@@ -71,3 +71,36 @@ describe("GET /offers/:id", () => {
     expect(body.status).toBe("new");
   });
 });
+
+describe("POST /offers/:id/events", () => {
+  it("creates an event and reflects it in the offer's derived status", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const postRes = await app.request(`/offers/${sampleOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "applied", channel: "email" }),
+    });
+    expect(postRes.status).toBe(201);
+
+    const getRes = await app.request(`/offers/${sampleOffer.id}`);
+    const body = (await getRes.json()) as { status: string; events: unknown[] };
+    expect(body.status).toBe("applied");
+    expect(body.events).toHaveLength(1);
+  });
+
+  it("rejects an unknown event type", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request(`/offers/${sampleOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "ghosted" }),
+    });
+    expect(res.status).toBe(400);
+  });
+});
