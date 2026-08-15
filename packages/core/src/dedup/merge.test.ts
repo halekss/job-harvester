@@ -82,4 +82,38 @@ describe("mergeOffers", () => {
     expect(merged.lastSeenAt).toBe("2026-08-12T00:00:00.000Z");
     expect(merged.sourceRefs).toHaveLength(2);
   });
+
+  it("prefers direct company applyUrl when existing is aggregator and incoming is direct", () => {
+    const existing = makeOffer({
+      id: "01J0000000000000000000A0",
+      originSource: "hellowork",
+      applyUrl: "https://hellowork.com/apply/123",
+    });
+    const incoming = makeOffer({
+      id: "01J0000000000000000000B0",
+      sourceOfferId: "def",
+      applyUrl: "https://acme.com/careers/apply",
+    });
+
+    const merged = mergeOffers(existing, incoming);
+
+    expect(merged.applyUrl).toBe("https://acme.com/careers/apply");
+  });
+
+  it("prefers existing applyUrl when existing is direct and incoming is aggregator", () => {
+    const existing = makeOffer({
+      id: "01J0000000000000000000A0",
+      applyUrl: "https://acme.com/careers/apply",
+    });
+    const incoming = makeOffer({
+      id: "01J0000000000000000000B0",
+      sourceOfferId: "def",
+      originSource: "hellowork",
+      applyUrl: "https://hellowork.com/apply/123",
+    });
+
+    const merged = mergeOffers(existing, incoming);
+
+    expect(merged.applyUrl).toBe("https://acme.com/careers/apply");
+  });
 });
