@@ -1,0 +1,36 @@
+{
+  "identifier": {
+    "id": null,
+    "partner_job_id": "170WXYZ",
+    "partner_label": "France Travail"
+  },
+  "workplace": {
+    "name": "Roquette Frères",
+    "legal_name": "ROQUETTE FRERES",
+    "website": null,
+    "siret": null,
+    "location": {
+      "address": "80080 Amiens",
+      "geopoint": { "type": "Point", "coordinates": [2.292605, 49.903041] }
+    }
+  },
+  "apply": {
+    "url": "https://candidat.francetravail.fr/offres/recherche/detail/170WXYZ?utm_source=api-apprentissage"
+  },
+  "contract": {
+    "start": null,
+    "duration": 24,
+    "type": ["Professionnalisation"],
+    "remote": null
+  },
+  "offer": {
+    "title": "Data Quality Analyst en alternance",
+    "description": "Contrôle et fiabilisation de la qualité des données industrielles.",
+    "rome_codes": ["M1805"],
+    "publication": {
+      "creation": "2026-07-20T08:00:00.000Z",
+      "expiration": null
+    },
+    "status": "Active"
+  }
+}

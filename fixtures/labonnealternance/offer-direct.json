@@ -1,0 +1,36 @@
+{
+  "identifier": {
+    "id": "6a5a004c8bfdaae34d6a2ea4",
+    "partner_job_id": "6a5a004c8bfdaae34d6a2ea4",
+    "partner_label": "offres_emploi_lba"
+  },
+  "workplace": {
+    "name": "Acme Data SAS",
+    "legal_name": "ACME DATA",
+    "website": "https://acme-data.example",
+    "siret": "12345678900012",
+    "location": {
+      "address": "10 Rue de la Paix, 59000 Lille",
+      "geopoint": { "type": "Point", "coordinates": [3.045391, 50.630951] }
+    }
+  },
+  "apply": {
+    "url": "https://acme-data.example/careers/data-analyst-alternance"
+  },
+  "contract": {
+    "start": "2026-09-01T00:00:00.000Z",
+    "duration": 12,
+    "type": ["Apprentissage"],
+    "remote": "hybrid"
+  },
+  "offer": {
+    "title": "Data Analyst en alternance",
+    "description": "Rejoignez notre équipe data pour analyser nos indicateurs et construire des tableaux de bord BI.",
+    "rome_codes": ["M1403"],
+    "publication": {
+      "creation": "2026-08-01T09:00:00.000Z",
+      "expiration": "2026-11-01T00:00:00.000Z"
+    },
+    "status": "Active"
+  }
+}
