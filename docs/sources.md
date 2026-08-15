@@ -7,7 +7,7 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
 ## Tier 0 — `labonnealternance`
 
 - **Domaine** : `api.apprentissage.beta.gouv.fr` (API Apprentissage / La Bonne Alternance)
-- **Route utilisée** : `GET /job/v1/search`
+- **Route utilisée** : `GET /api/job/v1/search`
 - **Authentification** : header `Authorization: Bearer <LBA_API_KEY>` (clé API à générer sur
   l'espace développeurs `https://api.apprentissage.beta.gouv.fr`)
 - **Paramètres de requête pertinents** : `latitude` (-90..90), `longitude` (-180..180),

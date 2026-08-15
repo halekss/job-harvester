@@ -10,7 +10,7 @@ export interface LbaClientOptions {
 }
 
 function buildSearchUrl(query: Pick<HarvestQuery, "location" | "romeCodes">): URL {
-  const url = new URL("/job/v1/search", BASE_URL);
+  const url = new URL("/api/job/v1/search", BASE_URL);
   url.searchParams.set("latitude", String(query.location.lat));
   url.searchParams.set("longitude", String(query.location.lng));
   url.searchParams.set("radius", String(query.location.radiusKm));
