@@ -1,0 +1,17 @@
+{
+  "name": "job-harvester",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "pnpm -r run test",
+    "typecheck": "pnpm -r run typecheck",
+    "dev:api": "pnpm --filter @job-harvester/api exec tsx watch src/server.ts",
+    "dev:web": "pnpm --filter @job-harvester/web run dev",
+    "harvest:run": "tsx packages/harvester/src/cli.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.12",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}
