@@ -32,7 +32,7 @@ export function registerOfferRoutes(app: Hono, { db }: AppDeps): void {
       cursorParam
         ? (() => {
             const cursor = decodeCursor(cursorParam);
-            return sql`(COALESCE(${offersTable.postedAt}, ${offersTable.firstSeenAt}), ${offersTable.id}) < (COALESCE(${cursor.postedAt}, ${cursor.firstSeenAt}), ${cursor.id})`;
+            return sql`(COALESCE(${offersTable.postedAt}, ${offersTable.firstSeenAt}), ${offersTable.firstSeenAt}, ${offersTable.id}) < (COALESCE(${cursor.postedAt}, ${cursor.firstSeenAt}), ${cursor.firstSeenAt}, ${cursor.id})`;
           })()
         : undefined,
     ].filter((condition) => condition !== undefined);
@@ -41,7 +41,7 @@ export function registerOfferRoutes(app: Hono, { db }: AppDeps): void {
       .select()
       .from(offersTable)
       .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(sql`COALESCE(${offersTable.postedAt}, ${offersTable.firstSeenAt})`), desc(offersTable.firstSeenAt))
+      .orderBy(desc(sql`COALESCE(${offersTable.postedAt}, ${offersTable.firstSeenAt})`), desc(offersTable.firstSeenAt), desc(offersTable.id))
       .limit(PAGE_SIZE)
       .all();
 
