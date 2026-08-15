@@ -50,6 +50,43 @@ describe("GET /offers", () => {
     expect(body.offers).toHaveLength(1);
     expect(body.offers[0]!.title).toBe("Data Analyst en alternance");
   });
+
+  it("keeps offers with a NULL postedAt reachable in pagination (COALESCE with firstSeenAt)", async () => {
+    const db = createDb(tmpDbPath());
+    const offerWithPostedAt: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000B0",
+      sourceOfferId: "with-posted-at",
+      canonicalUrl: "https://example.com/jobs/2",
+      postedAt: "2026-08-10T00:00:00.000Z",
+      firstSeenAt: "2026-08-10T00:00:00.000Z",
+      lastSeenAt: "2026-08-10T00:00:00.000Z",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/2"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "with-posted-at", canonicalUrl: "https://example.com/jobs/2" }],
+    };
+    const offerWithNullPostedAt: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000C0",
+      sourceOfferId: "null-posted-at",
+      canonicalUrl: "https://example.com/jobs/3",
+      postedAt: undefined,
+      firstSeenAt: "2026-08-05T00:00:00.000Z",
+      lastSeenAt: "2026-08-05T00:00:00.000Z",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/3"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "null-posted-at", canonicalUrl: "https://example.com/jobs/3" }],
+    };
+    db.insert(offersTable).values(offerToRow(offerWithPostedAt)).run();
+    db.insert(offersTable).values(offerToRow(offerWithNullPostedAt)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { sourceOfferId: string }[]; nextCursor: string | null };
+
+    expect(res.status).toBe(200);
+    const sourceOfferIds = body.offers.map((o) => o.sourceOfferId);
+    expect(sourceOfferIds).toContain("with-posted-at");
+    expect(sourceOfferIds).toContain("null-posted-at");
+  });
 });
 
 describe("GET /offers/:id", () => {
