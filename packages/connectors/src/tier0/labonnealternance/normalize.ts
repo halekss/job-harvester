@@ -69,6 +69,6 @@ export function normalizeLbaOffer(raw: RawOffer): NormalizedOffer {
     lifecycle: "active",
     dedupKey: exactDedupKeyFromUrl(canonicalUrl),
     sourceRefs: [{ source: LBA_CONNECTOR_ID, sourceOfferId: parsed.identifier.partner_job_id, canonicalUrl }],
-    rawPayload: raw.payload,
+    rawPayload: parsed,
   };
 }

@@ -38,4 +38,20 @@ describe("normalizeLbaOffer", () => {
   it("throws on a payload that fails schema validation", () => {
     expect(() => normalizeLbaOffer({ source: "labonnealternance", payload: { nope: true } })).toThrow();
   });
+
+  it("strips recruiter PII (e.g. apply.phone) from rawPayload since only Zod-validated fields are stored", () => {
+    const rawFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const applyWithPhone = {
+      ...(rawFixture.apply as Record<string, unknown>),
+      phone: "+33612345678",
+    };
+    const payloadWithPii = { ...rawFixture, apply: applyWithPhone };
+
+    const offer = normalizeLbaOffer({ source: "labonnealternance", payload: payloadWithPii });
+
+    expect(offer.rawPayload).not.toHaveProperty("apply.phone");
+    expect((offer.rawPayload as { apply: Record<string, unknown> }).apply).not.toHaveProperty("phone");
+    expect(JSON.stringify(offer.rawPayload)).not.toContain("phone");
+    expect(JSON.stringify(offer.rawPayload)).not.toContain("+33612345678");
+  });
 });
