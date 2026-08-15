@@ -1,0 +1,73 @@
+import { describe, it, expect, afterEach } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { createDb, offers as offersTable, offerToRow } from "@job-harvester/db";
+import { exactDedupKeyFromUrl, type NormalizedOffer } from "@job-harvester/core";
+import { createApp } from "./app.js";
+
+const tmpDirs: string[] = [];
+afterEach(() => {
+  for (const dir of tmpDirs.splice(0)) rmSync(dir, { recursive: true, force: true });
+});
+
+function tmpDbPath(): string {
+  const dir = mkdtempSync(path.join(tmpdir(), "job-harvester-api-"));
+  tmpDirs.push(dir);
+  return path.join(dir, "test.sqlite");
+}
+
+const sampleOffer: NormalizedOffer = {
+  id: "01J0000000000000000000A0",
+  source: "labonnealternance",
+  sourceOfferId: "abc",
+  canonicalUrl: "https://example.com/jobs/1",
+  title: "Data Analyst en alternance",
+  company: { name: "Acme", normalizedName: "acme" },
+  location: { label: "Lille", city: "Lille" },
+  contractType: "apprentissage",
+  romeCodes: ["M1403"],
+  descriptionText: "desc",
+  postedAt: "2026-08-10T00:00:00.000Z",
+  firstSeenAt: "2026-08-10T00:00:00.000Z",
+  lastSeenAt: "2026-08-10T00:00:00.000Z",
+  lifecycle: "active",
+  dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/1"),
+  sourceRefs: [{ source: "labonnealternance", sourceOfferId: "abc", canonicalUrl: "https://example.com/jobs/1" }],
+  rawPayload: {},
+};
+
+describe("GET /offers", () => {
+  it("returns stored offers filtered by city", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers?city=Lille");
+    const body = (await res.json()) as { offers: { title: string }[] };
+
+    expect(res.status).toBe(200);
+    expect(body.offers).toHaveLength(1);
+    expect(body.offers[0]!.title).toBe("Data Analyst en alternance");
+  });
+});
+
+describe("GET /offers/:id", () => {
+  it("returns 404 for an unknown offer", async () => {
+    const db = createDb(tmpDbPath());
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+    const res = await app.request("/offers/does-not-exist");
+    expect(res.status).toBe(404);
+  });
+
+  it("derives status 'new' when there are no events yet", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request(`/offers/${sampleOffer.id}`);
+    const body = (await res.json()) as { status: string };
+
+    expect(body.status).toBe("new");
+  });
+});

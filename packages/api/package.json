@@ -1,0 +1,28 @@
+{
+  "name": "@job-harvester/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.1",
+    "@job-harvester/connectors": "workspace:*",
+    "@job-harvester/core": "workspace:*",
+    "@job-harvester/db": "workspace:*",
+    "@job-harvester/harvester": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.2",
+    "ulid": "^3.0.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
+  }
+}
