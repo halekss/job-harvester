@@ -104,3 +104,32 @@ describe("POST /offers/:id/events", () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe("POST /harvest/:campaignId/run", () => {
+  it("returns 404 for an unknown campaign", async () => {
+    const db = createDb(tmpDbPath());
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+    const res = await app.request("/harvest/does-not-exist/run", { method: "POST" });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("GET /connectors/health", () => {
+  it("returns null lastRun for a connector that has never run", async () => {
+    const db = createDb(tmpDbPath());
+    const fakeConnector = {
+      id: "fake",
+      tier: 0 as const,
+      supports: () => true,
+      async *fetch() {},
+      normalize: (raw: unknown) => raw as never,
+      async healthCheck() {
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const app = createApp({ db, connectors: [fakeConnector], campaigns: [], env: {} });
+    const res = await app.request("/connectors/health");
+    const body = (await res.json()) as { connectors: unknown };
+    expect(body.connectors).toEqual([{ connectorId: "fake", lastRun: null }]);
+  });
+});
