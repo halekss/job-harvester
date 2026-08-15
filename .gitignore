@@ -3,4 +3,6 @@ dist/
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal
+*.sqlite-shm
 .env
+.playwright-mcp/
