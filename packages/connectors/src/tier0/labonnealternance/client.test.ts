@@ -12,7 +12,7 @@ const query: HarvestQuery = {
 
 describe("fetchLbaOffers", () => {
   it("yields each job from the search response and sends the Authorization header", async () => {
-    const fetchImpl = vi.fn(async () =>
+    const fetchImpl = vi.fn<typeof fetch>(async () =>
       new Response(JSON.stringify({ jobs: [{ id: 1 }, { id: 2 }], recruiters: [], warnings: [] }), { status: 200 }),
     );
 
