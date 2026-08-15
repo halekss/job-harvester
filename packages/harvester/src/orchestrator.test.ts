@@ -79,4 +79,34 @@ describe("runCampaign", () => {
     expect(db.select().from(offersTable).all()).toHaveLength(1);
     expect(db.select().from(connectorRuns).all()).toHaveLength(1);
   });
+
+  it("records a failed run when connector.fetch throws, without rethrowing", async () => {
+    const brokenConnector: Connector = {
+      id: "broken",
+      tier: 0,
+      supports: () => true,
+      async *fetch() {
+        throw new Error("network down");
+      },
+      normalize(raw) {
+        return makeOffer("unused", (raw.payload as { url: string }).url);
+      },
+      async healthCheck() {
+        return { connectorId: "broken", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const db = createDb(tmpDbPath());
+    const summary = await runCampaign(campaign, brokenConnector, db, {});
+
+    expect(summary).toMatchObject({ rawCount: 0, normalizedCount: 0, rejectedCount: 0 });
+    expect(db.select().from(offersTable).all()).toHaveLength(0);
+
+    const runs = db.select().from(connectorRuns).all();
+    expect(runs).toHaveLength(1);
+    const [run] = runs;
+    expect(run).toBeDefined();
+    expect(run).toMatchObject({ ok: false });
+    expect(run?.errorMessage).toContain("network down");
+  });
 });
