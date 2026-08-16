@@ -31,12 +31,14 @@ export function __resetTokenCacheForTests(): void {
   tokenCache.clear();
 }
 
-async function getAccessToken(options: FranceTravailClientOptions): Promise<string> {
+async function getAccessToken(options: FranceTravailClientOptions, forceRefresh = false): Promise<string> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const now = Date.now();
-  const cached = tokenCache.get(options.clientId);
-  if (cached && cached.expiresAt > now + TOKEN_EXPIRY_MARGIN_MS) {
-    return cached.accessToken;
+  if (!forceRefresh) {
+    const cached = tokenCache.get(options.clientId);
+    if (cached && cached.expiresAt > now + TOKEN_EXPIRY_MARGIN_MS) {
+      return cached.accessToken;
+    }
   }
 
   const url = new URL(TOKEN_URL);
@@ -77,6 +79,12 @@ function buildSearchUrl(query: Pick<HarvestQuery, "location" | "romeCodes">): UR
   const departement = extractDepartement(query.location.label);
   if (departement) {
     url.searchParams.set("departement", departement);
+  } else {
+    // JOB-23 : sans code postal dans le label de localisation, la recherche devient nationale
+    // au lieu d'être géo-filtrée — un avertissement visible vaut mieux qu'une perte silencieuse.
+    console.warn(
+      `francetravail: aucun code postal trouvé dans le label de localisation "${query.location.label}" — recherche non filtrée par département.`,
+    );
   }
   return url;
 }
@@ -102,6 +110,13 @@ export async function* fetchFranceTravailOffers(query: HarvestQuery, options: Fr
   const bodyJson = await response.json();
   const parsed = FranceTravailSearchResponseSchema.parse(bodyJson);
   for (const item of parsed.resultats) {
+    // L'API renvoie tout offre matchant codeROME/departement quel que soit son type de contrat
+    // (CDI/CDD inclus) — il n'existe pas de paramètre de recherche fiable pour restreindre à
+    // l'alternance (vérifié en direct : `alternance=true` en query string est silencieusement
+    // ignoré par l'API). Chaque offre porte en revanche un champ booléen fiable `alternance` ;
+    // on filtre donc côté client, avant de yield, comme pour le connecteur smartrecruiters (JOB-28).
+    const listing = item as { alternance?: boolean };
+    if (listing.alternance !== true) continue;
     yield item;
   }
 }
@@ -109,7 +124,10 @@ export async function* fetchFranceTravailOffers(query: HarvestQuery, options: Fr
 export async function checkFranceTravailHealth(options: FranceTravailClientOptions): Promise<ConnectorHealth> {
   const start = Date.now();
   try {
-    await getAccessToken(options);
+    // JOB-26 : bypasse le cache pour forcer un vrai aller-retour réseau — sinon un token déjà
+    // en cache (posé par un run de collecte récent) ferait renvoyer ok:true avec une latence
+    // quasi nulle sans jamais toucher le réseau, contrairement aux autres connecteurs.
+    await getAccessToken(options, true);
     return {
       connectorId: FRANCE_TRAVAIL_CONNECTOR_ID,
       ok: true,
