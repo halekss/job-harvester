@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { HarvestQuery, ConnectorHealth } from "@job-harvester/core";
 import { FranceTravailSearchResponseSchema } from "./types.js";
 
@@ -7,6 +8,11 @@ export const FRANCE_TRAVAIL_CONNECTOR_ID = "francetravail";
 
 const TOKEN_SCOPE = "api_offresdemploiv2 o2dsoffre";
 const TOKEN_EXPIRY_MARGIN_MS = 30_000;
+
+const TokenResponseSchema = z.object({
+  access_token: z.string(),
+  expires_in: z.number(),
+});
 
 export interface FranceTravailClientOptions {
   clientId: string;
@@ -50,7 +56,7 @@ async function getAccessToken(options: FranceTravailClientOptions): Promise<stri
   if (!response.ok) {
     throw new Error(`francetravail token request failed: HTTP ${response.status}`);
   }
-  const data = (await response.json()) as { access_token: string; expires_in: number };
+  const data = TokenResponseSchema.parse(await response.json());
   tokenCache.set(options.clientId, { accessToken: data.access_token, expiresAt: now + data.expires_in * 1000 });
   return data.access_token;
 }
@@ -89,6 +95,9 @@ export async function* fetchFranceTravailOffers(query: HarvestQuery, options: Fr
   const response = await fetchImpl(url, { headers: authHeaders(accessToken) });
   if (!response.ok) {
     throw new Error(`francetravail search failed: HTTP ${response.status}`);
+  }
+  if (response.status === 204) {
+    return;
   }
   const bodyJson = await response.json();
   const parsed = FranceTravailSearchResponseSchema.parse(bodyJson);

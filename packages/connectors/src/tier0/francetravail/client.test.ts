@@ -73,6 +73,40 @@ describe("fetchFranceTravailOffers", () => {
     };
     await expect(iterate()).rejects.toThrow(/HTTP 500/);
   });
+
+  it("yields zero items and does not throw when the search response is 204 No Content", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        return new Response(tokenResponseBody, { status: 200 });
+      }
+      return new Response(null, { status: 204 });
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(0);
+  });
+
+  it("throws a validation error when the token response is missing access_token", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        return new Response(JSON.stringify({ token_type: "Bearer", expires_in: 1499 }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ resultats: [] }), { status: 200 });
+    });
+
+    const iterate = async () => {
+      for await (const _item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+        // drain
+      }
+    };
+    await expect(iterate()).rejects.toThrow();
+  });
 });
 
 describe("checkFranceTravailHealth", () => {
