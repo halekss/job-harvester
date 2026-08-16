@@ -1,0 +1,20 @@
+{
+  "id": "170ABCD",
+  "intitule": "Data Analyst en alternance",
+  "description": "Rejoignez notre équipe pour analyser nos indicateurs de performance et construire des tableaux de bord.",
+  "dateCreation": "2026-08-01T09:00:00.000Z",
+  "lieuTravail": {
+    "libelle": "59 - Lille",
+    "codePostal": "59000"
+  },
+  "romeCode": "M1403",
+  "entreprise": {
+    "nom": "Acme Data SAS"
+  },
+  "natureContrat": "Cont. apprentissage",
+  "alternance": true,
+  "origineOffre": {
+    "origine": "1",
+    "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/170ABCD"
+  }
+}

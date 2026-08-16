@@ -1,0 +1,26 @@
+{
+  "id": "170WXYZ",
+  "intitule": "Développeur Web en alternance",
+  "description": "Contrat en alternance pour renforcer notre équipe technique sur des projets web full-stack.",
+  "dateCreation": "2026-07-20T08:00:00.000Z",
+  "lieuTravail": {
+    "libelle": "80 - Amiens",
+    "codePostal": "80000"
+  },
+  "romeCode": "M1805",
+  "entreprise": {
+    "nom": "TechCorp Solutions"
+  },
+  "natureContrat": "Cont. professionnalisation",
+  "alternance": true,
+  "origineOffre": {
+    "origine": "2",
+    "urlOrigine": "https://candidat.francetravail.fr/offres/recherche/detail/170WXYZ",
+    "partenaires": [
+      {
+        "nom": "JOBTEASER",
+        "url": "https://www.jobteaser.com/fr/job-offers/170wxyz-developpeur-web-alternance"
+      }
+    ]
+  }
+}
