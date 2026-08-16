@@ -38,10 +38,16 @@ le jobboard (`pnpm dev:web`).
 
 ## Interpréter `GET /connectors/health`
 
-Retourne, pour chaque connecteur enregistré, le dernier run connu
-(`rawCount`, `normalizedCount`, `rejectedCount`, `ok`, `errorMessage`). `lastRun: null`
-signifie que le connecteur n'a encore jamais été exécuté. Un `rejectedCount` élevé par
-rapport à `rawCount` indique un connecteur dont le format de réponse a changé.
+Retourne, pour chaque connecteur enregistré, deux informations distinctes :
+
+- `lastRun` : le dernier run de collecte connu en base (`rawCount`, `normalizedCount`,
+  `rejectedCount`, `ok`, `errorMessage`). `null` si le connecteur n'a encore jamais été
+  exécuté. Un `rejectedCount` élevé par rapport à `rawCount` indique un connecteur dont le
+  format de réponse a changé.
+- `live` : le résultat d'un vrai appel `healthCheck()` fait à l'instant de la requête
+  (`ok`, `latencyMs`, `message` en cas d'échec) — indépendant de `lastRun`, donc utile pour
+  détecter un problème (clé expirée, panne de la source) même si aucune collecte n'a encore
+  été relancée depuis.
 
 ## Export/réimport des événements de candidature
 
@@ -61,3 +67,41 @@ Voir `docs/sources.md` pour le détail de l'API. Les identifiants (`client_id` e
 `client_secret`, deux valeurs distinctes) s'obtiennent sur l'espace développeur
 `https://francetravail.io` en créant une application avec l'API "Offres d'emploi v2", et se
 renseignent dans `.env` sous `FRANCE_TRAVAIL_CLIENT_ID` et `FRANCE_TRAVAIL_CLIENT_SECRET`.
+
+## Configurer les cibles Workday et SmartRecruiters
+
+Contrairement à La Bonne Alternance et France Travail (qui recherchent sur tout le marché),
+les connecteurs `workday` et `smartrecruiters` ciblent des entreprises précises, déclarées
+sous `targets` dans `config/campaigns.yaml`. Aucune clé API n'est nécessaire pour ces deux
+connecteurs — seule l'identification de la cible est requise.
+
+**Workday** (`targets.workday`, liste de `{tenant, site, dc}`) : ouvrez la page carrière de
+l'entreprise sur Workday et lisez son URL, de la forme
+`https://{tenant}.{dc}.myworkdayjobs.com/{site}` — par exemple
+`https://valeo.wd3.myworkdayjobs.com/valeo_jobs` donne `tenant: valeo`, `dc: wd3`,
+`site: valeo_jobs`. Le `site` correspond souvent, mais pas toujours, au nom de l'espace de
+recrutement affiché dans l'URL (une même entreprise peut avoir plusieurs `site` pour
+différentes marques ou pays) ; vérifiez que la page liste bien des offres avant de l'ajouter.
+
+```yaml
+targets:
+  workday:
+    - { tenant: valeo, site: valeo_jobs, dc: wd3 }
+```
+
+**SmartRecruiters** (`targets.smartrecruiters`, liste de slugs) : ouvrez la page carrière de
+l'entreprise sur SmartRecruiters, de la forme `https://jobs.smartrecruiters.com/{SLUG}` (ou
+directement l'API `https://api.smartrecruiters.com/v1/companies/{SLUG}/postings` — une
+réponse JSON avec `content` confirme le bon slug) — par exemple
+`https://jobs.smartrecruiters.com/Mazars` donne le slug `MAZARS` (généralement en
+majuscules dans l'URL de l'API, mais l'API accepte aussi la casse d'origine).
+
+```yaml
+targets:
+  smartrecruiters: ["MAZARS"]
+```
+
+Les deux connecteurs filtrent déjà les offres non pertinentes (mot-clé "alternance" dans le
+titre côté Workday, titre contenant "alternance"/"apprentissage"/"apprenti" côté
+SmartRecruiters) — inutile de cibler une entreprise pour un métier qu'elle ne recrute
+manifestement pas en alternance, le connecteur ramènerait simplement 0 résultat.
