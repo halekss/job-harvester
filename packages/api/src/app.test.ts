@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createDb, offers as offersTable, offerToRow } from "@job-harvester/db";
 import { exactDedupKeyFromUrl, type NormalizedOffer } from "@job-harvester/core";
+import type { CampaignConfig } from "@job-harvester/harvester";
 import { createApp } from "./app.js";
 
 const tmpDirs: string[] = [];
@@ -148,6 +149,59 @@ describe("POST /harvest/:campaignId/run", () => {
     const app = createApp({ db, connectors: [], campaigns: [], env: {} });
     const res = await app.request("/harvest/does-not-exist/run", { method: "POST" });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("POST /harvest/:campaignId/run — multi-connector", () => {
+  function makeFakeConnector(id: string, supportsQuery: boolean, offers: unknown[]) {
+    return {
+      id,
+      tier: 0 as const,
+      supports: () => supportsQuery,
+      async *fetch() {
+        for (const offer of offers) yield { source: id, payload: offer };
+      },
+      normalize: (raw: { payload: unknown }) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: id, ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+  }
+
+  it("runs only the connectors that support the campaign and returns one summary each", async () => {
+    const db = createDb(tmpDbPath());
+    const supportedConnector = makeFakeConnector("supported", true, []);
+    const unsupportedConnector = makeFakeConnector("unsupported", false, []);
+    const campaign: CampaignConfig = {
+      id: "multi-test",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+    };
+    const app = createApp({ db, connectors: [supportedConnector, unsupportedConnector], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/multi-test/run", { method: "POST" });
+    const body = (await res.json()) as { summaries: unknown[] };
+
+    expect(res.status).toBe(200);
+    expect(body.summaries).toHaveLength(1);
+  });
+
+  it("returns 500 when no registered connector supports the campaign", async () => {
+    const db = createDb(tmpDbPath());
+    const unsupportedConnector = makeFakeConnector("unsupported", false, []);
+    const campaign: CampaignConfig = {
+      id: "unsupported-test",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+    };
+    const app = createApp({ db, connectors: [unsupportedConnector], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/unsupported-test/run", { method: "POST" });
+    expect(res.status).toBe(500);
   });
 });
 

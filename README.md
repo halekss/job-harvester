@@ -22,8 +22,9 @@ Les campagnes sont déclarées dans `config/campaigns.yaml`. Pour lancer la camp
 curl -X POST http://localhost:3000/harvest/alternance-data-hdf/run
 ```
 
-La réponse contient un résumé (`rawCount`, `normalizedCount`, `rejectedCount`). Les offres
-apparaissent ensuite dans le jobboard (`pnpm dev:web`).
+La réponse a la forme `{ summaries: [...] }` : un résumé (`rawCount`, `normalizedCount`,
+`rejectedCount`) par connecteur supportant la campagne. Les offres apparaissent ensuite dans
+le jobboard (`pnpm dev:web`).
 
 ## Ajouter une source
 
@@ -53,3 +54,10 @@ pnpm --filter @job-harvester/db exec tsx src/scripts/import-events.ts ./job-harv
 
 Voir `docs/sources.md` pour le détail de l'API. La clé s'obtient sur l'espace développeurs
 `https://api.apprentissage.beta.gouv.fr` et se renseigne dans `.env` sous `LBA_API_KEY`.
+
+## Obtenir des identifiants API France Travail
+
+Voir `docs/sources.md` pour le détail de l'API. Les identifiants (`client_id` et
+`client_secret`, deux valeurs distinctes) s'obtiennent sur l'espace développeur
+`https://francetravail.io` en créant une application avec l'API "Offres d'emploi v2", et se
+renseignent dans `.env` sous `FRANCE_TRAVAIL_CLIENT_ID` et `FRANCE_TRAVAIL_CLIENT_SECRET`.
