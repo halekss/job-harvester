@@ -10,9 +10,13 @@ function loadFixture(name: string): unknown {
   return JSON.parse(readFileSync(path.join(fixturesDir, name), "utf-8"));
 }
 
+function loadRawOfferPayload(): { company: string; detail: unknown } {
+  return { company: "MAZARS", detail: loadFixture("posting-detail-alternance.json") };
+}
+
 describe("normalizeSmartRecruitersOffer", () => {
   it("maps fields and strips HTML from the description", () => {
-    const offer = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: loadFixture("posting-detail-alternance.json") });
+    const offer = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: loadRawOfferPayload() });
 
     expect(offer.source).toBe("smartrecruiters");
     expect(offer.sourceOfferId).toBe("743000000000001");
@@ -30,10 +34,27 @@ describe("normalizeSmartRecruitersOffer", () => {
   });
 
   it("falls back to postingUrl when applyUrl is absent", () => {
-    const fixture = loadFixture("posting-detail-alternance.json") as Record<string, unknown>;
-    const { applyUrl: _drop, ...withoutApplyUrl } = fixture;
-    const offer = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: withoutApplyUrl });
+    const raw = loadRawOfferPayload();
+    const { applyUrl: _drop, ...detailWithoutApplyUrl } = raw.detail as Record<string, unknown>;
+    const offer = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: { ...raw, detail: detailWithoutApplyUrl } });
     expect(offer.applyUrl).toBe("https://jobs.smartrecruiters.com/Mazars/743000000000001-alternance-data-analyst-h-f");
+  });
+
+  it("falls back to a real, working API endpoint (with the company slug) when both applyUrl and postingUrl are absent (JOB-34)", () => {
+    const raw = loadRawOfferPayload();
+    const { applyUrl: _dropA, postingUrl: _dropB, ...detailWithoutUrls } = raw.detail as Record<string, unknown>;
+    const offer = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: { ...raw, detail: detailWithoutUrls } });
+    expect(offer.applyUrl).toBe("https://api.smartrecruiters.com/v1/companies/MAZARS/postings/743000000000001");
+  });
+
+  it("computes a 3-digit department for a DOM postal code (JOB-27)", () => {
+    const raw = loadRawOfferPayload();
+    const detail = raw.detail as Record<string, unknown>;
+    const domPayload = { ...raw, detail: { ...detail, location: { city: "Fort-de-France", postalCode: "97200" } } };
+
+    const offer = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: domPayload });
+
+    expect(offer.location.department).toBe("972");
   });
 
   it("throws on a payload that fails schema validation", () => {

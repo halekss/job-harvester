@@ -5,15 +5,16 @@ import {
   normalizeCompanyName,
   stripHtml,
   inferContractTypeFromText,
+  departmentFromPostalCode,
   type NormalizedOffer,
   type RawOffer,
 } from "@job-harvester/core";
-import { SmartRecruitersPostingDetailSchema } from "./types.js";
+import { SmartRecruitersRawOfferSchema } from "./types.js";
 import { SMARTRECRUITERS_CONNECTOR_ID } from "./client.js";
 
 export function normalizeSmartRecruitersOffer(raw: RawOffer): NormalizedOffer {
-  const parsed = SmartRecruitersPostingDetailSchema.parse(raw.payload);
-  const applyUrl = parsed.applyUrl ?? parsed.postingUrl ?? `https://api.smartrecruiters.com/v1/postings/${parsed.id}`;
+  const { company, detail: parsed } = SmartRecruitersRawOfferSchema.parse(raw.payload);
+  const applyUrl = parsed.applyUrl ?? parsed.postingUrl ?? `https://api.smartrecruiters.com/v1/companies/${company}/postings/${parsed.id}`;
   const canonicalUrl = canonicalizeUrl(applyUrl);
   const now = new Date().toISOString();
   const companyName = parsed.company?.name ?? "Entreprise inconnue";
@@ -35,7 +36,7 @@ export function normalizeSmartRecruitersOffer(raw: RawOffer): NormalizedOffer {
       label: parsed.location?.city ?? "",
       city: parsed.location?.city ?? "",
       postalCode,
-      department: postalCode?.slice(0, 2),
+      department: postalCode ? departmentFromPostalCode(postalCode) : undefined,
     },
     contractType: inferContractTypeFromText(`${parsed.name} ${descriptionText}`),
     romeCodes: [],

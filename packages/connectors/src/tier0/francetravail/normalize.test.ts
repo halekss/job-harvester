@@ -37,6 +37,19 @@ describe("normalizeFranceTravailOffer", () => {
     expect(offer.location.department).toBe("80");
   });
 
+  it("recognizes 2A/2B as Corsica department codes in lieuTravail.libelle (JOB-27)", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const corsicaPayload = {
+      ...directFixture,
+      lieuTravail: { libelle: "2A - Ajaccio", codePostal: "20000" },
+    };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload: corsicaPayload });
+
+    expect(offer.location.department).toBe("2A");
+    expect(offer.location.city).toBe("Ajaccio");
+  });
+
   it("throws on a payload that fails schema validation", () => {
     expect(() => normalizeFranceTravailOffer({ source: "francetravail", payload: { nope: true } })).toThrow();
   });

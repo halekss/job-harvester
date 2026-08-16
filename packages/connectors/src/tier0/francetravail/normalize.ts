@@ -12,10 +12,14 @@ function mapContractType(natureContrat: string | undefined): ContractType {
 
 // lieuTravail.libelle suit le format "<code département> - <ville>" ; on retombe sur le
 // libellé complet comme ville si le format diffère de ce à quoi s'attend l'API.
+// JOB-27 : la Corse utilise littéralement "2A"/"2B" comme code département dans ce libellé
+// (contrairement aux DOM, où le code postal est à 3 chiffres numériques) — sans ce cas, un
+// libellé "2A - Ajaccio" ne matchait aucun des deux groupes et retombait sur le libellé complet
+// comme ville, sans département.
 function parseLieuTravail(libelle: string): { city: string; department?: string } {
-  const match = libelle.match(/^(\d{2,3})\s*-\s*(.+)$/);
+  const match = libelle.match(/^(\d{2,3}|2[AB])\s*-\s*(.+)$/i);
   if (!match) return { city: libelle.trim() };
-  return { department: match[1], city: match[2]!.trim() };
+  return { department: match[1]!.toUpperCase(), city: match[2]!.trim() };
 }
 
 function resolveApplyUrl(parsed: ReturnType<typeof FranceTravailOfferSchema.parse>): string {
