@@ -9,6 +9,7 @@ export default defineConfig({
       "/offers": "http://localhost:3000",
       "/harvest": "http://localhost:3000",
       "/connectors": "http://localhost:3000",
+      "/campaigns": "http://localhost:3000",
     },
   },
 });

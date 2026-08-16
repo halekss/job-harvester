@@ -157,6 +157,23 @@ describe("POST /offers/:id/events", () => {
   });
 });
 
+describe("GET /campaigns", () => {
+  it("lists the configured campaign ids (JOB-20)", async () => {
+    const db = createDb(tmpDbPath());
+    const campaigns: CampaignConfig[] = [
+      { id: "alternance-data-hdf", romeCodes: ["M1403"], keywords: [], locations: [], contractTypes: ["apprentissage"] },
+      { id: "alternance-devweb-hdf", romeCodes: ["M1805"], keywords: [], locations: [], contractTypes: ["apprentissage"] },
+    ];
+    const app = createApp({ db, connectors: [], campaigns, env: {} });
+
+    const res = await app.request("/campaigns");
+    const body = (await res.json()) as { campaigns: { id: string }[] };
+
+    expect(res.status).toBe(200);
+    expect(body.campaigns).toEqual([{ id: "alternance-data-hdf" }, { id: "alternance-devweb-hdf" }]);
+  });
+});
+
 describe("POST /harvest/:campaignId/run", () => {
   it("returns 404 for an unknown campaign", async () => {
     const db = createDb(tmpDbPath());

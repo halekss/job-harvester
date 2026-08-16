@@ -17,7 +17,16 @@ export function OfferTable({ offers }: { offers: OfferSummary[] }) {
       <tbody>
         {offers.map((offer) => (
           <tr key={offer.id} className="border-b border-[var(--color-border)]">
-            <td className="py-2 pr-4">{offer.title}</td>
+            <td className="py-2 pr-4">
+              <a
+                href={offer.applyUrl ?? offer.canonicalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[var(--color-accent)] hover:underline"
+              >
+                {offer.title}
+              </a>
+            </td>
             <td className="py-2 pr-4">{offer.company.name}</td>
             <td className="py-2 pr-4">{offer.location.city}</td>
             <td className="py-2 pr-4">
