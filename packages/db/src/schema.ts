@@ -63,8 +63,3 @@ export const connectorRuns = sqliteTable("connector_runs", {
   ok: integer("ok", { mode: "boolean" }).notNull(),
   errorMessage: text("error_message"),
 });
-
-export const campaigns = sqliteTable("campaigns", {
-  id: text("id").primaryKey(),
-  config: text("config", { mode: "json" }).notNull(),
-});
