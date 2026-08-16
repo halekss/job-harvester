@@ -100,6 +100,35 @@ describe("mergeOffers", () => {
     expect(merged.applyUrl).toBe("https://acme.com/careers/apply");
   });
 
+  it("refreshes content fields (title, contractType, location) from incoming while keeping identity fields from existing (JOB-37)", () => {
+    const existing = makeOffer({
+      id: "01J0000000000000000000A0",
+      title: "Alternant Data Analyst",
+      contractType: "autre",
+      location: { label: "Lille", city: "Lille" },
+      romeCodes: ["M1403"],
+    });
+    const incoming = makeOffer({
+      id: "01J0000000000000000000B0",
+      title: "Alternant Data Analyst",
+      contractType: "apprentissage",
+      location: { label: "Lille 59000", city: "Lille", postalCode: "59000", department: "59" },
+      romeCodes: ["M1403", "M1805"],
+    });
+
+    const merged = mergeOffers(existing, incoming);
+
+    expect(merged.contractType).toBe("apprentissage");
+    expect(merged.location).toEqual({ label: "Lille 59000", city: "Lille", postalCode: "59000", department: "59" });
+    expect(merged.romeCodes).toEqual(["M1403", "M1805"]);
+    // Identity fields stay pinned to the existing record.
+    expect(merged.id).toBe("01J0000000000000000000A0");
+    expect(merged.source).toBe(existing.source);
+    expect(merged.sourceOfferId).toBe(existing.sourceOfferId);
+    expect(merged.dedupKey).toBe(existing.dedupKey);
+    expect(merged.canonicalUrl).toBe(existing.canonicalUrl);
+  });
+
   it("prefers existing applyUrl when existing is direct and incoming is aggregator", () => {
     const existing = makeOffer({
       id: "01J0000000000000000000A0",

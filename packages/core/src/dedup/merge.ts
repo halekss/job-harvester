@@ -40,8 +40,18 @@ export function mergeOffers(existing: NormalizedOffer, incoming: NormalizedOffer
       ? (incoming.applyUrl ?? existing.applyUrl)
       : (existing.applyUrl ?? incoming.applyUrl);
 
+  // JOB-37 : base sur `incoming`, pas `existing` — un re-harvest re-normalise systématiquement
+  // avec le code le plus récent (mapping de contractType corrigé, titre/description mis à jour
+  // côté source, etc.) ; figer sur `existing` gelait silencieusement une offre à l'état de sa
+  // toute première collecte. Seule l'identité stable de l'enregistrement (id, provenance
+  // primaire, clé de dédup, URL canonique servant à cette clé) reste ancrée sur `existing`.
   return {
-    ...existing,
+    ...incoming,
+    id: existing.id,
+    source: existing.source,
+    sourceOfferId: existing.sourceOfferId,
+    dedupKey: existing.dedupKey,
+    canonicalUrl: existing.canonicalUrl,
     descriptionText:
       incoming.descriptionText.length > existing.descriptionText.length ? incoming.descriptionText : existing.descriptionText,
     applyUrl: preferredApplyUrl,
