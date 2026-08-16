@@ -23,7 +23,10 @@ describe("fetchFranceTravailOffers", () => {
       if (url.includes("access_token")) {
         return new Response(tokenResponseBody, { status: 200 });
       }
-      return new Response(JSON.stringify({ resultats: [{ id: "1", alternance: true }, { id: "2", alternance: true }] }), { status: 200 });
+      return new Response(JSON.stringify({ resultats: [{ id: "1", alternance: true }, { id: "2", alternance: true }] }), {
+        status: 200,
+        headers: { "content-range": "offres 0-1/2" },
+      });
     });
 
     const results: unknown[] = [];
@@ -51,7 +54,7 @@ describe("fetchFranceTravailOffers", () => {
             { id: "alternance-1", alternance: true },
           ],
         }),
-        { status: 200 },
+        { status: 200, headers: { "content-range": "offres 0-2/3" } },
       );
     });
 
@@ -81,6 +84,114 @@ describe("fetchFranceTravailOffers", () => {
 
     const tokenCalls = fetchImpl.mock.calls.filter(([input]) => String(input).includes("access_token"));
     expect(tokenCalls).toHaveLength(1);
+  });
+
+  it("requests a fresh token when the client secret changes, instead of serving the old cached one (JOB-25)", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        return new Response(tokenResponseBody, { status: 200 });
+      }
+      return new Response(JSON.stringify({ resultats: [] }), { status: 200 });
+    });
+
+    for await (const _item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "old-secret", fetchImpl })) {
+      // drain
+    }
+    for await (const _item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "new-secret-after-rotation", fetchImpl })) {
+      // drain
+    }
+
+    const tokenCalls = fetchImpl.mock.calls.filter(([input]) => String(input).includes("access_token"));
+    expect(tokenCalls).toHaveLength(2);
+  });
+
+  it("coalesces concurrent token requests into a single network call (JOB-25)", async () => {
+    let tokenRequestCount = 0;
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        tokenRequestCount += 1;
+        // Yield to the microtask queue so both concurrent callers reach getAccessToken
+        // before this resolves, proving they share the same in-flight request.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        return new Response(tokenResponseBody, { status: 200 });
+      }
+      return new Response(JSON.stringify({ resultats: [] }), { status: 200 });
+    });
+
+    await Promise.all([
+      (async () => {
+        for await (const _item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+          // drain
+        }
+      })(),
+      (async () => {
+        for await (const _item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+          // drain
+        }
+      })(),
+    ]);
+
+    expect(tokenRequestCount).toBe(1);
+  });
+
+  it("pages through Content-Range until the total is reached (JOB-30)", async () => {
+    // 3 pages: 150 items, 150 items, 20 items — total 320, PAGE_SIZE=150.
+    const pages = [
+      { start: 0, end: 149, total: 320 },
+      { start: 150, end: 299, total: 320 },
+      { start: 300, end: 319, total: 320 },
+    ];
+    const requestedRanges: string[] = [];
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        return new Response(tokenResponseBody, { status: 200 });
+      }
+      const range = new URL(url).searchParams.get("range")!;
+      requestedRanges.push(range);
+      const page = pages[requestedRanges.length - 1]!;
+      const count = page.end - page.start + 1;
+      const resultats = Array.from({ length: count }, (_, i) => ({ id: `offer-${page.start + i}`, alternance: true }));
+      return new Response(JSON.stringify({ resultats }), {
+        status: 200,
+        headers: { "content-range": `offres ${page.start}-${page.end}/${page.total}` },
+      });
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(requestedRanges).toEqual(["0-149", "150-299", "300-449"]);
+    expect(results).toHaveLength(320);
+  });
+
+  it("stops after MAX_PAGES even if Content-Range never signals completion, as a safety cap (JOB-30)", async () => {
+    let pageCount = 0;
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        return new Response(tokenResponseBody, { status: 200 });
+      }
+      pageCount += 1;
+      // Always claims a huge total, and always returns a full page — an API bug this safety
+      // cap must survive rather than looping forever.
+      return new Response(JSON.stringify({ resultats: [{ id: `offer-${pageCount}`, alternance: true }] }), {
+        status: 200,
+        headers: { "content-range": "offres 0-0/999999" },
+      });
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchFranceTravailOffers(query, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(pageCount).toBe(20);
+    expect(results).toHaveLength(20);
   });
 
   it("throws when the search response is not ok", async () => {
