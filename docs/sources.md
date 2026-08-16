@@ -27,9 +27,34 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
   `github.com/mission-apprentissage/api-apprentissage` (`sdk/src/routes/jobs/job.routes.openapi.ts`,
   `sdk/src/models/job/job.model.openapi.ts`).
 
-## Tier 0 — `francetravail` (non couvert par ce sous-projet)
+## Tier 0 — `francetravail`
 
-À documenter lors du sous-projet suivant. Note de dédup : France Travail alimente déjà
-partiellement LBA (offres relayées avec `partner_label = "France Travail"`), donc la
-déduplication exacte/floue de `packages/core` doit fusionner les doublons entre les deux
-connecteurs une fois `francetravail` ajouté.
+- **Domaine** : `api.francetravail.io` (recherche), `entreprise.francetravail.fr` (auth)
+- **Route utilisée** : `GET https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search`
+- **Authentification** : OAuth2 *client credentials* à deux valeurs — `FRANCE_TRAVAIL_CLIENT_ID` +
+  `FRANCE_TRAVAIL_CLIENT_SECRET`, token obtenu via
+  `POST https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire`
+  (`grant_type=client_credentials`, `scope=api_offresdemploiv2 o2dsoffre`), token Bearer valable
+  environ 25 minutes, mis en cache par le connecteur.
+- **Paramètres de requête utilisés** : `codeROME` (codes séparés par virgule), `departement`
+  (extrait heuristiquement du label de localisation de la campagne, l'API n'acceptant pas de
+  lat/lng directement contrairement à LBA).
+- **Pagination** : via le header HTTP `Content-Range: offres <first>-<last>/<total>` (pas dans
+  le corps JSON). Non gérée dans ce sous-projet — un seul appel de recherche par requête,
+  comme pour `labonnealternance`.
+- **Réponse** : `{ resultats: [...], filtresPossibles: [...] }`. Champ clé pour la traçabilité
+  d'agrégation : `origineOffre.origine` (`"1"` = offre France Travail directe, `"2"` = offre
+  relayée par un partenaire listé dans `origineOffre.partenaires[]`, avec son `nom` et son URL
+  de candidature directe).
+- **Point d'attention PII** : l'API expose un objet `contact` (nom/téléphone/email de contact
+  recruteur selon la documentation générale, vide sur l'échantillon capturé) — délibérément
+  absent du schéma Zod de ce connecteur, jamais stocké.
+- **Statut robots.txt/CGU** : non applicable — accès par API officielle authentifiée.
+- **Décision** : autorisé, Tier 0. Cette source alimente déjà partiellement La Bonne
+  Alternance (offres relayées avec `partner_label: "France Travail"` côté LBA) — dédup
+  inter-connecteurs gérée par le moteur de dédup flou de `packages/core`, pas par
+  correspondance exacte d'URL (les deux sources utilisent des paramètres de tracking
+  différents sur l'URL de candidature).
+- **Vérifié en direct le 2026-08-16** : authentification, endpoint de recherche et forme de la
+  réponse tous confirmés par un appel réel (pas seulement documenté) — voir
+  `docs/superpowers/specs/2026-08-16-francetravail-connector-design.md`.
