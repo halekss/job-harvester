@@ -1,8 +1,11 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { loadCampaigns, findCampaign } from "./load-campaigns.js";
+
+const repoRoot = path.resolve(fileURLToPath(import.meta.url), "../../../../../");
 
 const tmpDirs: string[] = [];
 afterEach(() => {
@@ -32,6 +35,24 @@ campaigns:
     const campaigns = loadCampaigns(filePath);
     expect(campaigns).toHaveLength(1);
     expect(findCampaign(campaigns, "alternance-data-hdf")?.romeCodes).toEqual(["M1403", "M1805"]);
+  });
+
+  it("parses the real config/campaigns.yaml with both campaigns (JOB-18)", () => {
+    const campaigns = loadCampaigns(path.join(repoRoot, "config", "campaigns.yaml"));
+
+    expect(campaigns.map((campaign) => campaign.id)).toEqual(["alternance-data-hdf", "alternance-devweb-hdf"]);
+
+    const devweb = findCampaign(campaigns, "alternance-devweb-hdf");
+    expect(devweb?.romeCodes).toEqual(["M1802", "M1805", "M1811"]);
+    expect(devweb?.locations.map((location) => location.label)).toEqual([
+      "Lille 59000",
+      "Amiens 80000",
+      "Lens/Vendin-le-Vieil 62880",
+      "Paris 75000",
+    ]);
+
+    const data = findCampaign(campaigns, "alternance-data-hdf");
+    expect(data?.locations.map((location) => location.label)).toContain("Paris 75000");
   });
 
   it("rejects a file with an invalid contract type", () => {
