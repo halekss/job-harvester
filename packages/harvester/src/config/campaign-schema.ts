@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ContractTypeSchema } from "@job-harvester/core";
+import { ContractTypeSchema, HarvestTargetsSchema } from "@job-harvester/core";
 
 export const LocationConfigSchema = z.object({
   label: z.string(),
@@ -15,6 +15,7 @@ export const CampaignConfigSchema = z.object({
   keywords: z.array(z.string()),
   locations: z.array(LocationConfigSchema),
   contractTypes: z.array(ContractTypeSchema),
+  targets: HarvestTargetsSchema.optional(),
 });
 export type CampaignConfig = z.infer<typeof CampaignConfigSchema>;
 

@@ -59,6 +59,7 @@ export async function runCampaign(
   let rejectedCount = 0;
   let errorMessage: string | undefined;
 
+  let hasFetchedOnce = false;
   for (const location of campaign.locations) {
     const query: HarvestQuery = {
       campaignId: campaign.id,
@@ -66,8 +67,13 @@ export async function runCampaign(
       romeCodes: campaign.romeCodes,
       location,
       contractTypes: campaign.contractTypes,
+      targets: campaign.targets,
     };
     if (!connector.supports(query)) continue;
+    if (connector.locationScoped === false) {
+      if (hasFetchedOnce) continue;
+      hasFetchedOnce = true;
+    }
 
     await rateLimiter.wait(connector.id);
     try {

@@ -110,3 +110,59 @@ describe("runCampaign", () => {
     expect(run?.errorMessage).toContain("network down");
   });
 });
+
+describe("runCampaign — locationScoped connectors", () => {
+  const multiLocationCampaign: CampaignConfig = {
+    id: "multi-location-test",
+    romeCodes: ["M1403"],
+    keywords: [],
+    locations: [
+      { label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 },
+      { label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 },
+    ],
+    contractTypes: ["apprentissage"],
+  };
+
+  it("calls fetch exactly once across multiple campaign locations when locationScoped is false", async () => {
+    const db = createDb(tmpDbPath());
+    let fetchCallCount = 0;
+    const scopedConnector: Connector = {
+      id: "scoped-fake",
+      tier: 1,
+      locationScoped: false,
+      supports: () => true,
+      async *fetch() {
+        fetchCallCount += 1;
+      },
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "scoped-fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    await runCampaign(multiLocationCampaign, scopedConnector, db, {});
+
+    expect(fetchCallCount).toBe(1);
+  });
+
+  it("calls fetch once per location when locationScoped is absent (default true)", async () => {
+    const db = createDb(tmpDbPath());
+    let fetchCallCount = 0;
+    const defaultConnector: Connector = {
+      id: "default-fake",
+      tier: 0,
+      supports: () => true,
+      async *fetch() {
+        fetchCallCount += 1;
+      },
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "default-fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    await runCampaign(multiLocationCampaign, defaultConnector, db, {});
+
+    expect(fetchCallCount).toBe(2);
+  });
+});
