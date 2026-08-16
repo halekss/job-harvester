@@ -1,11 +1,13 @@
 import type { Hono } from "hono";
 import { ulid } from "ulid";
 import { z } from "zod";
-import { applicationEvents } from "@job-harvester/db";
+import { eq } from "drizzle-orm";
+import { ApplicationEventTypeSchema } from "@job-harvester/core";
+import { applicationEvents, offers as offersTable } from "@job-harvester/db";
 import type { AppDeps } from "../app.js";
 
 const CreateEventBodySchema = z.object({
-  type: z.enum(["applied", "spontaneous", "followup", "interview", "rejected", "no_reply", "archived"]),
+  type: ApplicationEventTypeSchema,
   occurredAt: z.string().optional(),
   channel: z.string().optional(),
   notes: z.string().optional(),
@@ -18,9 +20,17 @@ export function registerEventRoutes(app: Hono, { db }: AppDeps): void {
     if (!parsed.success) {
       return c.json({ error: "invalid_body", issues: parsed.error.issues }, 400);
     }
+    const offerId = c.req.param("id");
+    // JOB-11 : sans cette vérification, un id d'offre invalide (typo, offre supprimée) créerait
+    // soit une violation FK brute (PRAGMA foreign_keys activé) soit, avant ce fix, un événement
+    // orphelin silencieux.
+    const offer = db.select({ id: offersTable.id }).from(offersTable).where(eq(offersTable.id, offerId)).get();
+    if (!offer) {
+      return c.json({ error: "offer_not_found" }, 404);
+    }
     const event = {
       id: ulid(),
-      offerId: c.req.param("id"),
+      offerId,
       type: parsed.data.type,
       occurredAt: parsed.data.occurredAt ?? new Date().toISOString(),
       channel: parsed.data.channel,

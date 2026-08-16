@@ -10,6 +10,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export function createDb(filePath: string) {
   const sqlite = new Database(filePath);
   sqlite.pragma("journal_mode = WAL");
+  // SQLite ne fait respecter les contraintes FOREIGN KEY que si on l'active explicitement
+  // sur chaque connexion — sans ça, un événement référençant une offre inexistante est inséré
+  // silencieusement (JOB-11).
+  sqlite.pragma("foreign_keys = ON");
   const db = drizzle(sqlite, { schema });
   migrate(db, { migrationsFolder: path.join(__dirname, "..", "migrations") });
   return db;

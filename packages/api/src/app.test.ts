@@ -2,7 +2,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createDb, offers as offersTable, offerToRow } from "@job-harvester/db";
+import { createDb, offers as offersTable, applicationEvents as applicationEventsTable, offerToRow } from "@job-harvester/db";
 import { exactDedupKeyFromUrl, type NormalizedOffer } from "@job-harvester/core";
 import type { CampaignConfig } from "@job-harvester/harvester";
 import { createApp } from "./app.js";
@@ -141,6 +141,20 @@ describe("POST /offers/:id/events", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it("returns 404 instead of creating an orphaned event when the offer does not exist (JOB-11)", async () => {
+    const db = createDb(tmpDbPath());
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request(`/offers/does-not-exist/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "applied" }),
+    });
+
+    expect(res.status).toBe(404);
+    expect(db.select().from(applicationEventsTable).all()).toHaveLength(0);
+  });
 });
 
 describe("POST /harvest/:campaignId/run", () => {
@@ -188,7 +202,7 @@ describe("POST /harvest/:campaignId/run — multi-connector", () => {
     expect(body.summaries).toHaveLength(1);
   });
 
-  it("returns 500 when no registered connector supports the campaign", async () => {
+  it("returns 422 when no registered connector supports the campaign (JOB-29)", async () => {
     const db = createDb(tmpDbPath());
     const unsupportedConnector = makeFakeConnector("unsupported", false, []);
     const campaign: CampaignConfig = {
@@ -201,7 +215,7 @@ describe("POST /harvest/:campaignId/run — multi-connector", () => {
     const app = createApp({ db, connectors: [unsupportedConnector], campaigns: [campaign], env: {} });
 
     const res = await app.request("/harvest/unsupported-test/run", { method: "POST" });
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(422);
   });
 
   it("passes campaign.targets through to connector.supports so targets-scoped connectors are included", async () => {
