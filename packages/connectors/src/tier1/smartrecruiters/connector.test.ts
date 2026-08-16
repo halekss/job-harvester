@@ -28,8 +28,11 @@ describe("smartrecruitersConnector", () => {
   it("fetches raw offers wrapping each item with the connector id", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
-      if (url.endsWith("/postings?limit=50")) {
-        return new Response(JSON.stringify({ content: [{ id: "743000000000001", name: "Alternance Data Analyst H/F" }] }), { status: 200 });
+      if (url.includes("/postings?limit=50")) {
+        return new Response(
+          JSON.stringify({ content: [{ id: "743000000000001", name: "Alternance Data Analyst H/F" }], totalFound: 1 }),
+          { status: 200 },
+        );
       }
       return new Response(JSON.stringify(postingDetail), { status: 200 });
     });

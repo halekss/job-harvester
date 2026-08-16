@@ -16,13 +16,14 @@ describe("fetchSmartRecruitersOffers", () => {
     const detailUrls: string[] = [];
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
-      if (url.endsWith("/postings?limit=50")) {
+      if (url.includes("/postings?limit=50")) {
         return new Response(
           JSON.stringify({
             content: [
               { id: "1", name: "Alternance Data Analyst H/F" },
               { id: "2", name: "Auditeur confirmé H/F" },
             ],
+            totalFound: 2,
           }),
           { status: 200 },
         );
@@ -39,6 +40,35 @@ describe("fetchSmartRecruitersOffers", () => {
     expect(results).toHaveLength(1);
     expect(detailUrls).toHaveLength(1);
     expect(detailUrls[0]).toContain("/postings/1");
+    // JOB-34 : le slug d'entreprise doit être présent dans le payload composite yield,
+    // pas seulement utilisé pour construire l'URL de la requête.
+    expect(results[0]).toMatchObject({ company: "MAZARS", detail: { id: "1", name: "Alternance Data Analyst H/F" } });
+  });
+
+  it("pages through the postings list until totalFound is reached (JOB-32)", async () => {
+    const requestedOffsets: number[] = [];
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/postings?limit=50")) {
+        const offset = Number(new URL(url).searchParams.get("offset"));
+        requestedOffsets.push(offset);
+        // 70 total postings, page size 50: page 1 = 50 items, page 2 = 20 items.
+        const count = offset === 0 ? 50 : 20;
+        const content = Array.from({ length: count }, (_, i) => ({ id: `${offset + i}`, name: "Auditeur confirmé H/F" }));
+        return new Response(JSON.stringify({ content, totalFound: 70 }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ id: "x", name: "Auditeur confirmé H/F" }), { status: 200 });
+    });
+
+    const results: unknown[] = [];
+    for await (const _item of fetchSmartRecruitersOffers(query, { fetchImpl })) {
+      results.push(_item);
+    }
+
+    expect(requestedOffsets).toEqual([0, 50]);
+    // Aucune de ces offres n'est en alternance (filtrées avant le fetch de détail) — la
+    // pagination de la liste, elle, doit avoir couvert les 2 pages malgré tout.
+    expect(results).toHaveLength(0);
   });
 
   it("throws when the postings list request is not ok", async () => {
