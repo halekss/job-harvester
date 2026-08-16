@@ -31,11 +31,9 @@ describe("normalizeWorkdayOffer", () => {
     expect(offer.company.normalizedName).toBe("valeo");
     expect(offer.romeCodes).toEqual([]);
     expect(offer.originSource).toBeUndefined();
-    // Comportement réel observé et documenté volontairement (pas un bug de cette correction) :
-    // le titre/la description Workday réels ("Alternant Data Analyst" / "...une alternance de 12 mois...")
-    // ne contiennent ni "apprentissage" ni "professionnalisation" littéralement, donc
-    // inferContractTypeFromText retombe sur "autre" pour ce cas nominal. Suivi produit : ticket Linear dédié.
-    expect(offer.contractType).toBe("autre");
+    // JOB-33 : inferContractTypeFromText reconnaît désormais "alternant"/"alternance" comme
+    // mappant à apprentissage par défaut (le titre/la description contiennent "Alternant"/"alternance").
+    expect(offer.contractType).toBe("apprentissage");
   });
 
   it("infers contractType apprentissage from the title/description text", () => {

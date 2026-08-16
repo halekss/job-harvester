@@ -13,4 +13,9 @@ describe("inferContractTypeFromText", () => {
   it("falls back to autre when neither matches", () => {
     expect(inferContractTypeFromText("Poste en CDI, non concerné")).toBe("autre");
   });
+
+  it("maps the generic word alternance/alternant to apprentissage (JOB-33)", () => {
+    expect(inferContractTypeFromText("Alternant Data Analyst")).toBe("apprentissage");
+    expect(inferContractTypeFromText("Poste en alternance de 12 mois")).toBe("apprentissage");
+  });
 });
