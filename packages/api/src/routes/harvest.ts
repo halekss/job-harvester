@@ -15,6 +15,7 @@ export function registerHarvestRoutes(app: Hono, { db, connectors, campaigns, en
           romeCodes: campaign.romeCodes,
           location,
           contractTypes: campaign.contractTypes,
+          targets: campaign.targets,
         }),
       ),
     );

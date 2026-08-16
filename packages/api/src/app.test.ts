@@ -203,6 +203,41 @@ describe("POST /harvest/:campaignId/run — multi-connector", () => {
     const res = await app.request("/harvest/unsupported-test/run", { method: "POST" });
     expect(res.status).toBe(500);
   });
+
+  it("passes campaign.targets through to connector.supports so targets-scoped connectors are included", async () => {
+    const db = createDb(tmpDbPath());
+    let receivedQuery: { targets?: { workday?: unknown[] } } | undefined;
+    const targetsAwareConnector = {
+      id: "targets-aware",
+      tier: 1 as const,
+      locationScoped: false,
+      supports: (query: { targets?: { workday?: { tenant: string; site: string; dc: string }[] } }) => {
+        receivedQuery = query;
+        return Boolean(query.targets?.workday && query.targets.workday.length > 0);
+      },
+      async *fetch() {},
+      normalize: (raw: { payload: unknown }) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "targets-aware", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const campaign: CampaignConfig = {
+      id: "targets-test",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+      targets: { workday: [{ tenant: "valeo", site: "valeo_jobs", dc: "wd3" }] },
+    };
+    const app = createApp({ db, connectors: [targetsAwareConnector], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/targets-test/run", { method: "POST" });
+    const body = (await res.json()) as { summaries: unknown[] };
+
+    expect(res.status).toBe(200);
+    expect(body.summaries).toHaveLength(1);
+    expect(receivedQuery?.targets?.workday).toEqual([{ tenant: "valeo", site: "valeo_jobs", dc: "wd3" }]);
+  });
 });
 
 describe("GET /connectors/health", () => {
