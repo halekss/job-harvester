@@ -1,4 +1,4 @@
-import type { HarvestQuery, ConnectorHealth } from "@job-harvester/core";
+import { timedHealthCheck, type HarvestQuery, type ConnectorHealth } from "@job-harvester/core";
 import { LbaSearchResponseSchema } from "./types.js";
 
 const BASE_URL = "https://api.apprentissage.beta.gouv.fr";
@@ -42,25 +42,7 @@ export async function* fetchLbaOffers(query: HarvestQuery, options: LbaClientOpt
 }
 
 export async function checkLbaHealth(options: LbaClientOptions): Promise<ConnectorHealth> {
-  const start = Date.now();
   const fetchImpl = options.fetchImpl ?? fetch;
   const url = buildSearchUrl({ location: { label: "Paris", lat: 48.8566, lng: 2.3522, radiusKm: 5 }, romeCodes: [] });
-  try {
-    const response = await fetchImpl(url, { headers: authHeaders(options.apiKey) });
-    return {
-      connectorId: LBA_CONNECTOR_ID,
-      ok: response.ok,
-      latencyMs: Date.now() - start,
-      checkedAt: new Date().toISOString(),
-      message: response.ok ? undefined : `HTTP ${response.status}`,
-    };
-  } catch (error) {
-    return {
-      connectorId: LBA_CONNECTOR_ID,
-      ok: false,
-      latencyMs: Date.now() - start,
-      checkedAt: new Date().toISOString(),
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
+  return timedHealthCheck(LBA_CONNECTOR_ID, () => fetchImpl(url, { headers: authHeaders(options.apiKey) }));
 }

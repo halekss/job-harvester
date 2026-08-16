@@ -29,7 +29,7 @@ describe("francetravailConnector", () => {
       if (url.includes("access_token")) {
         return new Response(JSON.stringify({ access_token: "fake-token", expires_in: 1499 }), { status: 200 });
       }
-      return new Response(JSON.stringify({ resultats: [offerDirect] }), { status: 200 });
+      return new Response(JSON.stringify({ resultats: [offerDirect] }), { status: 200, headers: { "content-range": "offres 0-0/1" } });
     });
 
     const raws = [];
