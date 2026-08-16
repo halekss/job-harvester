@@ -1,46 +1,58 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { normalizeWorkdayOffer } from "./normalize.js";
 
-const rawOfferPayload = {
-  target: { tenant: "valeo", site: "valeo_jobs", dc: "wd3" },
-  externalPath: "/job/Lille/Alternant-Data-Analyst_REQ2026000111",
-  jobPostingInfo: {
-    title: "Alternant Data Analyst",
-    jobDescription: "<p>Rejoignez notre équipe <strong>data</strong>.</p>",
-    location: "Lille",
-    jobReqId: "REQ2026000111",
-    externalUrl: "https://valeo.wd3.myworkdayjobs.com/valeo_jobs/job/Lille/Alternant-Data-Analyst_REQ2026000111",
-  },
-};
+const fixturesDir = path.resolve(fileURLToPath(import.meta.url), "../../../../../../fixtures/workday");
+
+function loadFixture(name: string): unknown {
+  return JSON.parse(readFileSync(path.join(fixturesDir, name), "utf-8"));
+}
+
+const target = { tenant: "valeo", site: "valeo_jobs", dc: "wd3" };
+const externalPath = "/job/Lille/Alternant-Data-Analyst_REQ2026000111";
+
+function loadRawOfferPayload(): { target: typeof target; externalPath: string; jobPostingInfo: unknown } {
+  const detail = loadFixture("job-detail.json") as { jobPostingInfo: unknown };
+  return { target, externalPath, jobPostingInfo: detail.jobPostingInfo };
+}
 
 describe("normalizeWorkdayOffer", () => {
   it("maps fields, strips HTML from the description, and uses the externalUrl as applyUrl", () => {
-    const offer = normalizeWorkdayOffer({ source: "workday", payload: rawOfferPayload });
+    const offer = normalizeWorkdayOffer({ source: "workday", payload: loadRawOfferPayload() });
 
     expect(offer.source).toBe("workday");
     expect(offer.sourceOfferId).toBe("REQ2026000111");
     expect(offer.title).toBe("Alternant Data Analyst");
-    expect(offer.descriptionText).toBe("Rejoignez notre équipe data .");
+    expect(offer.descriptionText).toBe("Rejoignez notre équipe data pour une alternance de 12 mois. Analyse de données");
     expect(offer.applyUrl).toBe("https://valeo.wd3.myworkdayjobs.com/valeo_jobs/job/Lille/Alternant-Data-Analyst_REQ2026000111");
     expect(offer.location.city).toBe("Lille");
     expect(offer.company.normalizedName).toBe("valeo");
     expect(offer.romeCodes).toEqual([]);
     expect(offer.originSource).toBeUndefined();
+    // Comportement réel observé et documenté volontairement (pas un bug de cette correction) :
+    // le titre/la description Workday réels ("Alternant Data Analyst" / "...une alternance de 12 mois...")
+    // ne contiennent ni "apprentissage" ni "professionnalisation" littéralement, donc
+    // inferContractTypeFromText retombe sur "autre" pour ce cas nominal. Suivi produit : ticket Linear dédié.
+    expect(offer.contractType).toBe("autre");
   });
 
   it("infers contractType apprentissage from the title/description text", () => {
+    const raw = loadRawOfferPayload();
     const offer = normalizeWorkdayOffer({
       source: "workday",
-      payload: { ...rawOfferPayload, jobPostingInfo: { ...rawOfferPayload.jobPostingInfo, title: "Contrat d'apprentissage - Data Analyst" } },
+      payload: { ...raw, jobPostingInfo: { ...(raw.jobPostingInfo as Record<string, unknown>), title: "Contrat d'apprentissage - Data Analyst" } },
     });
     expect(offer.contractType).toBe("apprentissage");
   });
 
   it("constructs applyUrl from target+externalPath when externalUrl is absent", () => {
-    const { externalUrl: _drop, ...jobPostingInfoWithoutExternalUrl } = rawOfferPayload.jobPostingInfo;
+    const raw = loadRawOfferPayload();
+    const { externalUrl: _drop, ...jobPostingInfoWithoutExternalUrl } = raw.jobPostingInfo as Record<string, unknown>;
     const offer = normalizeWorkdayOffer({
       source: "workday",
-      payload: { ...rawOfferPayload, jobPostingInfo: jobPostingInfoWithoutExternalUrl },
+      payload: { ...raw, jobPostingInfo: jobPostingInfoWithoutExternalUrl },
     });
     expect(offer.applyUrl).toBe("https://valeo.wd3.myworkdayjobs.com/valeo_jobs/job/Lille/Alternant-Data-Analyst_REQ2026000111");
   });
