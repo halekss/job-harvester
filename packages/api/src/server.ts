@@ -1,11 +1,23 @@
 import { serve } from "@hono/node-server";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { createDb } from "@job-harvester/db";
 import { loadCampaigns } from "@job-harvester/harvester";
 import { labonnealternanceConnector, francetravailConnector, workdayConnector, smartrecruitersConnector } from "@job-harvester/connectors";
 import { createApp } from "./app.js";
 
-const db = createDb(process.env.DB_PATH ?? "./job-harvester.sqlite");
-const campaigns = loadCampaigns(process.env.CAMPAIGNS_FILE ?? "./config/campaigns.yaml");
+// Resolve against the repo root rather than process.cwd(): `pnpm --filter @job-harvester/api exec`
+// (used by the root `dev:api` script) runs with cwd set to this package's directory, not the repo root.
+const repoRoot = path.resolve(fileURLToPath(import.meta.url), "../../../..");
+
+try {
+  process.loadEnvFile(path.join(repoRoot, ".env"));
+} catch {
+  // .env is optional (e.g. tests, CI) — fall back to whatever is already in process.env.
+}
+
+const db = createDb(path.resolve(repoRoot, process.env.DB_PATH ?? "./job-harvester.sqlite"));
+const campaigns = loadCampaigns(path.resolve(repoRoot, process.env.CAMPAIGNS_FILE ?? "./config/campaigns.yaml"));
 
 const app = createApp({
   db,
