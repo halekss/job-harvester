@@ -255,7 +255,7 @@ describe("POST /harvest/:campaignId/run — multi-connector", () => {
 });
 
 describe("GET /connectors/health", () => {
-  it("returns null lastRun for a connector that has never run", async () => {
+  it("returns null lastRun for a connector that has never run, alongside a live healthCheck() result", async () => {
     const db = createDb(tmpDbPath());
     const fakeConnector = {
       id: "fake",
@@ -264,12 +264,37 @@ describe("GET /connectors/health", () => {
       async *fetch() {},
       normalize: (raw: unknown) => raw as never,
       async healthCheck() {
-        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: "2026-08-16T00:00:00.000Z" };
       },
     };
     const app = createApp({ db, connectors: [fakeConnector], campaigns: [], env: {} });
     const res = await app.request("/connectors/health");
-    const body = (await res.json()) as { connectors: unknown };
-    expect(body.connectors).toEqual([{ connectorId: "fake", lastRun: null }]);
+    const body = (await res.json()) as { connectors: unknown[] };
+    expect(body.connectors).toEqual([
+      { connectorId: "fake", lastRun: null, live: { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: "2026-08-16T00:00:00.000Z" } },
+    ]);
+  });
+
+  it("calls connector.healthCheck() for a real live status, not just the stored last run (JOB-16)", async () => {
+    const db = createDb(tmpDbPath());
+    let healthCheckCalls = 0;
+    const flakyConnector = {
+      id: "flaky",
+      tier: 0 as const,
+      supports: () => true,
+      async *fetch() {},
+      normalize: (raw: unknown) => raw as never,
+      async healthCheck() {
+        healthCheckCalls += 1;
+        return { connectorId: "flaky", ok: false, latencyMs: 12, checkedAt: new Date().toISOString(), message: "credentials manquants" };
+      },
+    };
+    const app = createApp({ db, connectors: [flakyConnector], campaigns: [], env: {} });
+
+    const res = await app.request("/connectors/health");
+    const body = (await res.json()) as { connectors: { live: { ok: boolean; message?: string } }[] };
+
+    expect(healthCheckCalls).toBe(1);
+    expect(body.connectors[0]!.live).toMatchObject({ ok: false, message: "credentials manquants" });
   });
 });
