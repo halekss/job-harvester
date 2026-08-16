@@ -7,3 +7,7 @@ campaigns:
       - { label: "Amiens 80000", lat: 49.903041, lng: 2.292605, radiusKm: 30 }
     contractTypes: [apprentissage, professionnalisation]
     schedule: "0 7 * * *"
+    targets:
+      workday:
+        - { tenant: valeo, site: valeo_jobs, dc: wd3 }
+      smartrecruiters: ["MAZARS"]

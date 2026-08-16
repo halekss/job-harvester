@@ -58,3 +58,33 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
 - **Vérifié en direct le 2026-08-16** : authentification, endpoint de recherche et forme de la
   réponse tous confirmés par un appel réel (pas seulement documenté) — voir
   `docs/superpowers/specs/2026-08-16-francetravail-connector-design.md`.
+
+## Tier 1 — `workday`
+
+- **Domaine** : `{tenant}.{dc}.myworkdayjobs.com` (un domaine par entreprise cliente de Workday)
+- **Route utilisée** : `POST https://{tenant}.{dc}.myworkdayjobs.com/wday/cxs/{tenant}/{site}/jobs`
+  (liste), `GET {mêmeBase}{externalPath}` (détail par offre)
+- **Authentification** : aucune — API publique utilisée par le widget de recherche intégré à
+  la page carrière de l'entreprise.
+- **Ciblage** : par entreprise (`tenant`/`site`/`dc`), configuré dans `config/campaigns.yaml`
+  sous `targets.workday`. Pas de recherche multi-entreprises native.
+- **Statut robots.txt/CGU** : non applicable — endpoint JSON public conçu pour l'intégration,
+  pas de scraping de page.
+- **Décision** : autorisé, Tier 1. Risque signalé : protection anti-bot Akamai pouvant limiter
+  un usage soutenu depuis une seule IP — respecter un débit bas.
+- **Vérifié en direct le 2026-08-16** sur `valeo.wd3.myworkdayjobs.com`.
+
+## Tier 1 — `smartrecruiters`
+
+- **Domaine** : `api.smartrecruiters.com`
+- **Route utilisée** : `GET /v1/companies/{company}/postings` (liste),
+  `GET /v1/companies/{company}/postings/{id}` (détail)
+- **Authentification** : aucune — API publique.
+- **Ciblage** : par entreprise (slug), configuré dans `config/campaigns.yaml` sous
+  `targets.smartrecruiters`.
+- **Filtrage alternance** : aucun paramètre natif côté API — filtrage côté client sur le titre
+  de l'offre avant l'appel de détail (évite d'appeler `/postings/{id}` pour chaque offre non
+  pertinente).
+- **Statut robots.txt/CGU** : non applicable — API publique dédiée à l'intégration.
+- **Décision** : autorisé, Tier 1.
+- **Vérifié en direct le 2026-08-16** sur l'entreprise `MAZARS` (188 offres réelles).
