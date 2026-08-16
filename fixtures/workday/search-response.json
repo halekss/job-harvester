@@ -1,0 +1,17 @@
+{
+  "total": 2,
+  "jobPostings": [
+    {
+      "title": "Alternant Data Analyst",
+      "externalPath": "/job/Lille/Alternant-Data-Analyst_REQ2026000111",
+      "locationsText": "Lille",
+      "postedOn": "Posted 5 Days Ago"
+    },
+    {
+      "title": "Ingénieur logiciel confirmé",
+      "externalPath": "/job/Paris/Ingenieur-logiciel-confirme_REQ2026000222",
+      "locationsText": "Paris",
+      "postedOn": "Posted 2 Days Ago"
+    }
+  ]
+}
