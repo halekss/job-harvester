@@ -52,6 +52,36 @@ describe("fetchWorkdayOffers", () => {
     expect(String(searchCall[0])).toBe("https://valeo.wd3.myworkdayjobs.com/wday/cxs/valeo/valeo_jobs/jobs");
   });
 
+  it("pages through the job list until total is reached (JOB-32)", async () => {
+    const requestedOffsets: number[] = [];
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        const body = JSON.parse(init!.body as string) as { offset: number };
+        requestedOffsets.push(body.offset);
+        // 25 total postings, page size 20: page 1 = 20 items, page 2 = 5 items.
+        const count = body.offset === 0 ? 20 : 5;
+        const jobPostings = Array.from({ length: count }, (_, i) => ({
+          title: `Alternant ${body.offset + i}`,
+          externalPath: `/job/Lille/x_REQ${body.offset + i}`,
+        }));
+        return new Response(JSON.stringify({ total: 25, jobPostings }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({ jobPostingInfo: { title: "x", jobDescription: "d", jobReqId: url, externalUrl: `https://x/${url}` } }),
+        { status: 200 },
+      );
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchWorkdayOffers(query, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(requestedOffsets).toEqual([0, 20]);
+    expect(results).toHaveLength(25);
+  });
+
   it("throws when the search request is not ok", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async () => new Response("nope", { status: 500 }));
     const iterate = async () => {

@@ -1,4 +1,4 @@
-import type { ConnectorHealth, HarvestQuery, WorkdayTarget } from "@job-harvester/core";
+import { timedHealthCheck, type ConnectorHealth, type HarvestQuery, type WorkdayTarget } from "@job-harvester/core";
 import { WorkdaySearchResponseSchema, WorkdayJobDetailSchema } from "./types.js";
 
 export const WORKDAY_CONNECTOR_ID = "workday";
@@ -20,17 +20,32 @@ function headers(): Record<string, string> {
   };
 }
 
+// JOB-32 : la réponse de liste Workday porte déjà `total` (vérifié en direct) — on boucle sur
+// `offset` tant qu'il reste des pages, avec un plafond dur de sécurité. Un run live antérieur
+// avait ramené exactement `rawCount === limit` (20/20) chez Valeo, preuve que le plafond
+// mordait déjà en pratique sans qu'aucun signal ne le montre.
+const LIST_PAGE_SIZE = 20;
+const MAX_LIST_PAGES = 20;
+
 async function fetchJobList(target: WorkdayTarget, searchText: string, fetchImpl: typeof fetch): Promise<unknown[]> {
-  const response = await fetchImpl(`${cxsBaseUrl(target)}/jobs`, {
-    method: "POST",
-    headers: headers(),
-    body: JSON.stringify({ appliedFacets: {}, limit: 20, offset: 0, searchText }),
-  });
-  if (!response.ok) {
-    throw new Error(`workday search failed: HTTP ${response.status}`);
+  const items: unknown[] = [];
+  let offset = 0;
+  for (let page = 0; page < MAX_LIST_PAGES; page++) {
+    const response = await fetchImpl(`${cxsBaseUrl(target)}/jobs`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ appliedFacets: {}, limit: LIST_PAGE_SIZE, offset, searchText }),
+    });
+    if (!response.ok) {
+      throw new Error(`workday search failed: HTTP ${response.status}`);
+    }
+    const parsed = WorkdaySearchResponseSchema.parse(await response.json());
+    items.push(...parsed.jobPostings);
+    if (parsed.jobPostings.length === 0) break;
+    offset += LIST_PAGE_SIZE;
+    if (offset >= parsed.total) break;
   }
-  const parsed = WorkdaySearchResponseSchema.parse(await response.json());
-  return parsed.jobPostings;
+  return items;
 }
 
 async function fetchJobDetail(
@@ -61,28 +76,12 @@ export async function* fetchWorkdayOffers(query: HarvestQuery, options: WorkdayC
 }
 
 export async function checkWorkdayHealth(options: WorkdayClientOptions): Promise<ConnectorHealth> {
-  const start = Date.now();
   const fetchImpl = options.fetchImpl ?? fetch;
-  try {
-    const response = await fetchImpl(`${cxsBaseUrl(HEALTH_CHECK_TARGET)}/jobs`, {
+  return timedHealthCheck(WORKDAY_CONNECTOR_ID, () =>
+    fetchImpl(`${cxsBaseUrl(HEALTH_CHECK_TARGET)}/jobs`, {
       method: "POST",
       headers: headers(),
       body: JSON.stringify({ appliedFacets: {}, limit: 1, offset: 0, searchText: "" }),
-    });
-    return {
-      connectorId: WORKDAY_CONNECTOR_ID,
-      ok: response.ok,
-      latencyMs: Date.now() - start,
-      checkedAt: new Date().toISOString(),
-      message: response.ok ? undefined : `HTTP ${response.status}`,
-    };
-  } catch (error) {
-    return {
-      connectorId: WORKDAY_CONNECTOR_ID,
-      ok: false,
-      latencyMs: Date.now() - start,
-      checkedAt: new Date().toISOString(),
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
+    }),
+  );
 }
