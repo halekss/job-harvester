@@ -1,15 +1,18 @@
 import { ulid } from "ulid";
 import { eq, and, or } from "drizzle-orm";
-import { isFuzzyDuplicate, mergeOffers, type Connector, type HarvestQuery, type NormalizedOffer } from "@job-harvester/core";
+import { isFuzzyDuplicate, mergeOffers, type Connector, type NormalizedOffer } from "@job-harvester/core";
 import { offers as offersTable, connectorRuns, offerToRow, rowToOffer, type Db } from "@job-harvester/db";
 import type { CampaignConfig } from "./config/campaign-schema.js";
 import { DomainRateLimiter } from "./rate-limit/domain-rate-limiter.js";
+import { buildHarvestQuery } from "./build-harvest-query.js";
 
 export interface RunSummary {
   runId: string;
   rawCount: number;
   normalizedCount: number;
   rejectedCount: number;
+  ok: boolean;
+  errorMessage?: string;
 }
 
 function upsertOffer(db: Db, normalized: NormalizedOffer): void {
@@ -61,14 +64,7 @@ export async function runCampaign(
 
   let hasFetchedOnce = false;
   for (const location of campaign.locations) {
-    const query: HarvestQuery = {
-      campaignId: campaign.id,
-      keywords: campaign.keywords,
-      romeCodes: campaign.romeCodes,
-      location,
-      contractTypes: campaign.contractTypes,
-      targets: campaign.targets,
-    };
+    const query = buildHarvestQuery(campaign, location);
     if (!connector.supports(query)) continue;
     if (connector.locationScoped === false) {
       if (hasFetchedOnce) continue;
@@ -93,6 +89,7 @@ export async function runCampaign(
   }
 
   const runId = ulid();
+  const ok = errorMessage === undefined;
   db.insert(connectorRuns)
     .values({
       id: runId,
@@ -104,10 +101,10 @@ export async function runCampaign(
       normalizedCount,
       rejectedCount,
       httpStatusesSeen: [],
-      ok: errorMessage === undefined,
+      ok,
       errorMessage,
     })
     .run();
 
-  return { runId, rawCount, normalizedCount, rejectedCount };
+  return { runId, rawCount, normalizedCount, rejectedCount, ok, errorMessage };
 }

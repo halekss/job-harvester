@@ -75,7 +75,8 @@ describe("runCampaign", () => {
     const db = createDb(tmpDbPath());
     const summary = await runCampaign(campaign, fakeConnector, db, {});
 
-    expect(summary).toMatchObject({ rawCount: 3, normalizedCount: 2, rejectedCount: 1 });
+    expect(summary).toMatchObject({ rawCount: 3, normalizedCount: 2, rejectedCount: 1, ok: true });
+    expect(summary.errorMessage).toBeUndefined();
     expect(db.select().from(offersTable).all()).toHaveLength(1);
     expect(db.select().from(connectorRuns).all()).toHaveLength(1);
   });
@@ -100,6 +101,10 @@ describe("runCampaign", () => {
     const summary = await runCampaign(campaign, brokenConnector, db, {});
 
     expect(summary).toMatchObject({ rawCount: 0, normalizedCount: 0, rejectedCount: 0 });
+    // JOB-22 : un run échoué doit être distinguable d'un run réussi-mais-vide directement
+    // sur le RunSummary retourné, pas seulement sur la ligne connector_runs en base.
+    expect(summary.ok).toBe(false);
+    expect(summary.errorMessage).toContain("network down");
     expect(db.select().from(offersTable).all()).toHaveLength(0);
 
     const runs = db.select().from(connectorRuns).all();
