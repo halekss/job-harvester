@@ -39,9 +39,11 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
 - **Paramètres de requête utilisés** : `codeROME` (codes séparés par virgule), `departement`
   (extrait heuristiquement du label de localisation de la campagne, l'API n'acceptant pas de
   lat/lng directement contrairement à LBA).
-- **Pagination** : via le header HTTP `Content-Range: offres <first>-<last>/<total>` (pas dans
-  le corps JSON). Non gérée dans ce sous-projet — un seul appel de recherche par requête,
-  comme pour `labonnealternance`.
+- **Pagination** : via le paramètre de requête `range=<start>-<end>` (200 → réponse `206
+  Partial Content` avec header `Content-Range: offres <first>-<last>/<total>`, pas dans le
+  corps JSON). Gérée depuis JOB-30 : boucle par pages de 150 (plus grande taille de page
+  vérifiée en direct sans erreur), jusqu'à couvrir `<total>`, avec un plafond dur de 20 pages
+  (3000 offres) par requête.
 - **Réponse** : `{ resultats: [...], filtresPossibles: [...] }`. Champ clé pour la traçabilité
   d'agrégation : `origineOffre.origine` (`"1"` = offre France Travail directe, `"2"` = offre
   relayée par un partenaire listé dans `origineOffre.partenaires[]`, avec son `nom` et son URL
@@ -72,6 +74,9 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
   pas de scraping de page.
 - **Décision** : autorisé, Tier 1. Risque signalé : protection anti-bot Akamai pouvant limiter
   un usage soutenu depuis une seule IP — respecter un débit bas.
+- **Pagination** : boucle sur `offset` (pas de 20, la taille de page native du widget) jusqu'à
+  couvrir `total` (déjà présent dans la réponse de liste), plafond dur de 20 pages par
+  cible (JOB-32).
 - **Vérifié en direct le 2026-08-16** sur `valeo.wd3.myworkdayjobs.com`.
 
 ## Tier 1 — `smartrecruiters`
@@ -85,6 +90,8 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
 - **Filtrage alternance** : aucun paramètre natif côté API — filtrage côté client sur le titre
   de l'offre avant l'appel de détail (évite d'appeler `/postings/{id}` pour chaque offre non
   pertinente).
+- **Pagination** : `limit`/`offset` en query string, réponse porte `totalFound` — boucle par
+  pages de 50 jusqu'à couvrir `totalFound`, plafond dur de 20 pages par entreprise (JOB-32).
 - **Statut robots.txt/CGU** : non applicable — API publique dédiée à l'intégration.
 - **Décision** : autorisé, Tier 1.
 - **Vérifié en direct le 2026-08-16** sur l'entreprise `MAZARS` (188 offres réelles).
