@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 import { ulid } from "ulid";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { ApplicationEventTypeSchema } from "@job-harvester/core";
 import { applicationEvents, offers as offersTable } from "@job-harvester/db";
 import type { AppDeps } from "../app.js";
@@ -39,5 +39,20 @@ export function registerEventRoutes(app: Hono, { db }: AppDeps): void {
     };
     db.insert(applicationEvents).values(event).run();
     return c.json({ event }, 201);
+  });
+
+  app.delete("/offers/:id/events/:eventId", (c) => {
+    const offerId = c.req.param("id");
+    const eventId = c.req.param("eventId");
+    const event = db
+      .select({ id: applicationEvents.id })
+      .from(applicationEvents)
+      .where(and(eq(applicationEvents.id, eventId), eq(applicationEvents.offerId, offerId)))
+      .get();
+    if (!event) {
+      return c.json({ error: "event_not_found" }, 404);
+    }
+    db.delete(applicationEvents).where(eq(applicationEvents.id, eventId)).run();
+    return c.json({ ok: true }, 200);
   });
 }

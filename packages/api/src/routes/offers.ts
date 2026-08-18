@@ -13,7 +13,7 @@ function decodeCursor(cursor: string): { postedAt: string | null; firstSeenAt: s
   return JSON.parse(Buffer.from(cursor, "base64url").toString("utf-8"));
 }
 
-function deriveStatus(events: { type: string; occurredAt: string }[]): string {
+export function deriveStatus(events: { type: string; occurredAt: string }[]): string {
   if (events.length === 0) return "new";
   return [...events].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt)).at(-1)!.type;
 }

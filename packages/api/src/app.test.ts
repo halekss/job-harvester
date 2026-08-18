@@ -157,6 +157,144 @@ describe("POST /offers/:id/events", () => {
   });
 });
 
+describe("DELETE /offers/:id/events/:eventId", () => {
+  it("deletes an existing event", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const postRes = await app.request(`/offers/${sampleOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "applied", channel: "email" }),
+    });
+    const { event } = (await postRes.json()) as { event: { id: string } };
+
+    const deleteRes = await app.request(`/offers/${sampleOffer.id}/events/${event.id}`, { method: "DELETE" });
+    const body = (await deleteRes.json()) as { ok: boolean };
+
+    expect(deleteRes.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(db.select().from(applicationEventsTable).all()).toHaveLength(0);
+  });
+
+  it("returns 404 for an unknown event", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request(`/offers/${sampleOffer.id}/events/does-not-exist`, { method: "DELETE" });
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 404 when the event belongs to a different offer", async () => {
+    const db = createDb(tmpDbPath());
+    const otherOffer: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000D0",
+      sourceOfferId: "other-offer",
+      canonicalUrl: "https://example.com/jobs/4",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/4"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "other-offer", canonicalUrl: "https://example.com/jobs/4" }],
+    };
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    db.insert(offersTable).values(offerToRow(otherOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const postRes = await app.request(`/offers/${sampleOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "applied" }),
+    });
+    const { event } = (await postRes.json()) as { event: { id: string } };
+
+    const res = await app.request(`/offers/${otherOffer.id}/events/${event.id}`, { method: "DELETE" });
+
+    expect(res.status).toBe(404);
+    expect(db.select().from(applicationEventsTable).all()).toHaveLength(1);
+  });
+});
+
+describe("GET /stats", () => {
+  it("aggregates offers by source, by derived status, and computes the response rate", async () => {
+    const db = createDb(tmpDbPath());
+
+    // 2 offres labonnealternance : une "applied" restée sans réponse, une "applied" -> "interview".
+    const appliedNoReplyOffer: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000E0",
+      sourceOfferId: "applied-no-reply",
+      canonicalUrl: "https://example.com/jobs/5",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/5"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "applied-no-reply", canonicalUrl: "https://example.com/jobs/5" }],
+    };
+    const appliedInterviewOffer: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000F0",
+      sourceOfferId: "applied-interview",
+      canonicalUrl: "https://example.com/jobs/6",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/6"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "applied-interview", canonicalUrl: "https://example.com/jobs/6" }],
+    };
+    // 1 offre d'une autre source, jamais postulée -> statut "new".
+    const otherSourceOffer: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000G0",
+      source: "francetravail",
+      sourceOfferId: "other-source",
+      canonicalUrl: "https://example.com/jobs/7",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/7"),
+      sourceRefs: [{ source: "francetravail", sourceOfferId: "other-source", canonicalUrl: "https://example.com/jobs/7" }],
+    };
+
+    db.insert(offersTable).values(offerToRow(appliedNoReplyOffer)).run();
+    db.insert(offersTable).values(offerToRow(appliedInterviewOffer)).run();
+    db.insert(offersTable).values(offerToRow(otherSourceOffer)).run();
+
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    await app.request(`/offers/${appliedNoReplyOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "applied", occurredAt: "2026-08-01T00:00:00.000Z" }),
+    });
+    await app.request(`/offers/${appliedInterviewOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "applied", occurredAt: "2026-08-01T00:00:00.000Z" }),
+    });
+    await app.request(`/offers/${appliedInterviewOffer.id}/events`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "interview", occurredAt: "2026-08-05T00:00:00.000Z" }),
+    });
+
+    const res = await app.request("/stats");
+    const body = (await res.json()) as {
+      bySource: Record<string, number>;
+      byStatus: Record<string, number>;
+      responseRate: { applied: number; responded: number; rate: number | null };
+    };
+
+    expect(res.status).toBe(200);
+    expect(body.bySource).toEqual({ labonnealternance: 2, francetravail: 1 });
+    expect(body.byStatus).toEqual({ applied: 1, interview: 1, new: 1 });
+    expect(body.responseRate).toEqual({ applied: 2, responded: 1, rate: 0.5 });
+  });
+
+  it("returns a null rate when no offer has been applied to", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/stats");
+    const body = (await res.json()) as { responseRate: { applied: number; responded: number; rate: number | null } };
+
+    expect(res.status).toBe(200);
+    expect(body.responseRate).toEqual({ applied: 0, responded: 0, rate: null });
+  });
+});
+
 describe("GET /campaigns", () => {
   it("lists the configured campaign ids (JOB-20)", async () => {
     const db = createDb(tmpDbPath());
