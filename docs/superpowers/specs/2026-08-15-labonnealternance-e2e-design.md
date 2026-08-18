@@ -58,7 +58,10 @@ Tier 2 (aucun connecteur Tier 2 dans ce sous-projet).
 
 ### `NormalizedOffer` (Zod, `packages/core`)
 
-Champs conformes à la spec produit : `id` (ULID), `source`, `sourceOfferId`, `originSource?`,
+Champs conformes à la spec produit : `id` (à l'origine un ULID généré à la normalisation ;
+depuis JOB-10, un identifiant stable dérivé de `(source, sourceOfferId)` via
+`exactDedupKeyFromSource`, pour rester inchangé à travers une reconstruction complète de la
+base), `source`, `sourceOfferId`, `originSource?`,
 `canonicalUrl`, `applyUrl?`, `title`, `company` (`name`, `normalizedName`, `siret?`,
 `website?`), `location` (`label`, `city`, `postalCode`, `department`, `lat`, `lng`),
 `contractType` (`apprentissage | professionnalisation | stage | autre`), `durationMonths?`,

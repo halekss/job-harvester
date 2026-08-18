@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { exactDedupKeyFromSource } from "@job-harvester/core";
 import { normalizeLbaOffer } from "./normalize.js";
 
 const fixturesDir = path.resolve(fileURLToPath(import.meta.url), "../../../../../../fixtures/labonnealternance");
@@ -53,5 +54,13 @@ describe("normalizeLbaOffer", () => {
     expect((offer.rawPayload as { apply: Record<string, unknown> }).apply).not.toHaveProperty("phone");
     expect(JSON.stringify(offer.rawPayload)).not.toContain("phone");
     expect(JSON.stringify(offer.rawPayload)).not.toContain("+33612345678");
+  });
+
+  it("derives a deterministic id from source and sourceOfferId (stable across DB reconstruction)", () => {
+    const offer1 = normalizeLbaOffer({ source: "labonnealternance", payload: loadFixture("offer-direct.json") });
+    const offer2 = normalizeLbaOffer({ source: "labonnealternance", payload: loadFixture("offer-direct.json") });
+
+    expect(offer1.id).toBe(offer2.id);
+    expect(offer1.id).toBe(exactDedupKeyFromSource("labonnealternance", "6a5a004c8bfdaae34d6a2ea4"));
   });
 });

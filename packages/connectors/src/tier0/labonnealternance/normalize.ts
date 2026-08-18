@@ -1,5 +1,12 @@
-import { ulid } from "ulid";
-import { canonicalizeUrl, exactDedupKeyFromUrl, normalizeCompanyName, type ContractType, type NormalizedOffer, type RawOffer } from "@job-harvester/core";
+import {
+  canonicalizeUrl,
+  exactDedupKeyFromSource,
+  exactDedupKeyFromUrl,
+  normalizeCompanyName,
+  type ContractType,
+  type NormalizedOffer,
+  type RawOffer,
+} from "@job-harvester/core";
 import { LbaOfferSchema } from "./types.js";
 import { LBA_CONNECTOR_ID } from "./client.js";
 
@@ -33,11 +40,12 @@ export function normalizeLbaOffer(raw: RawOffer): NormalizedOffer {
   const now = new Date().toISOString();
   const companyName = parsed.workplace.name ?? parsed.workplace.legal_name ?? "Entreprise inconnue";
   const { city, postalCode, department } = parseFrenchAddress(parsed.workplace.location.address);
+  const sourceOfferId = parsed.identifier.partner_job_id;
 
   return {
-    id: ulid(),
+    id: exactDedupKeyFromSource(LBA_CONNECTOR_ID, sourceOfferId),
     source: LBA_CONNECTOR_ID,
-    sourceOfferId: parsed.identifier.partner_job_id,
+    sourceOfferId,
     originSource: mapOriginSource(parsed.identifier.partner_label),
     canonicalUrl,
     applyUrl: parsed.apply.url,
@@ -68,7 +76,7 @@ export function normalizeLbaOffer(raw: RawOffer): NormalizedOffer {
     lastSeenAt: now,
     lifecycle: "active",
     dedupKey: exactDedupKeyFromUrl(canonicalUrl),
-    sourceRefs: [{ source: LBA_CONNECTOR_ID, sourceOfferId: parsed.identifier.partner_job_id, canonicalUrl }],
+    sourceRefs: [{ source: LBA_CONNECTOR_ID, sourceOfferId, canonicalUrl }],
     rawPayload: parsed,
   };
 }

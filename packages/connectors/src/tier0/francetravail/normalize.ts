@@ -1,5 +1,12 @@
-import { ulid } from "ulid";
-import { canonicalizeUrl, exactDedupKeyFromUrl, normalizeCompanyName, type ContractType, type NormalizedOffer, type RawOffer } from "@job-harvester/core";
+import {
+  canonicalizeUrl,
+  exactDedupKeyFromSource,
+  exactDedupKeyFromUrl,
+  normalizeCompanyName,
+  type ContractType,
+  type NormalizedOffer,
+  type RawOffer,
+} from "@job-harvester/core";
 import { FranceTravailOfferSchema } from "./types.js";
 import { FRANCE_TRAVAIL_CONNECTOR_ID } from "./client.js";
 
@@ -41,11 +48,12 @@ export function normalizeFranceTravailOffer(raw: RawOffer): NormalizedOffer {
   const now = new Date().toISOString();
   const companyName = parsed.entreprise?.nom ?? "Entreprise inconnue";
   const { city, department } = parseLieuTravail(parsed.lieuTravail.libelle);
+  const sourceOfferId = parsed.id;
 
   return {
-    id: ulid(),
+    id: exactDedupKeyFromSource(FRANCE_TRAVAIL_CONNECTOR_ID, sourceOfferId),
     source: FRANCE_TRAVAIL_CONNECTOR_ID,
-    sourceOfferId: parsed.id,
+    sourceOfferId,
     originSource: resolveOriginSource(parsed),
     canonicalUrl,
     applyUrl,
@@ -69,7 +77,7 @@ export function normalizeFranceTravailOffer(raw: RawOffer): NormalizedOffer {
     lastSeenAt: now,
     lifecycle: "active",
     dedupKey: exactDedupKeyFromUrl(canonicalUrl),
-    sourceRefs: [{ source: FRANCE_TRAVAIL_CONNECTOR_ID, sourceOfferId: parsed.id, canonicalUrl }],
+    sourceRefs: [{ source: FRANCE_TRAVAIL_CONNECTOR_ID, sourceOfferId, canonicalUrl }],
     rawPayload: parsed,
   };
 }

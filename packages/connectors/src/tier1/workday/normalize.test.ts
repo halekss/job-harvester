@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { exactDedupKeyFromSource } from "@job-harvester/core";
 import { normalizeWorkdayOffer } from "./normalize.js";
 
 const fixturesDir = path.resolve(fileURLToPath(import.meta.url), "../../../../../../fixtures/workday");
@@ -57,5 +58,13 @@ describe("normalizeWorkdayOffer", () => {
 
   it("throws on a payload that fails schema validation", () => {
     expect(() => normalizeWorkdayOffer({ source: "workday", payload: { nope: true } })).toThrow();
+  });
+
+  it("derives a deterministic id from source and sourceOfferId (stable across DB reconstruction)", () => {
+    const offer1 = normalizeWorkdayOffer({ source: "workday", payload: loadRawOfferPayload() });
+    const offer2 = normalizeWorkdayOffer({ source: "workday", payload: loadRawOfferPayload() });
+
+    expect(offer1.id).toBe(offer2.id);
+    expect(offer1.id).toBe(exactDedupKeyFromSource("workday", "REQ2026000111"));
   });
 });

@@ -56,6 +56,19 @@ pnpm --filter @job-harvester/db exec tsx src/scripts/export-events.ts ./job-harv
 pnpm --filter @job-harvester/db exec tsx src/scripts/import-events.ts ./job-harvester.sqlite ./events-backup.json
 ```
 
+`offer.id` est un identifiant stable dérivé de `(source, sourceOfferId)` (JOB-10) : une même
+offre recollectée après une reconstruction complète de la base reçoit à nouveau le même id, donc
+les événements réimportés se relient correctement sans étape supplémentaire. Si une base
+existante contient encore des offres avec l'ancien id aléatoire (pré-JOB-10), un script de
+rattrapage ponctuel les met à niveau (met aussi à jour `application_events.offer_id` en
+conséquence) — à exécuter une fois sur la base actuelle, **avant** le prochain export, sans quoi
+les offres pas encore recollectées depuis la mise à niveau JOB-10 garderaient leur ancien id
+jusqu'à leur prochain run :
+
+```bash
+pnpm --filter @job-harvester/db exec tsx src/scripts/recompute-offer-ids.ts ./job-harvester.sqlite
+```
+
 ## Obtenir une clé API La Bonne Alternance
 
 Voir `docs/sources.md` pour le détail de l'API. La clé s'obtient sur l'espace développeurs

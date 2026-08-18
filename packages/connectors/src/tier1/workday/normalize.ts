@@ -1,6 +1,6 @@
-import { ulid } from "ulid";
 import {
   canonicalizeUrl,
+  exactDedupKeyFromSource,
   exactDedupKeyFromUrl,
   normalizeCompanyName,
   stripHtml,
@@ -24,7 +24,7 @@ export function normalizeWorkdayOffer(raw: RawOffer): NormalizedOffer {
   const city = jobPostingInfo.location ?? "";
 
   return {
-    id: ulid(),
+    id: exactDedupKeyFromSource(WORKDAY_CONNECTOR_ID, sourceOfferId),
     source: WORKDAY_CONNECTOR_ID,
     sourceOfferId,
     canonicalUrl,

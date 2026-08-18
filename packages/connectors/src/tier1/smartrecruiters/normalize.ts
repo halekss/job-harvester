@@ -1,6 +1,6 @@
-import { ulid } from "ulid";
 import {
   canonicalizeUrl,
+  exactDedupKeyFromSource,
   exactDedupKeyFromUrl,
   normalizeCompanyName,
   stripHtml,
@@ -20,11 +20,12 @@ export function normalizeSmartRecruitersOffer(raw: RawOffer): NormalizedOffer {
   const companyName = parsed.company?.name ?? "Entreprise inconnue";
   const descriptionText = stripHtml(parsed.jobAd?.sections?.jobDescription?.text ?? "");
   const postalCode = parsed.location?.postalCode;
+  const sourceOfferId = parsed.id;
 
   return {
-    id: ulid(),
+    id: exactDedupKeyFromSource(SMARTRECRUITERS_CONNECTOR_ID, sourceOfferId),
     source: SMARTRECRUITERS_CONNECTOR_ID,
-    sourceOfferId: parsed.id,
+    sourceOfferId,
     canonicalUrl,
     applyUrl,
     title: parsed.name,
@@ -47,7 +48,7 @@ export function normalizeSmartRecruitersOffer(raw: RawOffer): NormalizedOffer {
     lastSeenAt: now,
     lifecycle: "active",
     dedupKey: exactDedupKeyFromUrl(canonicalUrl),
-    sourceRefs: [{ source: SMARTRECRUITERS_CONNECTOR_ID, sourceOfferId: parsed.id, canonicalUrl }],
+    sourceRefs: [{ source: SMARTRECRUITERS_CONNECTOR_ID, sourceOfferId, canonicalUrl }],
     rawPayload: parsed,
   };
 }

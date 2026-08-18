@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { exactDedupKeyFromSource } from "@job-harvester/core";
 import { normalizeFranceTravailOffer } from "./normalize.js";
 
 const fixturesDir = path.resolve(fileURLToPath(import.meta.url), "../../../../../../fixtures/francetravail");
@@ -66,5 +67,13 @@ describe("normalizeFranceTravailOffer", () => {
     expect(offer.rawPayload).not.toHaveProperty("contact");
     expect(JSON.stringify(offer.rawPayload)).not.toContain("Jean Recruteur");
     expect(JSON.stringify(offer.rawPayload)).not.toContain("telephone");
+  });
+
+  it("derives a deterministic id from source and sourceOfferId (stable across DB reconstruction)", () => {
+    const offer1 = normalizeFranceTravailOffer({ source: "francetravail", payload: loadFixture("offer-direct.json") });
+    const offer2 = normalizeFranceTravailOffer({ source: "francetravail", payload: loadFixture("offer-direct.json") });
+
+    expect(offer1.id).toBe(offer2.id);
+    expect(offer1.id).toBe(exactDedupKeyFromSource("francetravail", "170ABCD"));
   });
 });

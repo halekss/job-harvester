@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { exactDedupKeyFromSource } from "@job-harvester/core";
 import { normalizeSmartRecruitersOffer } from "./normalize.js";
 
 const fixturesDir = path.resolve(fileURLToPath(import.meta.url), "../../../../../../fixtures/smartrecruiters");
@@ -59,5 +60,13 @@ describe("normalizeSmartRecruitersOffer", () => {
 
   it("throws on a payload that fails schema validation", () => {
     expect(() => normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: { nope: true } })).toThrow();
+  });
+
+  it("derives a deterministic id from source and sourceOfferId (stable across DB reconstruction)", () => {
+    const offer1 = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: loadRawOfferPayload() });
+    const offer2 = normalizeSmartRecruitersOffer({ source: "smartrecruiters", payload: loadRawOfferPayload() });
+
+    expect(offer1.id).toBe(offer2.id);
+    expect(offer1.id).toBe(exactDedupKeyFromSource("smartrecruiters", "743000000000001"));
   });
 });
