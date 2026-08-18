@@ -86,4 +86,17 @@ describe("createRateLimitedFetch", () => {
     expect(response.status).toBe(200);
     expect(elapsed).toBeGreaterThanOrEqual(85); // ~30ms + ~60ms, minus small scheduling slack
   });
+
+  it("propagates thrown/network errors immediately without retry", async () => {
+    const testError = new Error("Network timeout");
+    const baseFetch = vi.fn().mockRejectedValue(testError);
+    const rateLimitedFetch = createRateLimitedFetch(baseFetch as unknown as typeof fetch, {
+      bucketCapacity: 10,
+      refillPerSecond: 100,
+      retryDelaysMs: [5, 5],
+    });
+
+    await expect(rateLimitedFetch("https://example.com/jobs")).rejects.toBe(testError);
+    expect(baseFetch).toHaveBeenCalledTimes(1);
+  });
 });
