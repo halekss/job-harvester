@@ -136,6 +136,35 @@ describe("runCampaign", () => {
     expect(receivedFetchImpl).toBeDefined();
     expect(receivedFetchImpl).not.toBe(fetch);
   });
+
+  it("shares the same guarded fetchImpl (and its rate-limiter state) across separate runCampaign calls (JOB-12)", async () => {
+    const db = createDb(tmpDbPath());
+
+    function makeObservingConnector(id: string, capture: { fetchImpl: typeof fetch | undefined }): Connector {
+      return {
+        id,
+        tier: 0,
+        supports: () => true,
+        async *fetch(_query, ctx) {
+          capture.fetchImpl = ctx.fetchImpl;
+        },
+        normalize: (raw) => raw.payload as never,
+        async healthCheck() {
+          return { connectorId: id, ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+        },
+      };
+    }
+
+    const firstCapture: { fetchImpl: typeof fetch | undefined } = { fetchImpl: undefined };
+    const secondCapture: { fetchImpl: typeof fetch | undefined } = { fetchImpl: undefined };
+
+    await runCampaign(campaign, makeObservingConnector("observing-1", firstCapture), db, {});
+    await runCampaign(campaign, makeObservingConnector("observing-2", secondCapture), db, {});
+
+    expect(firstCapture.fetchImpl).toBeDefined();
+    expect(secondCapture.fetchImpl).toBeDefined();
+    expect(secondCapture.fetchImpl).toBe(firstCapture.fetchImpl);
+  });
 });
 
 describe("runCampaign — locationScoped connectors", () => {

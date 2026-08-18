@@ -6,6 +6,11 @@ import type { CampaignConfig } from "./config/campaign-schema.js";
 import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
 import { buildHarvestQuery } from "./build-harvest-query.js";
 
+// JOB-12 : instance partagée au niveau module — un seul jeu de seaux à jetons (par hostname)
+// pour toute la durée de vie du process, afin que le rate limiting reste effectif même quand
+// plusieurs campagnes (ex. mêmes horaires cron) déclenchent runCampaign() indépendamment.
+const sharedGuardedFetch = createRateLimitedFetch(fetch);
+
 export interface RunSummary {
   runId: string;
   rawCount: number;
@@ -55,7 +60,7 @@ export async function runCampaign(
   db: Db,
   env: Record<string, string | undefined>,
 ): Promise<RunSummary> {
-  const guardedFetch = createRateLimitedFetch(fetch);
+  const guardedFetch = sharedGuardedFetch;
   const startedAt = new Date().toISOString();
   let rawCount = 0;
   let normalizedCount = 0;
