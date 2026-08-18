@@ -19,15 +19,25 @@ export function startScheduler(
   db: Db,
   env: Record<string, string | undefined>,
 ): Scheduler {
-  const jobs = campaigns.filter(hasSchedule).map((campaign) =>
-    new Cron(
-      campaign.schedule,
-      { catch: (err: unknown) => console.error(`[scheduler] campagne ${campaign.id} :`, err) },
-      async () => {
-        await runCampaignAcrossConnectors(campaign, connectors, db, env);
-      },
-    ),
-  );
+  const jobs: Cron[] = [];
+  for (const campaign of campaigns.filter(hasSchedule)) {
+    try {
+      jobs.push(
+        new Cron(
+          campaign.schedule,
+          { catch: (err: unknown) => console.error(`[scheduler] campagne ${campaign.id} :`, err) },
+          async () => {
+            await runCampaignAcrossConnectors(campaign, connectors, db, env);
+          },
+        ),
+      );
+    } catch (err) {
+      // JOB-5 : un schedule cron invalide sur une campagne ne doit pas faire planter le
+      // démarrage du scheduler (ni, par ricochet, tout le process API) — on l'ignore et on
+      // continue avec les autres campagnes.
+      console.error(`[scheduler] schedule invalide pour la campagne ${campaign.id}, campagne ignorée :`, err);
+    }
+  }
 
   return {
     stop() {

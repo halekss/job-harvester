@@ -141,4 +141,43 @@ describe("startScheduler", () => {
 
     errorSpy.mockRestore();
   });
+
+  it("skips a campaign with an invalid schedule string without throwing, and still runs the other valid campaigns (JOB-5)", async () => {
+    const db = createDb(tmpDbPath());
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const callLog: string[] = [];
+
+    const invalidCampaign: CampaignConfig = {
+      id: "invalid-schedule",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+      schedule: "not a valid cron",
+    };
+    const validCampaign: CampaignConfig = {
+      id: "valid-schedule",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+      schedule: "* * * * * *",
+    };
+
+    let scheduler: ReturnType<typeof startScheduler> | undefined;
+    expect(() => {
+      scheduler = startScheduler([invalidCampaign, validCampaign], [makeConnector(callLog)], db, {});
+    }).not.toThrow();
+
+    await wait(1300);
+    scheduler?.stop();
+
+    expect(callLog.length).toBeGreaterThanOrEqual(1);
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("invalid-schedule"),
+      expect.anything(),
+    );
+
+    errorSpy.mockRestore();
+  });
 });
