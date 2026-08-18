@@ -114,6 +114,28 @@ describe("runCampaign", () => {
     expect(run).toMatchObject({ ok: false });
     expect(run?.errorMessage).toContain("network down");
   });
+
+  it("passes a guarded fetchImpl to the connector, not the raw global fetch (JOB-12)", async () => {
+    const db = createDb(tmpDbPath());
+    let receivedFetchImpl: typeof fetch | undefined;
+    const observingConnector: Connector = {
+      id: "observing",
+      tier: 0,
+      supports: () => true,
+      async *fetch(_query, ctx) {
+        receivedFetchImpl = ctx.fetchImpl;
+      },
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    await runCampaign(campaign, observingConnector, db, {});
+
+    expect(receivedFetchImpl).toBeDefined();
+    expect(receivedFetchImpl).not.toBe(fetch);
+  });
 });
 
 describe("runCampaign — locationScoped connectors", () => {

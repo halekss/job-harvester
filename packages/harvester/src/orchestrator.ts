@@ -3,7 +3,7 @@ import { eq, and, or } from "drizzle-orm";
 import { isFuzzyDuplicate, mergeOffers, type Connector, type NormalizedOffer } from "@job-harvester/core";
 import { offers as offersTable, connectorRuns, offerToRow, rowToOffer, type Db } from "@job-harvester/db";
 import type { CampaignConfig } from "./config/campaign-schema.js";
-import { DomainRateLimiter } from "./rate-limit/domain-rate-limiter.js";
+import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
 import { buildHarvestQuery } from "./build-harvest-query.js";
 
 export interface RunSummary {
@@ -55,7 +55,7 @@ export async function runCampaign(
   db: Db,
   env: Record<string, string | undefined>,
 ): Promise<RunSummary> {
-  const rateLimiter = new DomainRateLimiter();
+  const guardedFetch = createRateLimitedFetch(fetch);
   const startedAt = new Date().toISOString();
   let rawCount = 0;
   let normalizedCount = 0;
@@ -71,9 +71,8 @@ export async function runCampaign(
       hasFetchedOnce = true;
     }
 
-    await rateLimiter.wait(connector.id);
     try {
-      for await (const raw of connector.fetch(query, { fetchImpl: fetch, env })) {
+      for await (const raw of connector.fetch(query, { fetchImpl: guardedFetch, env })) {
         rawCount += 1;
         try {
           const normalized = connector.normalize(raw);
