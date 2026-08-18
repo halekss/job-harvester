@@ -1,5 +1,6 @@
 import { timedHealthCheck, type HarvestQuery, type ConnectorHealth } from "@job-harvester/core";
 import { LbaSearchResponseSchema } from "./types.js";
+import { USER_AGENT } from "../../lib/user-agent.js";
 
 const BASE_URL = "https://api.apprentissage.beta.gouv.fr";
 export const LBA_CONNECTOR_ID = "labonnealternance";
@@ -23,7 +24,7 @@ function buildSearchUrl(query: Pick<HarvestQuery, "location" | "romeCodes">): UR
 function authHeaders(apiKey: string): Record<string, string> {
   return {
     Authorization: `Bearer ${apiKey}`,
-    "User-Agent": "job-harvester/0.1 (personal alternance watch tool)",
+    "User-Agent": USER_AGENT,
   };
 }
 

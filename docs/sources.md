@@ -95,3 +95,56 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
 - **Statut robots.txt/CGU** : non applicable — API publique dédiée à l'intégration.
 - **Décision** : autorisé, Tier 1.
 - **Vérifié en direct le 2026-08-16** sur l'entreprise `MAZARS` (188 offres réelles).
+
+## Tier 2 — `jsonld-generic`
+
+- **Domaine** : arbitraire — une ou plusieurs pages carrière complètes configurées par
+  l'utilisateur, une par entreprise, sous `targets.jsonldGeneric` (`config/campaigns.yaml`). Pas
+  de domaine fixe, contrairement aux connecteurs Tier 0/1.
+- **Route utilisée** : `GET <url cible>` — récupération de la page HTML publique, sans API
+  dédiée. Le connecteur extrait le JSON-LD `schema.org/JobPosting` embarqué dans un
+  `<script type="application/ld+json">` de la page (`packages/connectors/src/lib/jsonld.ts`,
+  parsing via `cheerio`).
+- **Authentification** : aucune — accès public, comme un navigateur anonyme.
+- **Ciblage** : par URL de page carrière complète (pas de recherche/filtre côté source ; le
+  filtrage alternance se fait après coup côté `normalize.ts`, sur le texte titre/description).
+- **Pagination** : aucune — une page cible = un ou plusieurs `JobPosting` extraits de cette même
+  page (`@graph`/tableau JSON-LD aplati).
+- **Rendu** : fetch statique en premier lieu ; si aucun JSON-LD n'est trouvé (page qui rend son
+  contenu côté client), repli sur un navigateur headless réel (Playwright,
+  `packages/connectors/src/lib/headless.ts`) — dernier recours coûteux, jamais le premier essai.
+- **Statut robots.txt/CGU** : applicable, et vérifié **dynamiquement par URL cible au moment du
+  run** (pas une décision figée par domaine comme pour Tier 0/1, puisque le domaine dépend de la
+  configuration de chaque campagne) — `packages/connectors/src/lib/robots.ts` télécharge et
+  parse le `robots.txt` de l'origine de chaque URL cible (`robots-parser`, résultat mis en cache
+  en mémoire par origine pour la durée du run) avant tout fetch ; une URL refusée est ignorée
+  (log `console.warn`) sans bloquer les autres cibles. Absence de `robots.txt` (404) ou fichier
+  vide = autorisé par défaut.
+- **Décision** : autorisé au cas par cas, Tier 2 — chaque URL cible doit passer la vérification
+  `robots.txt` en direct avant d'être collectée ; aucune cible réelle configurée à ce stade
+  (ticket JOB-7 livré sur fixtures/tests offline uniquement).
+
+## Tier 2 — `sitemap-crawler`
+
+- **Domaine** : arbitraire — un ou plusieurs sitemaps XML (ou domaines racine, résolus en
+  `{racine}/sitemap.xml`) configurés sous `targets.sitemapCrawler`.
+- **Route utilisée** : `GET <sitemap.xml>` puis `GET <url candidate>` pour chaque URL du sitemap
+  dont le chemin matche `/jobs/`, `/careers/`, `/offre` ou `/recrutement` (insensible à la
+  casse) ; extraction du JSON-LD `JobPosting` de chaque page candidate, comme `jsonld-generic`
+  (réutilise `lib/jsonld.ts` et `normalize.ts` de `jsonld-generic` directement, sans duplication).
+- **Authentification** : aucune — accès public.
+- **Ciblage** : par sitemap (ou domaine racine), pas par entreprise nommée individuellement page
+  par page — le crawl découvre lui-même les pages d'offres pertinentes.
+- **Pagination** : aucune côté source ; le nombre de pages visitées est borné par le contenu du
+  sitemap et le filtre de motif de chemin.
+- **Politesse inter-requêtes** : une requête par domaine espacée d'au moins 1 seconde
+  (`packages/connectors/src/lib/domain-politeness.ts`, `waitForDomain`) en plus du fetch statique
+  → repli navigateur headless (Playwright) en dernier recours si aucun JSON-LD n'est trouvé,
+  identique à `jsonld-generic`.
+- **Statut robots.txt/CGU** : applicable, et vérifié **dynamiquement par URL cible au moment du
+  run** (pas une décision figée par domaine) — le `robots.txt` de l'origine est vérifié une
+  première fois pour le sitemap lui-même, puis à nouveau pour chaque page candidate avant de la
+  visiter ; une URL refusée est ignorée (log `console.warn`) sans interrompre le crawl du reste
+  du sitemap.
+- **Décision** : autorisé au cas par cas, Tier 2 — mêmes garde-fous que `jsonld-generic` ; aucune
+  cible réelle configurée à ce stade (ticket JOB-7 livré sur fixtures/tests offline uniquement).

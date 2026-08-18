@@ -6,3 +6,7 @@ export * from "./tier1/workday/connector.js";
 export * from "./tier1/workday/normalize.js";
 export * from "./tier1/smartrecruiters/connector.js";
 export * from "./tier1/smartrecruiters/normalize.js";
+export * from "./tier2/jsonld-generic/connector.js";
+export * from "./tier2/jsonld-generic/normalize.js";
+export * from "./tier2/sitemap-crawler/connector.js";
+export * from "./tier2/sitemap-crawler/normalize.js";

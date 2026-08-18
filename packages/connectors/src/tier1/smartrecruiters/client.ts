@@ -1,5 +1,6 @@
 import { timedHealthCheck, type ConnectorHealth, type HarvestQuery } from "@job-harvester/core";
 import { SmartRecruitersSearchResponseSchema } from "./types.js";
+import { USER_AGENT } from "../../lib/user-agent.js";
 
 export const SMARTRECRUITERS_CONNECTOR_ID = "smartrecruiters";
 const BASE_URL = "https://api.smartrecruiters.com/v1/companies";
@@ -10,7 +11,7 @@ export interface SmartRecruitersClientOptions {
 }
 
 function headers(): Record<string, string> {
-  return { "User-Agent": "job-harvester/0.1 (personal alternance watch tool)" };
+  return { "User-Agent": USER_AGENT };
 }
 
 function isAlternanceRelevant(text: string): boolean {

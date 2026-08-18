@@ -1,5 +1,6 @@
 import { timedHealthCheck, type ConnectorHealth, type HarvestQuery, type WorkdayTarget } from "@job-harvester/core";
 import { WorkdaySearchResponseSchema, WorkdayJobDetailSchema } from "./types.js";
+import { USER_AGENT } from "../../lib/user-agent.js";
 
 export const WORKDAY_CONNECTOR_ID = "workday";
 
@@ -16,7 +17,7 @@ function cxsBaseUrl(target: WorkdayTarget): string {
 function headers(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    "User-Agent": "job-harvester/0.1 (personal alternance watch tool)",
+    "User-Agent": USER_AGENT,
   };
 }
 

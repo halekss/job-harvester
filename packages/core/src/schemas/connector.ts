@@ -19,6 +19,8 @@ export type WorkdayTarget = z.infer<typeof WorkdayTargetSchema>;
 export const HarvestTargetsSchema = z.object({
   workday: z.array(WorkdayTargetSchema).optional(),
   smartrecruiters: z.array(z.string()).optional(),
+  jsonldGeneric: z.array(z.string()).optional(),
+  sitemapCrawler: z.array(z.string()).optional(),
 });
 export type HarvestTargets = z.infer<typeof HarvestTargetsSchema>;
 

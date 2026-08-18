@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://careers.acmedata.example/about</loc>
+    <lastmod>2026-07-01</lastmod>
+  </url>
+  <url>
+    <loc>https://careers.acmedata.example/jobs/123</loc>
+    <lastmod>2026-08-10</lastmod>
+  </url>
+  <url>
+    <loc>https://careers.acmedata.example/legal</loc>
+    <lastmod>2026-01-15</lastmod>
+  </url>
+  <url>
+    <loc>https://careers.acmedata.example/careers/data-analyst</loc>
+    <lastmod>2026-08-12</lastmod>
+  </url>
+  <url>
+    <loc>https://careers.acmedata.example/contact</loc>
+    <lastmod>2026-06-20</lastmod>
+  </url>
+</urlset>

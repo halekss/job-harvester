@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { timedHealthCheck, type HarvestQuery, type ConnectorHealth } from "@job-harvester/core";
 import { FranceTravailSearchResponseSchema } from "./types.js";
+import { USER_AGENT } from "../../lib/user-agent.js";
 
 const TOKEN_URL = "https://entreprise.francetravail.fr/connexion/oauth2/access_token";
 const SEARCH_URL = "https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search";
@@ -116,7 +117,7 @@ function buildSearchUrl(query: Pick<HarvestQuery, "location" | "romeCodes">): UR
 function authHeaders(accessToken: string): Record<string, string> {
   return {
     Authorization: `Bearer ${accessToken}`,
-    "User-Agent": "job-harvester/0.1 (personal alternance watch tool)",
+    "User-Agent": USER_AGENT,
   };
 }
 

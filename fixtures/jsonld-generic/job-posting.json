@@ -1,0 +1,30 @@
+{
+  "@context": "https://schema.org",
+  "@type": "JobPosting",
+  "title": "Alternance Développeur Data (H/F)",
+  "description": "<p>Au sein de notre équipe Data, vous participerez au développement de pipelines de données en alternance dans le cadre d'un contrat d'apprentissage de 12 à 24 mois.</p><ul><li>Développement Python/SQL</li><li>Automatisation de traitements de données</li></ul>",
+  "datePosted": "2026-08-10",
+  "validThrough": "2026-10-01",
+  "employmentType": "INTERN",
+  "identifier": {
+    "@type": "PropertyValue",
+    "name": "AcmeData",
+    "value": "ACME-DATA-2026-042"
+  },
+  "hiringOrganization": {
+    "@type": "Organization",
+    "name": "AcmeData",
+    "sameAs": "https://www.acmedata.example"
+  },
+  "jobLocation": {
+    "@type": "Place",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "12 rue des Fabriques",
+      "addressLocality": "Lille",
+      "postalCode": "59000",
+      "addressCountry": "FR"
+    }
+  },
+  "url": "https://careers.acmedata.example/jobs/alternance-developpeur-data-042"
+}

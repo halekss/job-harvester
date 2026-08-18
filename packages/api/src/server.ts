@@ -3,7 +3,14 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createDb } from "@job-harvester/db";
 import { loadCampaigns, startScheduler } from "@job-harvester/harvester";
-import { labonnealternanceConnector, francetravailConnector, workdayConnector, smartrecruitersConnector } from "@job-harvester/connectors";
+import {
+  labonnealternanceConnector,
+  francetravailConnector,
+  workdayConnector,
+  smartrecruitersConnector,
+  jsonldGenericConnector,
+  sitemapCrawlerConnector,
+} from "@job-harvester/connectors";
 import { createApp } from "./app.js";
 
 // Resolve against the repo root rather than process.cwd(): `pnpm --filter @job-harvester/api exec`
@@ -18,7 +25,14 @@ try {
 
 const db = createDb(path.resolve(repoRoot, process.env.DB_PATH ?? "./job-harvester.sqlite"));
 const campaigns = loadCampaigns(path.resolve(repoRoot, process.env.CAMPAIGNS_FILE ?? "./config/campaigns.yaml"));
-const connectors = [labonnealternanceConnector, francetravailConnector, workdayConnector, smartrecruitersConnector];
+const connectors = [
+  labonnealternanceConnector,
+  francetravailConnector,
+  workdayConnector,
+  smartrecruitersConnector,
+  jsonldGenericConnector,
+  sitemapCrawlerConnector,
+];
 
 const app = createApp({ db, connectors, campaigns, env: process.env });
 
