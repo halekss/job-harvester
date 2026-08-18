@@ -1,10 +1,55 @@
 import { ulid } from "ulid";
-import { eq, and, or } from "drizzle-orm";
+import { eq, and, or, desc } from "drizzle-orm";
 import { isFuzzyDuplicate, mergeOffers, type Connector, type NormalizedOffer } from "@job-harvester/core";
 import { offers as offersTable, connectorRuns, offerToRow, rowToOffer, type Db } from "@job-harvester/db";
 import type { CampaignConfig } from "./config/campaign-schema.js";
 import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
 import { buildHarvestQuery } from "./build-harvest-query.js";
+import { reportIncident, resolveIncidentIfHealthy } from "./linear/incident-reporter.js";
+
+// Une baseline calculée sur moins de runs que ça n'est pas fiable : on préfère ne pas
+// alerter plutôt que de crier au loup sur les tout premiers runs d'un connecteur.
+const HEALTH_HISTORY_WINDOW = 10;
+const MIN_BASELINE_RUNS = 3;
+const VOLUME_DROP_RATIO = 0.5;
+
+export async function evaluateConnectorHealth(connector: Connector, db: Db): Promise<void> {
+  const recentRuns = db
+    .select()
+    .from(connectorRuns)
+    .where(eq(connectorRuns.connectorId, connector.id))
+    .orderBy(desc(connectorRuns.startedAt))
+    .limit(HEALTH_HISTORY_WINDOW)
+    .all();
+
+  const [currentRun, ...previousRuns] = recentRuns;
+  if (!currentRun) return;
+
+  if (!currentRun.ok) {
+    await reportIncident(
+      connector.id,
+      connector.tier,
+      "health-check-failed",
+      currentRun.errorMessage ?? `Connector run ${currentRun.id} failed with no error message.`,
+    );
+    return;
+  }
+
+  if (previousRuns.length >= MIN_BASELINE_RUNS) {
+    const movingAverage = previousRuns.reduce((sum, run) => sum + run.normalizedCount, 0) / previousRuns.length;
+    if (movingAverage > 0 && currentRun.normalizedCount < movingAverage * VOLUME_DROP_RATIO) {
+      await reportIncident(
+        connector.id,
+        connector.tier,
+        "volume-drop",
+        `normalizedCount=${currentRun.normalizedCount} is below ${Math.round(VOLUME_DROP_RATIO * 100)}% of the ${previousRuns.length}-run moving average (${movingAverage.toFixed(1)}).`,
+      );
+      return;
+    }
+  }
+
+  await resolveIncidentIfHealthy(connector.id);
+}
 
 // JOB-12 : instance partagée au niveau module — un seul jeu de seaux à jetons (par hostname)
 // pour toute la durée de vie du process, afin que le rate limiting reste effectif même quand
@@ -109,6 +154,15 @@ export async function runCampaign(
       errorMessage,
     })
     .run();
+
+  // Linear est un système d'observabilité annexe : une panne de son API (réseau, quota,
+  // credentials expirés...) ne doit jamais faire échouer une campagne de collecte déjà
+  // terminée. L'erreur est journalisée localement et absorbée ici, jamais propagée.
+  try {
+    await evaluateConnectorHealth(connector, db);
+  } catch (error) {
+    console.error(`[JOB-8] connector observability failed for ${connector.id}:`, error);
+  }
 
   return { runId, rawCount, normalizedCount, rejectedCount, ok, errorMessage };
 }

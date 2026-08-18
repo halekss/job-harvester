@@ -7,6 +7,7 @@ import { registerEventRoutes } from "./routes/events.js";
 import { registerHarvestRoutes } from "./routes/harvest.js";
 import { registerHealthRoutes } from "./routes/health.js";
 import { registerCampaignRoutes } from "./routes/campaigns.js";
+import { registerStatsRoutes } from "./routes/stats.js";
 
 export interface AppDeps {
   db: Db;
@@ -22,5 +23,6 @@ export function createApp(deps: AppDeps): Hono {
   registerHarvestRoutes(app, deps);
   registerHealthRoutes(app, deps);
   registerCampaignRoutes(app, deps);
+  registerStatsRoutes(app, deps);
   return app;
 }

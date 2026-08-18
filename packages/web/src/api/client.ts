@@ -9,6 +9,7 @@ export interface OfferSummary {
   contractType: string;
   applyUrl?: string;
   canonicalUrl: string;
+  nextFollowUpAt?: string | null;
 }
 
 export interface OfferDetail {
@@ -17,11 +18,27 @@ export interface OfferDetail {
   events: Array<{ id: string; type: string; occurredAt: string }>;
 }
 
-export async function getOffers(): Promise<OfferSummary[]> {
-  const res = await fetch("/offers");
+export interface OfferFilters {
+  city?: string;
+  contractType?: string;
+  q?: string;
+}
+
+export interface OffersPage {
+  offers: OfferSummary[];
+  nextCursor: string | null;
+}
+
+export async function getOffers(filters: OfferFilters = {}, cursor?: string): Promise<OffersPage> {
+  const params = new URLSearchParams();
+  if (filters.city) params.set("city", filters.city);
+  if (filters.contractType) params.set("contractType", filters.contractType);
+  if (filters.q) params.set("q", filters.q);
+  if (cursor) params.set("cursor", cursor);
+  const qs = params.toString();
+  const res = await fetch(`/offers${qs ? `?${qs}` : ""}`);
   if (!res.ok) throw new Error(`GET /offers failed: HTTP ${res.status}`);
-  const body = await res.json();
-  return body.offers;
+  return res.json();
 }
 
 export async function getOfferDetail(id: string): Promise<OfferDetail> {
@@ -59,7 +76,7 @@ export async function runHarvest(campaignId: string): Promise<RunSummary[]> {
 
 export async function postEvent(
   offerId: string,
-  body: { type: string; channel?: string; notes?: string },
+  body: { type: string; channel?: string; notes?: string; nextFollowUpAt?: string },
 ): Promise<void> {
   const res = await fetch(`/offers/${offerId}/events`, {
     method: "POST",
