@@ -1,12 +1,23 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { createDb, offers as offersTable, connectorRuns } from "@job-harvester/db";
+import { eq } from "drizzle-orm";
+import { ulid } from "ulid";
+import { createDb, offers as offersTable, connectorRuns, type Db } from "@job-harvester/db";
 import type { Connector, NormalizedOffer, RawOffer } from "@job-harvester/core";
 import { exactDedupKeyFromUrl } from "@job-harvester/core";
 import { runCampaign } from "./orchestrator.js";
 import type { CampaignConfig } from "./config/campaign-schema.js";
+
+vi.mock("./linear/client.js", () => ({
+  searchIssueByTitle: vi.fn(async () => []),
+  createIssue: vi.fn(async () => ({ id: "linear-issue-1", identifier: "ENG-1", title: "mock", state: { name: "Backlog" } })),
+  commentOnIssue: vi.fn(async () => undefined),
+  transitionIssueState: vi.fn(async () => undefined),
+}));
+
+import { searchIssueByTitle, createIssue, commentOnIssue, transitionIssueState } from "./linear/client.js";
 
 const tmpDirs: string[] = [];
 afterEach(() => {
@@ -169,5 +180,154 @@ describe("runCampaign — locationScoped connectors", () => {
     await runCampaign(multiLocationCampaign, defaultConnector, db, {});
 
     expect(fetchCallCount).toBe(2);
+  });
+});
+
+// JOB-8 : alerte de seuil (moyenne mobile) + remontée Linear déduplifiée.
+describe("runCampaign — connector observability (JOB-8)", () => {
+  function insertRun(
+    db: Db,
+    connectorId: string,
+    normalizedCount: number,
+    startedAt: string,
+    ok = true,
+  ): void {
+    db.insert(connectorRuns)
+      .values({
+        id: ulid(),
+        connectorId,
+        campaignId: campaign.id,
+        startedAt,
+        finishedAt: startedAt,
+        rawCount: normalizedCount,
+        normalizedCount,
+        rejectedCount: 0,
+        httpStatusesSeen: [],
+        ok,
+        errorMessage: ok ? undefined : "simulated failure",
+      })
+      .run();
+  }
+
+  function insertBaseline(db: Db, connectorId: string, count: number, normalizedCount: number): void {
+    for (let i = 0; i < count; i += 1) {
+      insertRun(db, connectorId, normalizedCount, `2020-01-01T00:0${i}:00.000Z`);
+    }
+  }
+
+  function connectorYielding(id: string, tier: 0 | 1 | 2, urls: string[]): Connector {
+    return {
+      id,
+      tier,
+      supports: () => true,
+      async *fetch() {
+        for (const url of urls) yield { source: id, payload: { id: url, url } };
+      },
+      normalize(raw) {
+        const payload = raw.payload as { id: string; url: string };
+        return makeOffer(payload.id, payload.url);
+      },
+      async healthCheck() {
+        return { connectorId: id, ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+  }
+
+  beforeEach(() => {
+    vi.mocked(searchIssueByTitle).mockReset().mockResolvedValue([]);
+    vi.mocked(createIssue)
+      .mockReset()
+      .mockResolvedValue({ id: "linear-issue-1", identifier: "ENG-1", title: "mock", state: { name: "Backlog" } });
+    vi.mocked(commentOnIssue).mockReset().mockResolvedValue(undefined);
+    vi.mocked(transitionIssueState).mockReset().mockResolvedValue(undefined);
+  });
+
+  it("reports a volume-drop incident when normalizedCount falls under 50% of the moving average", async () => {
+    const db = createDb(tmpDbPath());
+    insertBaseline(db, "drop-connector", 5, 10);
+    const connector = connectorYielding("drop-connector", 1, ["https://example.com/a", "https://example.com/b"]);
+
+    await runCampaign(campaign, connector, db, {});
+
+    expect(createIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "[connector:drop-connector] volume-drop",
+        labelIds: ["tier-1", "volume-drop"],
+      }),
+    );
+    expect(commentOnIssue).not.toHaveBeenCalled();
+  });
+
+  it("does not create a second issue when an incident is already open for the connector", async () => {
+    const db = createDb(tmpDbPath());
+    insertBaseline(db, "repeat-connector", 5, 10);
+    vi.mocked(searchIssueByTitle).mockResolvedValue([
+      { id: "existing-issue", identifier: "ENG-9", title: "[connector:repeat-connector] volume-drop", state: { name: "Backlog" } },
+    ]);
+    const connector = connectorYielding("repeat-connector", 0, ["https://example.com/a"]);
+
+    await runCampaign(campaign, connector, db, {});
+
+    expect(createIssue).not.toHaveBeenCalled();
+    expect(commentOnIssue).toHaveBeenCalledWith("existing-issue", expect.any(String));
+  });
+
+  it("resolves the open incident and transitions it to Done when the connector is healthy again", async () => {
+    const db = createDb(tmpDbPath());
+    vi.mocked(searchIssueByTitle).mockResolvedValue([
+      { id: "existing-issue", identifier: "ENG-9", title: "[connector:recovered-connector] volume-drop", state: { name: "Backlog" } },
+    ]);
+    const urls = Array.from({ length: 10 }, (_, i) => `https://example.com/offer-${i}`);
+    const connector = connectorYielding("recovered-connector", 2, urls);
+
+    await runCampaign(campaign, connector, db, {});
+
+    expect(createIssue).not.toHaveBeenCalled();
+    expect(commentOnIssue).toHaveBeenCalledWith("existing-issue", expect.any(String));
+    expect(transitionIssueState).toHaveBeenCalledWith("existing-issue", "Done");
+  });
+
+  it("reports a health-check-failed incident when the run itself failed", async () => {
+    const db = createDb(tmpDbPath());
+    const brokenConnector: Connector = {
+      id: "broken-observability",
+      tier: 2,
+      supports: () => true,
+      async *fetch() {
+        throw new Error("connector exploded");
+      },
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "broken-observability", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    await runCampaign(campaign, brokenConnector, db, {});
+
+    expect(createIssue).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "[connector:broken-observability] health-check-failed",
+        labelIds: ["tier-2", "health-check-failed"],
+      }),
+    );
+  });
+
+  it("never lets a Linear API failure make runCampaign fail — the run is still recorded", async () => {
+    const db = createDb(tmpDbPath());
+    vi.mocked(searchIssueByTitle).mockRejectedValue(new Error("Linear is down"));
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const connector = connectorYielding("linear-outage-connector", 0, ["https://example.com/only"]);
+
+    const summary = await runCampaign(campaign, connector, db, {});
+
+    expect(summary.ok).toBe(true);
+    const runs = db.select().from(connectorRuns).where(eq(connectorRuns.connectorId, "linear-outage-connector")).all();
+    expect(runs).toHaveLength(1);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect.stringContaining("linear-outage-connector"),
+      expect.any(Error),
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 });

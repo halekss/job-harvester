@@ -7,7 +7,8 @@
     "typecheck": "pnpm -r run typecheck",
     "dev:api": "pnpm --filter @job-harvester/api exec tsx watch src/server.ts",
     "dev:web": "pnpm --filter @job-harvester/web run dev",
-    "harvest:run": "tsx packages/harvester/src/cli.ts"
+    "harvest:run": "tsx packages/harvester/src/cli.ts",
+    "harvester:backlog": "tsx packages/harvester/src/scripts/backlog.ts"
   },
   "devDependencies": {
     "tsx": "^4.23.12",
