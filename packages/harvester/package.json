@@ -13,6 +13,7 @@
   "dependencies": {
     "@job-harvester/core": "workspace:*",
     "@job-harvester/db": "workspace:*",
+    "croner": "^10.0.1",
     "drizzle-orm": "^0.45.2",
     "ulid": "^3.0.2",
     "yaml": "^2.9.0",
