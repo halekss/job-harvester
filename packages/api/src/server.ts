@@ -2,7 +2,7 @@ import { serve } from "@hono/node-server";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createDb } from "@job-harvester/db";
-import { loadCampaigns } from "@job-harvester/harvester";
+import { loadCampaigns, startScheduler } from "@job-harvester/harvester";
 import { labonnealternanceConnector, francetravailConnector, workdayConnector, smartrecruitersConnector } from "@job-harvester/connectors";
 import { createApp } from "./app.js";
 
@@ -18,13 +18,14 @@ try {
 
 const db = createDb(path.resolve(repoRoot, process.env.DB_PATH ?? "./job-harvester.sqlite"));
 const campaigns = loadCampaigns(path.resolve(repoRoot, process.env.CAMPAIGNS_FILE ?? "./config/campaigns.yaml"));
+const connectors = [labonnealternanceConnector, francetravailConnector, workdayConnector, smartrecruitersConnector];
 
-const app = createApp({
-  db,
-  connectors: [labonnealternanceConnector, francetravailConnector, workdayConnector, smartrecruitersConnector],
-  campaigns,
-  env: process.env,
-});
+const app = createApp({ db, connectors, campaigns, env: process.env });
+
+if (process.env.ENABLE_SCHEDULER === "true") {
+  startScheduler(campaigns, connectors, db, process.env);
+  console.log("job-harvester scheduler enabled (ENABLE_SCHEDULER=true)");
+}
 
 serve({ fetch: app.fetch, port: Number(process.env.PORT ?? 3000) }, (info) => {
   console.log(`job-harvester api listening on http://localhost:${info.port}`);

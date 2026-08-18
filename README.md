@@ -26,6 +26,14 @@ La réponse a la forme `{ summaries: [...] }` : un résumé (`rawCount`, `normal
 `rejectedCount`) par connecteur supportant la campagne. Les offres apparaissent ensuite dans
 le jobboard (`pnpm dev:web`).
 
+## Planifier des collectes automatiques (cron)
+
+Chaque campagne de `config/campaigns.yaml` peut définir un champ `schedule` (expression cron,
+ex. `"0 7 * * *"` pour 7h chaque jour). Le serveur API programme alors automatiquement
+`POST /harvest/:campaignId/run` pour cette campagne à l'horaire indiqué — mais seulement si la
+variable d'environnement `ENABLE_SCHEDULER=true` est définie (désactivé par défaut, pour ne pas
+lancer de collectes réelles à chaque redémarrage en développement local).
+
 ## Ajouter une source
 
 1. Documenter la source dans `docs/sources.md` (endpoint, authentification, statut
