@@ -55,6 +55,29 @@ campaigns:
     expect(data?.locations.map((location) => location.label)).toContain("Paris 75000");
   });
 
+  it("exposes the schedule field when present, and leaves it undefined when absent", () => {
+    const withSchedule = writeCampaignsFile(`
+campaigns:
+  - id: with-schedule
+    romeCodes: [M1403]
+    keywords: []
+    locations: []
+    contractTypes: [apprentissage]
+    schedule: "0 7 * * *"
+`);
+    const withoutSchedule = writeCampaignsFile(`
+campaigns:
+  - id: without-schedule
+    romeCodes: [M1403]
+    keywords: []
+    locations: []
+    contractTypes: [apprentissage]
+`);
+
+    expect(findCampaign(loadCampaigns(withSchedule), "with-schedule")?.schedule).toBe("0 7 * * *");
+    expect(findCampaign(loadCampaigns(withoutSchedule), "without-schedule")?.schedule).toBeUndefined();
+  });
+
   it("rejects a file with an invalid contract type", () => {
     const filePath = writeCampaignsFile(`
 campaigns:

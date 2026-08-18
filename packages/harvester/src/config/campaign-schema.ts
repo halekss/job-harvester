@@ -16,6 +16,7 @@ export const CampaignConfigSchema = z.object({
   locations: z.array(LocationConfigSchema),
   contractTypes: z.array(ContractTypeSchema),
   targets: HarvestTargetsSchema.optional(),
+  schedule: z.string().optional(),
 });
 export type CampaignConfig = z.infer<typeof CampaignConfigSchema>;
 
