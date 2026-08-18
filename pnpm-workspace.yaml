@@ -1,2 +1,9 @@
 packages:
   - "packages/*"
+allowBuilds:
+  better-sqlite3: true
+  esbuild: true
+minimumReleaseAgeExclude:
+  - '@tanstack/react-virtual@3.14.10'
+  - '@tanstack/virtual-core@3.17.8'
+  - '@testing-library/user-event@14.6.5'

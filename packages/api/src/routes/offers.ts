@@ -1,6 +1,7 @@
 import type { Hono } from "hono";
-import { and, desc, eq, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, like, sql } from "drizzle-orm";
 import { offers as offersTable, applicationEvents, rowToOffer } from "@job-harvester/db";
+import type { Db } from "@job-harvester/db";
 import type { AppDeps } from "../app.js";
 
 const PAGE_SIZE = 50;
@@ -16,6 +17,22 @@ function decodeCursor(cursor: string): { postedAt: string | null; firstSeenAt: s
 export function deriveStatus(events: { type: string; occurredAt: string }[]): string {
   if (events.length === 0) return "new";
   return [...events].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt)).at(-1)!.type;
+}
+
+function nextFollowUpByOfferId(db: Db, offerIds: string[]): Map<string, string> {
+  if (offerIds.length === 0) return new Map();
+  const rows = db
+    .select({ offerId: applicationEvents.offerId, nextFollowUpAt: applicationEvents.nextFollowUpAt })
+    .from(applicationEvents)
+    .where(and(inArray(applicationEvents.offerId, offerIds), isNotNull(applicationEvents.nextFollowUpAt)))
+    .all();
+  const result = new Map<string, string>();
+  for (const row of rows) {
+    if (!row.nextFollowUpAt) continue;
+    const current = result.get(row.offerId);
+    if (!current || row.nextFollowUpAt < current) result.set(row.offerId, row.nextFollowUpAt);
+  }
+  return result;
 }
 
 export function registerOfferRoutes(app: Hono, { db }: AppDeps): void {
@@ -46,7 +63,12 @@ export function registerOfferRoutes(app: Hono, { db }: AppDeps): void {
       .all();
 
     const nextCursor = rows.length === PAGE_SIZE ? encodeCursor(rows.at(-1)!) : null;
-    return c.json({ offers: rows.map(rowToOffer), nextCursor });
+    const followUps = nextFollowUpByOfferId(
+      db,
+      rows.map((row) => row.id),
+    );
+    const offers = rows.map((row) => ({ ...rowToOffer(row), nextFollowUpAt: followUps.get(row.id) ?? null }));
+    return c.json({ offers, nextCursor });
   });
 
   app.get("/offers/:id", (c) => {

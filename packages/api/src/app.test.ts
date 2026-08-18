@@ -88,6 +88,36 @@ describe("GET /offers", () => {
     expect(sourceOfferIds).toContain("with-posted-at");
     expect(sourceOfferIds).toContain("null-posted-at");
   });
+
+  it("exposes nextFollowUpAt as the earliest non-null follow-up among an offer's events (JOB-9)", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    db.insert(applicationEventsTable)
+      .values([
+        { id: "evt-1", offerId: sampleOffer.id, type: "applied", occurredAt: "2026-08-01T00:00:00.000Z", nextFollowUpAt: "2026-08-20T00:00:00.000Z" },
+        { id: "evt-2", offerId: sampleOffer.id, type: "followup", occurredAt: "2026-08-05T00:00:00.000Z", nextFollowUpAt: "2026-08-15T00:00:00.000Z" },
+        { id: "evt-3", offerId: sampleOffer.id, type: "no_reply", occurredAt: "2026-08-06T00:00:00.000Z", nextFollowUpAt: null },
+      ])
+      .run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { id: string; nextFollowUpAt: string | null }[] };
+
+    expect(res.status).toBe(200);
+    expect(body.offers[0]!.nextFollowUpAt).toBe("2026-08-15T00:00:00.000Z");
+  });
+
+  it("exposes nextFollowUpAt as null when an offer has no events with a follow-up date", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { nextFollowUpAt: string | null }[] };
+
+    expect(body.offers[0]!.nextFollowUpAt).toBeNull();
+  });
 });
 
 describe("GET /offers/:id", () => {
