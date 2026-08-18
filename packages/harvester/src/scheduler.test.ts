@@ -1,5 +1,5 @@
 // packages/harvester/src/scheduler.test.ts
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -30,6 +30,27 @@ function makeConnector(callLog: string[]): Connector {
     normalize: (raw) => raw.payload as never,
     async healthCheck() {
       return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+    },
+  };
+}
+
+// Unlike a thrown `fetch` (which runCampaign catches internally and reports as a failed
+// RunSummary, see orchestrator.test.ts "records a failed run when connector.fetch throws,
+// without rethrowing"), a throwing `supports()` blows up synchronously inside
+// runCampaignAcrossConnectors's outer filter, outside any try/catch — so it genuinely rejects
+// the promise returned to the scheduler's tick callback. That's the real trigger for JOB-5's
+// "unhandled rejection crashes the process" bug.
+function makeThrowingConnector(): Connector {
+  return {
+    id: "throwing",
+    tier: 0,
+    supports: () => {
+      throw new Error("boom from supports()");
+    },
+    async *fetch() {},
+    normalize: (raw) => raw.payload as never,
+    async healthCheck() {
+      return { connectorId: "throwing", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
     },
   };
 }
@@ -93,5 +114,31 @@ describe("startScheduler", () => {
     await wait(1300);
 
     expect(callLog).toEqual([]);
+  });
+
+  it("routes a rejected campaign run to the catch handler instead of crashing", async () => {
+    const db = createDb(tmpDbPath());
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const campaign: CampaignConfig = {
+      id: "throwing-campaign",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+      schedule: "* * * * * *",
+    };
+
+    const scheduler = startScheduler([campaign], [makeThrowingConnector()], db, {});
+    await wait(1300);
+    scheduler.stop();
+
+    // If the tick callback discards the rejected promise (e.g. via `void`), croner's `catch`
+    // option never fires and the rejection becomes an unhandled rejection outside vitest's
+    // control — reaching this assertion at all (without the test process crashing/erroring
+    // on an unhandled rejection) is itself part of the regression guard.
+    expect(errorSpy).toHaveBeenCalled();
+    expect(errorSpy.mock.calls[0]?.[1]).toBeInstanceOf(Error);
+
+    errorSpy.mockRestore();
   });
 });

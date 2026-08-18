@@ -23,8 +23,8 @@ export function startScheduler(
     new Cron(
       campaign.schedule,
       { catch: (err: unknown) => console.error(`[scheduler] campagne ${campaign.id} :`, err) },
-      () => {
-        void runCampaignAcrossConnectors(campaign, connectors, db, env);
+      async () => {
+        await runCampaignAcrossConnectors(campaign, connectors, db, env);
       },
     ),
   );
