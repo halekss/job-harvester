@@ -107,3 +107,20 @@ export async function runCampaign(
 
   return { runId, rawCount, normalizedCount, rejectedCount, ok, errorMessage };
 }
+
+export async function runCampaignAcrossConnectors(
+  campaign: CampaignConfig,
+  connectors: Connector[],
+  db: Db,
+  env: Record<string, string | undefined>,
+): Promise<RunSummary[]> {
+  const supportedConnectors = connectors.filter((connector) =>
+    campaign.locations.some((location) => connector.supports(buildHarvestQuery(campaign, location))),
+  );
+
+  const summaries: RunSummary[] = [];
+  for (const connector of supportedConnectors) {
+    summaries.push(await runCampaign(campaign, connector, db, env));
+  }
+  return summaries;
+}

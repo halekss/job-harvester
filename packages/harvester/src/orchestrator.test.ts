@@ -5,7 +5,7 @@ import path from "node:path";
 import { createDb, offers as offersTable, connectorRuns } from "@job-harvester/db";
 import type { Connector, NormalizedOffer, RawOffer } from "@job-harvester/core";
 import { exactDedupKeyFromUrl } from "@job-harvester/core";
-import { runCampaign } from "./orchestrator.js";
+import { runCampaign, runCampaignAcrossConnectors } from "./orchestrator.js";
 import type { CampaignConfig } from "./config/campaign-schema.js";
 
 const tmpDirs: string[] = [];
@@ -191,5 +191,53 @@ describe("runCampaign — locationScoped connectors", () => {
     await runCampaign(multiLocationCampaign, defaultConnector, db, {});
 
     expect(fetchCallCount).toBe(2);
+  });
+});
+
+describe("runCampaignAcrossConnectors", () => {
+  it("runs only the connectors that support the campaign and returns one summary each", async () => {
+    const db = createDb(tmpDbPath());
+    const supported: Connector = {
+      id: "supported",
+      tier: 0,
+      supports: () => true,
+      async *fetch() {},
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "supported", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const unsupported: Connector = {
+      id: "unsupported",
+      tier: 0,
+      supports: () => false,
+      async *fetch() {},
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "unsupported", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const summaries = await runCampaignAcrossConnectors(campaign, [supported, unsupported], db, {});
+
+    expect(summaries).toHaveLength(1);
+  });
+
+  it("returns an empty array when no connector supports the campaign", async () => {
+    const db = createDb(tmpDbPath());
+    const unsupported: Connector = {
+      id: "unsupported",
+      tier: 0,
+      supports: () => false,
+      async *fetch() {},
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "unsupported", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const summaries = await runCampaignAcrossConnectors(campaign, [unsupported], db, {});
+
+    expect(summaries).toEqual([]);
   });
 });
