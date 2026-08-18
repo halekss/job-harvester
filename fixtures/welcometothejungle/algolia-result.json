@@ -1,0 +1,125 @@
+{
+  "hits": [
+    {
+      "slug": "alternance-data-analyst-credit-risk-f-h_paris",
+      "name": "Alternance - Data Analyst Credit Risk (F/H)",
+      "profile": "Tu seras en Master 2 avec une spécialisation en Data (école d'ingénieur, école de commerce ou équivalent universitaire) sur l'année scolaire 2026-2027 et tu recherches un contrat d'apprentissage de 12 mois",
+      "language": "fr",
+      "published_at": "2026-08-18T14:00:00.000+02:00",
+      "reference": "YOUNI_2DxQ3bz",
+      "organization": {
+        "name": "Younited",
+        "slug": "younited-credit"
+      },
+      "contract_type": "APPRENTICESHIP",
+      "contract_type_names": {
+        "fr": "Alternance",
+        "en": "Apprenticeship"
+      },
+      "contract_duration_minimum": 12,
+      "contract_duration_maximum": 12,
+      "office": {
+        "city": "Paris",
+        "district": "Paris",
+        "state": "Ile-de-France",
+        "country": "France",
+        "country_code": "FR"
+      },
+      "department": "Risk & Data",
+      "remote": "punctual",
+      "salary_currency": "EUR",
+      "salary_minimum": null,
+      "salary_maximum": null,
+      "salary_period": "yearly",
+      "_geoloc": [
+        {
+          "lat": 48.8759104,
+          "lng": 2.3382473
+        }
+      ],
+      "objectID": "4202854"
+    },
+    {
+      "slug": "alternance-developpeur-web_paris_IF_PpOVzJ7",
+      "name": "Alternance - Développeur Web",
+      "profile": "Tu es passionné.e par le développement web et les nouvelles technologies. Tu fais preuve d'autonomie, de curiosité et d'un bon esprit d'analyse.",
+      "language": "fr",
+      "published_at": "2026-08-17T18:00:00.000+02:00",
+      "reference": "IF_PpOVzJ7",
+      "organization": {
+        "name": "Ironhack France",
+        "slug": "ironhack-france"
+      },
+      "contract_type": "APPRENTICESHIP",
+      "contract_type_names": {
+        "fr": "Alternance",
+        "en": "Apprenticeship"
+      },
+      "contract_duration_minimum": 6,
+      "contract_duration_maximum": 24,
+      "office": {
+        "city": "Paris",
+        "district": "Paris",
+        "state": "Ile-de-France",
+        "country": "France",
+        "country_code": "FR"
+      },
+      "department": null,
+      "remote": "punctual",
+      "salary_currency": "EUR",
+      "salary_minimum": null,
+      "salary_maximum": null,
+      "salary_period": "none",
+      "_geoloc": [
+        {
+          "lat": 48.85268,
+          "lng": 2.3884
+        }
+      ],
+      "objectID": "4233653"
+    },
+    {
+      "slug": "alternance-developpeur-solution-web-f-h_massy",
+      "name": "ALTERNANCE – Développeur solution Web – F/H",
+      "profile": null,
+      "language": "fr",
+      "published_at": "2026-08-15T00:00:00.000+02:00",
+      "reference": "THALE_mNW4woe",
+      "organization": {
+        "name": "Thales",
+        "slug": "thales"
+      },
+      "contract_type": "APPRENTICESHIP",
+      "contract_type_names": {
+        "fr": "Alternance",
+        "en": "Apprenticeship"
+      },
+      "contract_duration_minimum": null,
+      "contract_duration_maximum": null,
+      "office": {
+        "city": "Massy",
+        "district": "Seine-Maritime",
+        "state": "Normandy",
+        "country": "France",
+        "country_code": "FR"
+      },
+      "department": null,
+      "remote": "unknown",
+      "salary_currency": null,
+      "salary_minimum": null,
+      "salary_maximum": null,
+      "salary_period": "none",
+      "_geoloc": [
+        {
+          "lat": 49.69083,
+          "lng": 1.39972
+        }
+      ],
+      "objectID": "4128182"
+    }
+  ],
+  "nbHits": 320,
+  "page": 0,
+  "nbPages": 160,
+  "hitsPerPage": 3
+}

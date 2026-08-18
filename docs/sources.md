@@ -148,3 +148,148 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
   du sitemap.
 - **Décision** : autorisé au cas par cas, Tier 2 — mêmes garde-fous que `jsonld-generic` ; aucune
   cible réelle configurée à ce stade (ticket JOB-7 livré sur fixtures/tests offline uniquement).
+
+## Tier 1 — `welcometothejungle`
+
+- **Domaine réellement interrogé** : `{appId}-dsn.algolia.net` (Algolia, tiers), **pas**
+  `welcometothejungle.com`. Index `wk_cms_jobs_production`.
+- **Route utilisée** : `POST https://{appId}-dsn.algolia.net/1/indexes/wk_cms_jobs_production/query`
+  avec en-têtes `x-algolia-application-id`, `x-algolia-api-key`, corps
+  `{"params": "query=...&hitsPerPage=...&page=...&aroundLatLng=lat,lng&aroundRadius=mètres"}`.
+- **Authentification** : clé Algolia « search-only » publique (`WTTJ_ALGOLIA_APP_ID` /
+  `WTTJ_ALGOLIA_API_KEY`), du type que n'importe quel visiteur du site charge déjà dans son
+  navigateur pour effectuer une recherche — pas un secret privé côté WTTJ, mais un identifiant
+  que ce connecteur doit fournir lui-même (voir "Conflit robots.txt" ci-dessous pour pourquoi il
+  n'est pas extrait automatiquement à l'exécution).
+- **⚠️ Conflit robots.txt / décision assumée** : `welcometothejungle.com/robots.txt` (vérifié en
+  direct) contient `disallow: */jobs?query=*` et `Disallow: /*?` — la plateforme interdit
+  explicitement le crawl de ses propres URLs de recherche (`/fr/jobs?query=...`). Ce connecteur
+  ne fetch **jamais** ces URLs interdites : il interroge directement `{appId}-dsn.algolia.net`,
+  le service tiers qui alimente cette recherche, domaine sur lequel `welcometothejungle.com`
+  n'a techniquement aucune autorité `robots.txt` (chaque domaine ne régit que lui-même). **Ceci
+  reproduit néanmoins la même fonctionnalité que l'interface de recherche interdite au crawl.**
+  Décision assumée avec l'utilisateur du dépôt : implémenter quand même, pour un usage
+  strictement personnel (veille alternance individuelle, pas de redistribution, pas de volume
+  significatif — un connecteur personnel n'est pas le scraping massif que ce `Disallow` vise
+  probablement à empêcher), documentée ici en toute transparence plutôt que passée sous silence.
+  Si cette lecture devait changer (usage partagé, volume élevé, CGU explicites contre l'accès
+  Algolia direct), ce connecteur devrait être désactivé.
+- **Détail supplémentaire vérifié en direct** : la page `welcometothejungle.com/fr/jobs` a en
+  réalité migré vers une expérience de recherche gated par compte (« matching ») — taper une
+  recherche dans son propre champ de recherche déclenche uniquement un compteur
+  (`GET api.welcometothejungle.com/api/v3/search/jobs/count`, public) puis redirige vers un mur
+  d'inscription pour voir la liste ; l'API `api.welcometothejungle.com/api/v3/search/jobs` (liste
+  complète, non `/count`) renvoie `403 Forbidden` sans session authentifiée. La recherche Algolia
+  documentée ici reste néanmoins accessible et fonctionnelle en direct (vérifiée avec de vraies
+  clés capturées et une vraie requête retournant des offres réelles) — elle alimente d'autres
+  parties du site (ex. les carrousels d'entreprises en page d'accueil) et n'a, à ce jour, pas été
+  fermée malgré le changement d'UX de la recherche principale.
+- **Découverte des clés** : app-id et clé publique capturés en direct via interception réseau
+  d'un navigateur réel sur une page autorisée par `robots.txt` (`/fr/jobs`, sans query string) ;
+  la recherche statique du HTML/JS ne les expose pas (chargées dynamiquement). Ce connecteur ne
+  répète pas cette capture à l'exécution : il attend `WTTJ_ALGOLIA_APP_ID`/`WTTJ_ALGOLIA_API_KEY`
+  en variables d'environnement (voir `.env.example`), à renseigner manuellement si elles changent
+  un jour (rotation de clé côté WTTJ) — capture reproductible depuis les devtools réseau
+  (onglet Réseau, filtrer `algolia.net`, en-têtes de la requête `POST .../query`).
+- **Gestion de l'absence de clé** : `supports()` retourne `false` sans configuration —
+  connecteur inactif, pas d'erreur qui casse une campagne ; `fetch()` lève une erreur explicite
+  seulement s'il est appelé malgré tout.
+- **Ciblage** : aucun — connecteur « large » comme `labonnealternance`/`francetravail`, recherche
+  directe via `query.keywords` (texte libre) et `query.location` (`aroundLatLng`/`aroundRadius`,
+  vérifié en direct avec un centre Lille/30 km, résultats cohérents).
+- **Pagination** : `page`/`hitsPerPage` (défaut 50), boucle jusqu'à couvrir `nbPages`, plafond dur
+  de 10 pages (500 offres) par requête.
+- **Point d'attention PII** : whitelist Zod stricte (`types.ts`) — aucun champ de contact
+  recruteur n'existe dans les hits de cet index (vérifié en direct sur plusieurs offres réelles).
+- **Vérifié en direct le 2026-08-18** : app-id (`CSEKHVMS53`), clé publique, endpoint, format de
+  requête/réponse et URL canonique de détail (`/fr/companies/{organisation}/jobs/{offre}`) tous
+  confirmés par de vraies requêtes retournant de vraies offres (ex. Younited, Ironhack France,
+  Thales) — voir `fixtures/welcometothejungle/algolia-result.json`.
+
+## Tier 1 — `talentsoft`
+
+- **Domaine** : `{domaine cible}` (un par entreprise, ex. `recrutement.mgen.fr`), configuré sous
+  `targets.talentsoft` (`config/campaigns.yaml`).
+- **Détection de plateforme** : avant tout appel du flux d'offres, la page racine du domaine
+  cible est chargée et vérifiée pour les marqueurs `__VIEWSTATE`, `.aspx` ou la chaîne
+  `talentsoft` (insensible à la casse). Un domaine qui ne les porte pas est ignoré proprement
+  (`console.warn`), sans jamais appeler un handler RSS qui n'existerait pas dessus — garde-fou
+  contre un faux positif comme `recrutement.vnf.fr` (relevé dans le ticket d'origine : même
+  convention d'URL `recrutement.{organisme}.fr` mais tourne en réalité sur WordPress).
+- **Route utilisée** : `GET https://{domaine}/handlers/offerRss.ashx?LCID=1036` — flux RSS
+  officiel exposé par la plateforme Talentsoft elle-même (handler générique du produit, pas
+  spécifique à un client), paramètres optionnels `Rss_Contract`/`Rss_JobFamily` pour filtrer
+  (non utilisés en v1).
+- **Pourquoi pas `jsonld-generic`** : aucun JSON-LD `schema.org/JobPosting` n'a été trouvé sur
+  l'instance Talentsoft vérifiée (`recrutement.mgen.fr`) — `jsonld-generic` ne peut donc rien en
+  extraire. Le flux RSS officiel, lui, est disponible sans dépendre du rendu HTML de la page.
+- **Format** : RSS 2.0 standard — chaque `<item>` porte `<link>` (URL de détail avec paramètre
+  `idOffre=NNNN`), plusieurs `<category>` (filière/métier, type de contrat, adresse en texte
+  libre), `<title>` (préfixé d'une référence interne type `"2026-5515 - "`, retirée à la
+  normalisation), `<description>` (HTML échappé en entités XML). Parsé par extraction regex
+  simple (`client.ts`) — pas de dépendance à une lib XML pour ce format.
+- **Extraction de la localisation** : la catégorie qui porte l'adresse est repérée par un motif
+  virgule + code postal à 5 chiffres (ex. `"59 bis boulevard Jean Jaurès, 74500 EVIAN-LES-BAINS,
+  france"`) ; les autres catégories (filière, type de contrat) n'ont jamais ce motif.
+- **Nom d'entreprise** : absent du flux RSS — dérivé heuristiquement du domaine cible
+  (best-effort, documenté comme tel dans `normalize.ts`, pas une source autoritaire).
+- **Authentification** : aucune — flux RSS public, comme n'importe quel lecteur de flux.
+- **Statut robots.txt** : vérifié dynamiquement par domaine cible (`isAllowedByRobots()`), à la
+  fois pour la page racine (détection de plateforme) et pour le handler RSS — même garde-fou que
+  `jsonld-generic`, bien que Tier 1. `recrutement.mgen.fr` n'a pas de `robots.txt` (200, corps
+  vide) au moment de la vérification — autorisé par défaut, comme documenté pour les autres
+  connecteurs de ce dépôt.
+- **Décision** : autorisé, Tier 1. Aucune cible réelle configurée dans `config/campaigns.yaml` à
+  ce stade — MGEN (mutuelle de santé) a servi uniquement à vérifier/construire la fixture, sans
+  rapport avec les campagnes data/dev web existantes.
+- **Vérifié en direct le 2026-08-18** sur `recrutement.mgen.fr` : marqueurs de détection de
+  plateforme, `robots.txt` vide, et flux RSS réel (20 offres, dont une en alternance) tous
+  confirmés par de vraies requêtes — voir `fixtures/talentsoft/offer-rss.xml` (extrait tronqué à
+  3 offres représentatives de la réponse réelle).
+
+## Tier 1 — `digitalrecruiters`
+
+- **Domaine** : `joinus.{entreprise}.fr` (un sous-domaine par entreprise cliente), configuré sous
+  `targets.digitalRecruiters` (`config/campaigns.yaml`).
+- **Écart avec l'hypothèse initiale du ticket** : le ticket d'origine envisageait de parser le
+  bloc `window.__NUXT__` embarqué dans le HTML public de `/fr/annonces`. Vérifié en direct sur
+  `joinus.decathlon.fr` (Decathlon est bien client DigitalRecruiters) : ce bloc SSR ne porte que
+  la configuration de page (thème, i18n, réglages du site carrière) — le store Pinia qu'il
+  initialise est **vide** (`jobAds:{jobAds:[],count:void 0,...}`). La liste d'offres est en
+  réalité chargée après coup côté client via un appel XHR séparé vers une route JSON publique,
+  capturée en direct via interception réseau d'un navigateur réel. Cette route JSON est utilisée
+  directement par ce connecteur — plus simple et plus robuste qu'un parsing HTML/JS dont la
+  structure de rendu peut changer à chaque build Nuxt.
+- **Route utilisée** : `POST https://api.digitalrecruiters.com/public/v1/careers-site/job-ads
+  ?domainName={domaine}&limit=50&page={n}&locale=fr_FR`, corps
+  `{"filters":{},"coordinates":{"lat":0,"lng":0}}`.
+- **Authentification** : aucune — route publique (`/public/v1/...`), utilisée par le site carrière
+  lui-même pour tout visiteur anonyme. Distincte de `api.digitalrecruiters.com/careers/v1/...`
+  (mentionnée dans le ticket d'origine), qui elle est gated (`403` sans session) et n'est pas
+  utilisée par ce connecteur.
+- **Réponse** : `{count, items: [{job_ad_id, title, contract, location, job, url, ...}], filters}`.
+  Un seul appel suffit à obtenir tous les champs nécessaires à la normalisation (titre, contrat,
+  ville, URL) — pas de requête de détail par offre.
+- **Extraction de la localisation** : le champ `url` (slug) se termine systématiquement par
+  `-{code postal 5 chiffres}-{ville}` (ex. `...-33300-bordeaux`), exploité pour en extraire un
+  code postal sans requête supplémentaire ; `location` (ville en texte libre, ex. `"Bordeaux"`)
+  sert de libellé lisible.
+- **URL de détail** : `https://{domaine}/fr/annonce/{url}` (singulier `annonce`, vérifié en
+  direct — un lien réel du DOM de la page de listing pointe vers ce chemin exact).
+- **Nom d'entreprise** : absent de la réponse (seules des divisions internes DigitalRecruiters
+  "brand", ex. `"DECATHLON Retail Omnichannel"`, sont exposées, pas le nom de l'entreprise
+  elle-même) — dérivé heuristiquement du sous-domaine cible, comme pour `talentsoft`.
+- **Description** : absente de cet endpoint de liste — laissée vide plutôt qu'inventée ;
+  `canonicalUrl` renvoie vers la page réelle pour le texte complet.
+- **Pagination** : `limit`/`page`, boucle jusqu'à une page incomplète, plafond dur de 20 pages
+  (1000 offres) par cible.
+- **Statut robots.txt/CGU** : non applicable — API publique dédiée à l'intégration (même
+  catégorie que `smartrecruiters`/`workday`), pas de scraping HTML. Vérifié par ailleurs que
+  `joinus.decathlon.fr/robots.txt` autorise explicitement tout crawl (`Allow: /`,
+  `Crawl-delay: 10`).
+- **Décision** : autorisé, Tier 1. Aucune cible réelle configurée dans `config/campaigns.yaml` à
+  ce stade — Decathlon n'est pas pertinent pour les campagnes data/dev web existantes ; a servi
+  uniquement à vérifier/construire la fixture.
+- **Vérifié en direct le 2026-08-18** sur `joinus.decathlon.fr` : endpoint, authentification,
+  format de réponse (1474 offres réelles au moment du test, dont des alternances) et URL de
+  détail tous confirmés par de vraies requêtes — voir `fixtures/digitalrecruiters/job-ads.json`.

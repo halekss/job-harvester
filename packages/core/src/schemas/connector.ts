@@ -21,6 +21,8 @@ export const HarvestTargetsSchema = z.object({
   smartrecruiters: z.array(z.string()).optional(),
   jsonldGeneric: z.array(z.string()).optional(),
   sitemapCrawler: z.array(z.string()).optional(),
+  talentsoft: z.array(z.string()).optional(),
+  digitalRecruiters: z.array(z.string()).optional(),
 });
 export type HarvestTargets = z.infer<typeof HarvestTargetsSchema>;
 

@@ -10,6 +10,9 @@ import {
   smartrecruitersConnector,
   jsonldGenericConnector,
   sitemapCrawlerConnector,
+  talentsoftConnector,
+  digitalRecruitersConnector,
+  welcometothejungleConnector,
 } from "@job-harvester/connectors";
 import { createApp } from "./app.js";
 
@@ -32,6 +35,9 @@ const connectors = [
   smartrecruitersConnector,
   jsonldGenericConnector,
   sitemapCrawlerConnector,
+  talentsoftConnector,
+  digitalRecruitersConnector,
+  welcometothejungleConnector,
 ];
 
 const app = createApp({ db, connectors, campaigns, env: process.env });

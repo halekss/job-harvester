@@ -1,0 +1,65 @@
+{
+  "count": 1474,
+  "items": [
+    {
+      "id": "4553539-1062333",
+      "job_ad_id": 4553539,
+      "title": "Conseiller-ère Vente Omnicanal (H/F) - Temps partiel",
+      "contract": "CDI",
+      "location": "Bordeaux",
+      "job": "Conseiller.e vente omnicanal",
+      "url": "4553539-conseiller-ere-vente-omnicanal-hf-temps-partiel-33300-bordeaux",
+      "brand_id": 1557,
+      "is_external": false,
+      "is_aggregated": false,
+      "career_domain": "joinus.decathlon.fr",
+      "careers_site_url": null,
+      "broadcast_hash": null
+    },
+    {
+      "id": "4553459-1061406",
+      "job_ad_id": 4553459,
+      "title": "REJOINS NOTRE ÉCOLE pour devenir Conseiller.e Vente Omnicanal (H/F) Alternance",
+      "contract": "Contrat d'alternance (pro, apprentissage)",
+      "location": "Groslay",
+      "job": "Conseiller.e vente omnicanal",
+      "url": "4553459-rejoins-notre-ecole-pour-devenir-conseiller-e-vente-omnicanal-hf-alternance-95410-groslay",
+      "brand_id": 1557,
+      "is_external": false,
+      "is_aggregated": false,
+      "career_domain": "joinus.decathlon.fr",
+      "careers_site_url": null,
+      "broadcast_hash": null
+    },
+    {
+      "id": "4552725-1062543",
+      "job_ad_id": 4552725,
+      "title": "STAGE COMMERCE - Développer l'activité commerciale de ton sport (H/F)",
+      "contract": "Stage",
+      "location": "La Teste-de-Buch",
+      "job": "Conseiller.e vente omnicanal",
+      "url": "4552725-stage-commerce-developper-l-activite-commerciale-de-ton-sport-hf-33260-la-teste-de-buch",
+      "brand_id": 1557,
+      "is_external": false,
+      "is_aggregated": false,
+      "career_domain": "joinus.decathlon.fr",
+      "careers_site_url": null,
+      "broadcast_hash": null
+    },
+    {
+      "id": "3983371-1062153",
+      "job_ad_id": 3983371,
+      "title": "Conseiller-ère Services et Expériences Client (H/F) - Temps partiel",
+      "contract": "CDD",
+      "location": "Tourville-la-Rivière",
+      "job": "Conseiller.e service & expérience client",
+      "url": "3983371-conseiller-ere-services-et-experiences-client-hf-temps-partiel-76410-tourville-la-riviere",
+      "brand_id": 1557,
+      "is_external": false,
+      "is_aggregated": false,
+      "career_domain": "joinus.decathlon.fr",
+      "careers_site_url": null,
+      "broadcast_hash": null
+    }
+  ]
+}
