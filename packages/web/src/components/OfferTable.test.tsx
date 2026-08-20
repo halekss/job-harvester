@@ -18,6 +18,7 @@ function makeOffer(overrides: Partial<OfferSummary> = {}): OfferSummary {
     contractType: "apprentissage",
     canonicalUrl: "https://example.com/jobs/1",
     nextFollowUpAt: null,
+    activeEvents: {},
     ...overrides,
   };
 }

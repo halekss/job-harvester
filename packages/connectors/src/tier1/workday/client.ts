@@ -1,4 +1,4 @@
-import { timedHealthCheck, type ConnectorHealth, type HarvestQuery, type WorkdayTarget } from "@job-harvester/core";
+import { timedHealthCheck, stripHtml, type ConnectorHealth, type HarvestQuery, type WorkdayTarget } from "@job-harvester/core";
 import { WorkdaySearchResponseSchema, WorkdayJobDetailSchema } from "./types.js";
 import { USER_AGENT } from "../../lib/user-agent.js";
 
@@ -49,6 +49,23 @@ async function fetchJobList(target: WorkdayTarget, searchText: string, fetchImpl
   return items;
 }
 
+// JOB-audit-2026-08-19 : jusqu'ici la requete "alternance" ramenait tout ce que
+// Workday publie pour la cible, sans jamais lire query.keywords/romeCodes -
+// une campagne comme alternance-data-hdf recevait donc aussi les offres
+// logistique/mecanique du meme employeur. Filtre texte simple sur titre+description,
+// sans dependance a une taxonomie ROME cote Workday (l'API n'en expose pas).
+// Limites de mots \b obligatoires : un mot-cle court comme "BI" en simple sous-chaine
+// matchait "mobility" dans le pied de page anglais Valeo present sur toutes les offres,
+// ce qui laissait tout passer silencieusement (constate en re-lancant une vraie collecte).
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function matchesKeywords(text: string, keywords: string[]): boolean {
+  if (keywords.length === 0) return true;
+  return keywords.some((keyword) => new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text));
+}
+
 async function fetchJobDetail(
   target: WorkdayTarget,
   externalPath: string,
@@ -71,6 +88,8 @@ export async function* fetchWorkdayOffers(query: HarvestQuery, options: WorkdayC
       const listing = item as { externalPath?: string };
       if (!listing.externalPath) continue;
       const jobPostingInfo = await fetchJobDetail(target, listing.externalPath, fetchImpl);
+      const searchableText = `${jobPostingInfo.title} ${stripHtml(jobPostingInfo.jobDescription)}`;
+      if (!matchesKeywords(searchableText, query.keywords)) continue;
       yield { target, externalPath: listing.externalPath, jobPostingInfo };
     }
   }

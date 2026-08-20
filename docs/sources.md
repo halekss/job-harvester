@@ -156,6 +156,11 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
 - **Route utilisée** : `POST https://{appId}-dsn.algolia.net/1/indexes/wk_cms_jobs_production/query`
   avec en-têtes `x-algolia-application-id`, `x-algolia-api-key`, corps
   `{"params": "query=...&hitsPerPage=...&page=...&aroundLatLng=lat,lng&aroundRadius=mètres"}`.
+- **⚠️ En-tête `Referer` obligatoire** (vérifié en direct le 2026-08-20) : la clé Algolia publique
+  du site est une « secured API key » restreinte côté Algolia par referer — sans
+  `Referer: https://www.welcometothejungle.com/`, la requête échoue en `403 Method not allowed
+  with this referer`, même avec une clé par ailleurs valide. `fetch` Node n'envoie pas ce header
+  par défaut (contrairement à un vrai navigateur) : `client.ts` doit le forcer explicitement.
 - **Authentification** : clé Algolia « search-only » publique (`WTTJ_ALGOLIA_APP_ID` /
   `WTTJ_ALGOLIA_API_KEY`), du type que n'importe quel visiteur du site charge déjà dans son
   navigateur pour effectuer une recherche — pas un secret privé côté WTTJ, mais un identifiant
@@ -191,6 +196,13 @@ consommées via API officielle avec authentification, donc hors périmètre `rob
   en variables d'environnement (voir `.env.example`), à renseigner manuellement si elles changent
   un jour (rotation de clé côté WTTJ) — capture reproductible depuis les devtools réseau
   (onglet Réseau, filtrer `algolia.net`, en-têtes de la requête `POST .../query`).
+  **Mise à jour 2026-08-20** : `/fr/jobs` n'a plus de champ de recherche libre — la page a migré
+  vers un mur d'inscription (« Découvrir mes matchs ») et ne liste que des liens de catégories
+  statiques. La requête Algolia la plus simple à intercepter aujourd'hui est celle des
+  entreprises à la une sur cette même page (`search_origin=home_featured_companies_client`,
+  index `wk_cms_organizations_production`) — la clé qu'elle porte fonctionne aussi sur
+  `wk_cms_jobs_production` (vérifié en direct), pas besoin de trouver une page qui interroge
+  spécifiquement l'index jobs.
 - **Gestion de l'absence de clé** : `supports()` retourne `false` sans configuration —
   connecteur inactif, pas d'erreur qui casse une campagne ; `fetch()` lève une erreur explicite
   seulement s'il est appelé malgré tout.

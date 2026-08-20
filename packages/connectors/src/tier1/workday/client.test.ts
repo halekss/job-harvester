@@ -82,6 +82,96 @@ describe("fetchWorkdayOffers", () => {
     expect(results).toHaveLength(25);
   });
 
+  it("filters detail results by campaign keywords when provided (title or description match)", async () => {
+    const queryWithKeywords: HarvestQuery = { ...query, keywords: ["data"] };
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        return new Response(
+          JSON.stringify({
+            total: 2,
+            jobPostings: [
+              { title: "Alternant Data Analyst", externalPath: "/job/data" },
+              { title: "Alternant Logistique", externalPath: "/job/logistique" },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      const detail = url.endsWith("/job/data")
+        ? { title: "Alternant Data Analyst", jobDescription: "<p>Analyse de donnees.</p>", jobReqId: "R1" }
+        : { title: "Alternant Logistique", jobDescription: "<p>Gestion des stocks.</p>", jobReqId: "R2" };
+      return new Response(JSON.stringify({ jobPostingInfo: detail }), { status: 200 });
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchWorkdayOffers(queryWithKeywords, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ jobPostingInfo: { title: "Alternant Data Analyst" } });
+  });
+
+  it("does not match a short keyword as a substring inside an unrelated word (JOB-audit-2026-08-19)", async () => {
+    const queryWithKeywords: HarvestQuery = { ...query, keywords: ["BI"] };
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        return new Response(
+          JSON.stringify({ total: 1, jobPostings: [{ title: "Alternance Logistique", externalPath: "/job/log" }] }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          jobPostingInfo: {
+            title: "Alternance Logistique",
+            jobDescription: "<p>Join us to reinvent the mobility of tomorrow.</p>",
+            jobReqId: "R3",
+          },
+        }),
+        { status: 200 },
+      );
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchWorkdayOffers(queryWithKeywords, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(0);
+  });
+
+  it("keeps every result when the campaign has no keywords (back-compat)", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        return new Response(
+          JSON.stringify({
+            total: 2,
+            jobPostings: [
+              { title: "Alternant Data Analyst", externalPath: "/job/data" },
+              { title: "Alternant Logistique", externalPath: "/job/logistique" },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      const detail = url.endsWith("/job/data")
+        ? { title: "Alternant Data Analyst", jobDescription: "<p>Analyse.</p>", jobReqId: "R1" }
+        : { title: "Alternant Logistique", jobDescription: "<p>Stocks.</p>", jobReqId: "R2" };
+      return new Response(JSON.stringify({ jobPostingInfo: detail }), { status: 200 });
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchWorkdayOffers(query, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(2);
+  });
+
   it("throws when the search request is not ok", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async () => new Response("nope", { status: 500 }));
     const iterate = async () => {

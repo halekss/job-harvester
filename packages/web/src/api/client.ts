@@ -10,6 +10,7 @@ export interface OfferSummary {
   applyUrl?: string;
   canonicalUrl: string;
   nextFollowUpAt?: string | null;
+  activeEvents: Record<string, string>;
 }
 
 export interface OfferDetail {
@@ -84,4 +85,9 @@ export async function postEvent(
     body: JSON.stringify(body),
   });
   if (!res.ok) throw new Error(`POST /offers/${offerId}/events failed: HTTP ${res.status}`);
+}
+
+export async function deleteEvent(offerId: string, eventId: string): Promise<void> {
+  const res = await fetch(`/offers/${offerId}/events/${eventId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`DELETE /offers/${offerId}/events/${eventId} failed: HTTP ${res.status}`);
 }

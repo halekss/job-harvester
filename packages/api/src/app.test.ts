@@ -118,6 +118,35 @@ describe("GET /offers", () => {
 
     expect(body.offers[0]!.nextFollowUpAt).toBeNull();
   });
+
+  it("exposes activeEvents as the latest event id per type, so several action types can show as active at once", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    db.insert(applicationEventsTable)
+      .values([
+        { id: "evt-1", offerId: sampleOffer.id, type: "applied", occurredAt: "2026-08-01T00:00:00.000Z" },
+        { id: "evt-2", offerId: sampleOffer.id, type: "applied", occurredAt: "2026-08-05T00:00:00.000Z" },
+        { id: "evt-3", offerId: sampleOffer.id, type: "interview", occurredAt: "2026-08-06T00:00:00.000Z" },
+      ])
+      .run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { activeEvents: Record<string, string> }[] };
+
+    expect(body.offers[0]!.activeEvents).toEqual({ applied: "evt-2", interview: "evt-3" });
+  });
+
+  it("exposes activeEvents as an empty object when an offer has no events", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { activeEvents: Record<string, string> }[] };
+
+    expect(body.offers[0]!.activeEvents).toEqual({});
+  });
 });
 
 describe("GET /offers/:id", () => {

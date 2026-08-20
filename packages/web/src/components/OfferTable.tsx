@@ -3,8 +3,14 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import type { OfferFilters, OfferSummary } from "../api/client.js";
 import { EventButtons } from "./EventButtons.js";
 
+// Chaque ligne (role="row") est un conteneur grid independant - "auto" sur la derniere
+// colonne se dimensionne donc sur le contenu de CETTE ligne. L'en-tete ("Actions", ~46px)
+// et une ligne d'offre (6 boutons, jusqu'a ~368px) n'ont pas le meme contenu, donc pas la
+// meme largeur "auto" -> les colonnes minmax/fr precedentes se recalculent differemment
+// par ligne et desalignent tout l'en-tete. Largeur Actions fixe pour que toutes les lignes
+// (et l'en-tete) partagent exactement les memes pistes de colonnes.
 const ROW_GRID =
-  "grid-cols-[2.5rem_minmax(10rem,2fr)_minmax(8rem,1.2fr)_minmax(6rem,0.8fr)_minmax(8rem,1.2fr)_6.5rem_6.5rem_auto]";
+  "grid-cols-[2.5rem_minmax(10rem,2fr)_minmax(8rem,1.2fr)_minmax(6rem,0.8fr)_minmax(8rem,1.2fr)_6.5rem_6.5rem_23rem]";
 
 interface OfferTableProps {
   offers: OfferSummary[];
@@ -81,7 +87,7 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
       aria-rowcount={offers.length + 1}
       className="w-full text-sm border border-[var(--color-border)] rounded overflow-hidden"
     >
-      <div role="rowgroup">
+      <div role="rowgroup" className="overflow-y-auto [scrollbar-gutter:stable]">
         <div
           role="row"
           aria-rowindex={1}
@@ -108,7 +114,7 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
           <div role="columnheader">Actions</div>
         </div>
       </div>
-      <div ref={parentRef} role="rowgroup" className="max-h-[70vh] overflow-auto">
+      <div ref={parentRef} role="rowgroup" className="max-h-[70vh] overflow-auto [scrollbar-gutter:stable]">
         <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const offer = offers[virtualRow.index]!;
@@ -164,7 +170,7 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
                   {formatDate(offer.nextFollowUpAt)}
                 </div>
                 <div role="cell">
-                  <EventButtons offerId={offer.id} filters={filters} />
+                  <EventButtons offerId={offer.id} filters={filters} activeEvents={offer.activeEvents} />
                 </div>
               </div>
             );
