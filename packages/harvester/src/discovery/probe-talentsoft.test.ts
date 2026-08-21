@@ -1,13 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { probeTalentsoft } from "./probe-talentsoft.js";
-import { clearRobotsCache } from "@job-harvester/connectors";
 
 const talentsoftHtml = `<html><body>__VIEWSTATE talentsoft <a href="Pages/x.aspx">link</a></body></html>`;
 
 describe("probeTalentsoft", () => {
-  beforeEach(() => {
-    clearRobotsCache();
-  });
   it("returns the first candidate domain that responds ok and carries Talentsoft markers", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
@@ -43,7 +39,7 @@ describe("probeTalentsoft", () => {
       return new Response(talentsoftHtml, { status: 200 });
     });
 
-    const result = await probeTalentsoft("acme", fetchImpl);
+    const result = await probeTalentsoft("zeta-corp", fetchImpl);
 
     expect(result).toBeUndefined();
     expect(rootCalls).toEqual([]);

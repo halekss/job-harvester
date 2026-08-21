@@ -37,7 +37,3 @@ export async function isAllowedByRobots(url: string, userAgent: string, fetchImp
   const robots = await getRobots(origin, fetchImpl);
   return robots.isAllowed(url, userAgent) ?? true;
 }
-
-export function clearRobotsCache(): void {
-  robotsCache.clear();
-}
