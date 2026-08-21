@@ -38,11 +38,18 @@ export interface DiscoverTargetsOptions {
   limit?: number;
 }
 
-async function safeProbe<T>(probe: () => Promise<T | undefined>): Promise<T | undefined> {
+type ProbeResult<T> = { ok: true; value: T | undefined } | { ok: false };
+
+// Distingue "la sonde a tourné et a un résultat (trouvé ou pas)" de "la sonde a levé une
+// exception" (timeout, DNS, réseau...). Seul le premier cas doit être écrit dans
+// discovery_probes : une exception ne doit jamais fermer définitivement une paire
+// (entreprise, plateforme), sous peine de transformer un incident transitoire en "jamais
+// retenté" (voir le regard JOB-audit-2026-08-21 sur ce point).
+async function safeProbe<T>(probe: () => Promise<T | undefined>): Promise<ProbeResult<T>> {
   try {
-    return await probe();
+    return { ok: true, value: await probe() };
   } catch {
-    return undefined;
+    return { ok: false };
   }
 }
 
@@ -96,38 +103,46 @@ export async function discoverTargets(
 
   for (const slug of toProbe) {
     if (!probedPairs.has(probeKey(slug, "digitalRecruiters"))) {
-      const digitalRecruiters = await safeProbe(() => probeDigitalRecruiters(slug, fetchImpl));
-      recordProbe(db, slug, "digitalRecruiters", digitalRecruiters);
-      if (digitalRecruiters) {
-        found.push({ companySlug: slug, platform: "digitalRecruiters", target: digitalRecruiters });
-        addTargetToCampaigns(campaignsFilePath, "digitalRecruiters", digitalRecruiters);
+      const result = await safeProbe(() => probeDigitalRecruiters(slug, fetchImpl));
+      if (result.ok) {
+        recordProbe(db, slug, "digitalRecruiters", result.value);
+        if (result.value) {
+          found.push({ companySlug: slug, platform: "digitalRecruiters", target: result.value });
+          addTargetToCampaigns(campaignsFilePath, "digitalRecruiters", result.value);
+        }
       }
     }
 
     if (!probedPairs.has(probeKey(slug, "smartrecruiters"))) {
-      const smartrecruiters = await safeProbe(() => probeSmartRecruiters(slug, fetchImpl));
-      recordProbe(db, slug, "smartrecruiters", smartrecruiters);
-      if (smartrecruiters) {
-        found.push({ companySlug: slug, platform: "smartrecruiters", target: smartrecruiters });
-        addTargetToCampaigns(campaignsFilePath, "smartrecruiters", smartrecruiters);
+      const result = await safeProbe(() => probeSmartRecruiters(slug, fetchImpl));
+      if (result.ok) {
+        recordProbe(db, slug, "smartrecruiters", result.value);
+        if (result.value) {
+          found.push({ companySlug: slug, platform: "smartrecruiters", target: result.value });
+          addTargetToCampaigns(campaignsFilePath, "smartrecruiters", result.value);
+        }
       }
     }
 
     if (!probedPairs.has(probeKey(slug, "talentsoft"))) {
-      const talentsoft = await safeProbe(() => probeTalentsoft(slug, fetchImpl));
-      recordProbe(db, slug, "talentsoft", talentsoft);
-      if (talentsoft) {
-        found.push({ companySlug: slug, platform: "talentsoft", target: talentsoft });
-        addTargetToCampaigns(campaignsFilePath, "talentsoft", talentsoft);
+      const result = await safeProbe(() => probeTalentsoft(slug, fetchImpl));
+      if (result.ok) {
+        recordProbe(db, slug, "talentsoft", result.value);
+        if (result.value) {
+          found.push({ companySlug: slug, platform: "talentsoft", target: result.value });
+          addTargetToCampaigns(campaignsFilePath, "talentsoft", result.value);
+        }
       }
     }
 
     if (!probedPairs.has(probeKey(slug, "workday"))) {
-      const workday = await safeProbe(() => probeWorkday(slug, fetchImpl));
-      recordProbe(db, slug, "workday", workday);
-      if (workday) {
-        found.push({ companySlug: slug, platform: "workday", target: workday });
-        addTargetToCampaigns(campaignsFilePath, "workday", workday);
+      const result = await safeProbe(() => probeWorkday(slug, fetchImpl));
+      if (result.ok) {
+        recordProbe(db, slug, "workday", result.value);
+        if (result.value) {
+          found.push({ companySlug: slug, platform: "workday", target: result.value });
+          addTargetToCampaigns(campaignsFilePath, "workday", result.value);
+        }
       }
     }
   }

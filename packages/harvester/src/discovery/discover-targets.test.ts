@@ -106,30 +106,42 @@ describe("discoverTargets", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
-  it("treats a probe that throws as 'not found' instead of letting the error propagate, and keeps probing other platforms/companies", async () => {
+  it("treats a probe that throws as 'not yet probed' (no row written) instead of permanently recording it as not-found, and keeps probing other platforms/companies", async () => {
     const db = createDb(tmpDbPath());
     db.insert(offersTable).values(offerToRow(makeOffer("Acme", "https://example.com/1"))).run();
     const campaignsFilePath = tmpCampaignsFile();
 
-    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+    const throwingFetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
       if (url.includes("smartrecruiters.com")) throw new Error("boom: network unreachable");
       if (url.includes("digitalrecruiters.com")) return new Response(JSON.stringify({ count: 5 }), { status: 200 });
       return new Response("nope", { status: 404 });
     });
 
-    await expect(discoverTargets(db, campaignsFilePath, { fetchImpl })).resolves.not.toThrow();
-    const summary = await discoverTargets(db, campaignsFilePath, { fetchImpl });
-    // second call: company already fully probed (all 4 platforms have rows, including the
-    // thrown-on smartrecruiters one recorded as not-found) -> nothing left to probe.
-    expect(summary.probed).toBe(0);
+    await expect(discoverTargets(db, campaignsFilePath, { fetchImpl: throwingFetchImpl })).resolves.not.toThrow();
 
-    const probes = db.select().from(discoveryProbes).all();
-    expect(probes).toHaveLength(4);
-    const smartrecruitersProbe = probes.find((p) => p.platform === "smartrecruiters");
-    expect(smartrecruitersProbe?.found).toBe(false);
-    const digitalRecruitersProbe = probes.find((p) => p.platform === "digitalRecruiters");
+    // Only the 3 platforms that actually ran to completion got a row; the one that threw
+    // (smartrecruiters) must NOT be recorded, so the pair stays eligible for a retry.
+    const probesAfterFirstRun = db.select().from(discoveryProbes).all();
+    expect(probesAfterFirstRun).toHaveLength(3);
+    expect(probesAfterFirstRun.some((p) => p.platform === "smartrecruiters")).toBe(false);
+    const digitalRecruitersProbe = probesAfterFirstRun.find((p) => p.platform === "digitalRecruiters");
     expect(digitalRecruitersProbe?.found).toBe(true);
+
+    // Second call: the company is NOT fully probed yet (smartrecruiters is still missing a
+    // row), so it remains eligible and gets re-probed for that one platform.
+    const recoveredFetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("smartrecruiters.com")) return new Response(JSON.stringify({ totalFound: 5 }), { status: 200 });
+      return new Response("nope", { status: 404 });
+    });
+    const summary = await discoverTargets(db, campaignsFilePath, { fetchImpl: recoveredFetchImpl });
+    expect(summary.probed).toBe(1);
+
+    const probesAfterSecondRun = db.select().from(discoveryProbes).all();
+    expect(probesAfterSecondRun).toHaveLength(4);
+    const smartrecruitersProbe = probesAfterSecondRun.find((p) => p.platform === "smartrecruiters");
+    expect(smartrecruitersProbe?.found).toBe(true);
   });
 
   it("re-probes a company for the one platform it's missing, without re-probing the platforms it already has a row for", async () => {
