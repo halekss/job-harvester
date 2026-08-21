@@ -45,6 +45,51 @@ describe("fetchSmartRecruitersOffers", () => {
     expect(results[0]).toMatchObject({ company: "MAZARS", detail: { id: "1", name: "Alternance Data Analyst H/F" } });
   });
 
+  it("filters out postings whose title/description don't match campaign keywords (JOB-audit-2026-08-20)", async () => {
+    const keywordQuery: HarvestQuery = { ...query, keywords: ["data"] };
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/postings?limit=50")) {
+        return new Response(
+          JSON.stringify({
+            content: [
+              { id: "1", name: "Alternance Data Analyst H/F" },
+              { id: "2", name: "Alternance Auditeur H/F" },
+            ],
+            totalFound: 2,
+          }),
+          { status: 200 },
+        );
+      }
+      if (url.includes("/postings/1")) {
+        return new Response(
+          JSON.stringify({
+            id: "1",
+            name: "Alternance Data Analyst H/F",
+            jobAd: { sections: { jobDescription: { text: "Analyse de donnees." } } },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response(
+        JSON.stringify({
+          id: "2",
+          name: "Alternance Auditeur H/F",
+          jobAd: { sections: { jobDescription: { text: "Audit financier." } } },
+        }),
+        { status: 200 },
+      );
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchSmartRecruitersOffers(keywordQuery, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ detail: { id: "1" } });
+  });
+
   it("pages through the postings list until totalFound is reached (JOB-32)", async () => {
     const requestedOffsets: number[] = [];
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {

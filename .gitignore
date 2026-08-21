@@ -8,3 +8,4 @@ dist/
 .playwright-mcp/
 .worktrees/
 graphify-out/cache/
+graphify-out/audit-report.html

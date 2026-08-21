@@ -48,6 +48,25 @@ describe("fetchTalentsoftOffers", () => {
     });
   });
 
+  it("filters items whose title/description don't match campaign keywords (JOB-audit-2026-08-20)", async () => {
+    const keywordQuery: HarvestQuery = { ...query, keywords: ["data"] };
+    const rss = [
+      "<rss><channel>",
+      "<item><link>https://recrutement.mgen.fr/offre/1</link><title>Alternance Data Analyst</title><description>Analyse de donnees.</description></item>",
+      "<item><link>https://recrutement.mgen.fr/offre/2</link><title>Alternance Comptable</title><description>Comptabilite generale.</description></item>",
+      "</channel></rss>",
+    ].join("");
+    const fetchImpl = fetchImplFor(talentsoftRootHtml, rss);
+
+    const results: unknown[] = [];
+    for await (const item of fetchTalentsoftOffers(keywordQuery, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ item: { title: "Alternance Data Analyst" } });
+  });
+
   it("skips a target whose root page has none of the Talentsoft markers (JOB-31 false-positive guard)", async () => {
     const fetchImpl = fetchImplFor("<html><body>WordPress site, nothing here</body></html>", rssXml);
 

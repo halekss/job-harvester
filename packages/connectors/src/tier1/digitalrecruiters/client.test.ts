@@ -34,6 +34,31 @@ describe("fetchDigitalRecruitersOffers", () => {
     expect(fetchImpl.mock.calls[0]?.[1]).toMatchObject({ method: "POST" });
   });
 
+  it("filters items whose title/job field don't match campaign keywords (JOB-audit-2026-08-20)", async () => {
+    const keywordQuery: HarvestQuery = { ...query, keywords: ["data"] };
+    const fetchImpl = vi.fn<typeof fetch>(
+      async () =>
+        new Response(
+          JSON.stringify({
+            count: 2,
+            items: [
+              { job_ad_id: 1, title: "Alternant Data Analyst", contract: "Apprentissage", location: "Bordeaux", job: "Data", url: "1-alternant-data-analyst-33300-bordeaux" },
+              { job_ad_id: 2, title: "Alternant Vendeur", contract: "Apprentissage", location: "Bordeaux", job: "Vente", url: "2-alternant-vendeur-33300-bordeaux" },
+            ],
+          }),
+          { status: 200 },
+        ),
+    );
+
+    const results: unknown[] = [];
+    for await (const item of fetchDigitalRecruitersOffers(keywordQuery, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(1);
+    expect(results[0]).toMatchObject({ item: { job_ad_id: 1 } });
+  });
+
   it("pages through job-ads until a short page is returned", async () => {
     const requestedPages: number[] = [];
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {

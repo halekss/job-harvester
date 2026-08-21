@@ -14,16 +14,21 @@ import { TALENTSOFT_CONNECTOR_ID } from "./client.js";
 
 // The RSS handler exposes no dedicated company-name field — the target domain is the closest
 // proxy available. Talentsoft career domains conventionally look like `recrutement.{company}.fr`
-// or `{company}.talent-soft.com`; this heuristic strips the common leading label and TLD and
-// title-cases what remains. It won't recover real acronyms (e.g. "mgen" -> "Mgen", not "MGEN"),
-// so it's a best-effort fallback, not an authoritative company name.
+// (MGEN) or `{company}-{suffix}.talent-soft.com` (AGIRC-ARRCO, CNP, ADEME... - the more common
+// pattern in practice, verified live on 7 real instances 2026-08-21) - this heuristic strips the
+// common leading/trailing platform labels on either pattern and title-cases what remains. It
+// won't recover real acronyms (e.g. "mgen" -> "Mgen", not "MGEN"), so it's a best-effort
+// fallback, not an authoritative company name.
+const PLATFORM_LABELS = new Set(["recrutement", "recrute", "career", "carriere", "carrieres", "cand", "emploi", "jobs", "www"]);
+
 function companyNameFromDomain(domain: string): string {
   const labels = domain.split(".");
   const withoutTld = labels.length > 2 ? labels.slice(0, -1) : labels;
-  const meaningful = withoutTld.filter((label) => !["recrutement", "emploi", "carrieres", "www"].includes(label));
+  const meaningful = withoutTld.filter((label) => !PLATFORM_LABELS.has(label));
   const core = meaningful[0] ?? withoutTld[0] ?? domain;
   return core
     .split("-")
+    .filter((word) => !PLATFORM_LABELS.has(word.toLowerCase()))
     .map((word) => (word.length > 0 ? word[0]!.toUpperCase() + word.slice(1) : word))
     .join(" ");
 }
@@ -36,9 +41,13 @@ function stripReferencePrefix(title: string): string {
 
 // JOB-31 : vérifié en direct — la catégorie qui porte l'adresse ressemble à
 // "59 bis boulevard Jean Jaurès, 74500 EVIAN-LES-BAINS, france" (virgule + code postal à 5
-// chiffres) ; les autres catégories (filière/métier, type de contrat) n'ont jamais ce motif.
+// chiffres) chez MGEN ; les autres catégories (filière/métier, type de contrat) n'ont jamais ce
+// motif.
+// JOB-audit-2026-08-21 : d'autres clients Talentsoft (Groupe ADP, vérifié en direct) formatent
+// l'adresse sans virgule avant le code postal ("21 quai d'Austerlitz 75013 Paris") - la seule
+// invariante fiable entre les deux formats est la présence d'un code postal à 5 chiffres.
 function findAddressCategory(categories: string[]): string | undefined {
-  return categories.find((category) => /,\s*\d{5}/.test(category));
+  return categories.find((category) => /\d{5}/.test(category));
 }
 
 function parseAddress(address: string): { city: string; postalCode?: string } {

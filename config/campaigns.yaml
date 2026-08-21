@@ -12,6 +12,16 @@ campaigns:
       workday:
         - { tenant: valeo, site: valeo_jobs, dc: wd3 }
       smartrecruiters: ["MAZARS"]
+      talentsoft:
+        - "agirc-arrco-career.talent-soft.com"
+        - "cnp-recrute.talent-soft.com"
+        - "groupeadp-recrute.talent-soft.com"
+        - "ministereinterieur-career.talent-soft.com"
+        - "cdcinformatique-career.talent-soft.com"
+        - "ademe-career.talent-soft.com"
+        - "actionlogement-recrute.talent-soft.com"
+      digitalRecruiters:
+        - "joinus.yzee-services.fr"
 
   - id: alternance-devweb-hdf
     romeCodes: [M1802, M1805, M1811]
@@ -23,3 +33,14 @@ campaigns:
       - { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 }
     contractTypes: [apprentissage, professionnalisation]
     schedule: "0 7 * * *"
+    targets:
+      talentsoft:
+        - "agirc-arrco-career.talent-soft.com"
+        - "cnp-recrute.talent-soft.com"
+        - "groupeadp-recrute.talent-soft.com"
+        - "ministereinterieur-career.talent-soft.com"
+        - "cdcinformatique-career.talent-soft.com"
+        - "ademe-career.talent-soft.com"
+        - "actionlogement-recrute.talent-soft.com"
+      digitalRecruiters:
+        - "joinus.yzee-services.fr"

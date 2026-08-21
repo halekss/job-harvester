@@ -1,5 +1,5 @@
 import { timedHealthCheck, type ConnectorHealth, type HarvestQuery } from "@job-harvester/core";
-import { DigitalRecruitersSearchResponseSchema } from "./types.js";
+import { DigitalRecruitersJobAdSchema, DigitalRecruitersSearchResponseSchema } from "./types.js";
 import { USER_AGENT } from "../../lib/user-agent.js";
 
 export const DIGITALRECRUITERS_CONNECTOR_ID = "digitalrecruiters";
@@ -20,6 +20,21 @@ const MAX_LIST_PAGES = 20;
 
 export interface DigitalRecruitersClientOptions {
   fetchImpl?: typeof fetch;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// JOB-audit-2026-08-20 : query.keywords (mots-cles de la campagne, ex. "data") n'etait jamais lu
+// ici, et `filters` reste volontairement vide dans le corps de requete (l'API ne documente pas
+// de recherche texte fiable) - une entreprise ciblee remontait donc TOUTES ses offres, sans
+// rapport avec le metier vise. Meme filtre par limite de mot que Workday/WTTJ/SmartRecruiters/
+// Talentsoft, applique sur le titre et le champ `job` (categorie/filiere metier) - il n'y a pas
+// de description sur cet endpoint de liste.
+function matchesKeywords(text: string, keywords: string[]): boolean {
+  if (keywords.length === 0) return true;
+  return keywords.some((keyword) => new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text));
 }
 
 function headers(): Record<string, string> {
@@ -58,6 +73,11 @@ export async function* fetchDigitalRecruitersOffers(
       }
       if (items.length === 0) break;
       for (const item of items) {
+        const parsed = DigitalRecruitersJobAdSchema.safeParse(item);
+        if (parsed.success) {
+          const searchableText = `${parsed.data.title} ${parsed.data.job ?? ""}`;
+          if (!matchesKeywords(searchableText, query.keywords)) continue;
+        }
         yield { domain, item };
       }
       if (items.length < LIST_PAGE_SIZE) break;

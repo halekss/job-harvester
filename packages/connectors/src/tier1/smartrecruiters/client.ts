@@ -1,5 +1,5 @@
-import { timedHealthCheck, type ConnectorHealth, type HarvestQuery } from "@job-harvester/core";
-import { SmartRecruitersSearchResponseSchema } from "./types.js";
+import { timedHealthCheck, stripHtml, type ConnectorHealth, type HarvestQuery } from "@job-harvester/core";
+import { SmartRecruitersPostingDetailSchema, SmartRecruitersSearchResponseSchema } from "./types.js";
 import { USER_AGENT } from "../../lib/user-agent.js";
 
 export const SMARTRECRUITERS_CONNECTOR_ID = "smartrecruiters";
@@ -16,6 +16,18 @@ function headers(): Record<string, string> {
 
 function isAlternanceRelevant(text: string): boolean {
   return /alternance|apprentissage|apprenti/i.test(text);
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// JOB-audit-2026-08-20 : query.keywords (mots-cles de la campagne, ex. "data") n'etait jamais lu
+// ici - une entreprise ciblee comme MAZARS remontait donc TOUTES ses offres en alternance, sans
+// rapport avec le metier vise par la campagne. Meme filtre par limite de mot que Workday/WTTJ.
+function matchesKeywords(text: string, keywords: string[]): boolean {
+  if (keywords.length === 0) return true;
+  return keywords.some((keyword) => new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text));
 }
 
 // JOB-32 : vérifié en direct (`totalFound` réel de 188 chez MAZARS, `offset`/`limit` acceptés
@@ -60,6 +72,11 @@ export async function* fetchSmartRecruitersOffers(
       const listing = item as { id?: string; name?: string };
       if (!listing.id || !isAlternanceRelevant(listing.name ?? "")) continue;
       const detail = await fetchPostingDetail(company, listing.id, fetchImpl);
+      const parsedDetail = SmartRecruitersPostingDetailSchema.safeParse(detail);
+      if (parsedDetail.success) {
+        const searchableText = `${parsedDetail.data.name} ${stripHtml(parsedDetail.data.jobAd?.sections?.jobDescription?.text ?? "")}`;
+        if (!matchesKeywords(searchableText, query.keywords)) continue;
+      }
       // JOB-34 : `company` (le slug de l'entreprise ciblée) n'apparaît dans aucun champ de la
       // réponse de détail elle-même — sans lui, normalize.ts ne peut pas reconstruire une URL
       // de repli valide (`/v1/companies/{company}/postings/{id}`) si l'API omet un jour

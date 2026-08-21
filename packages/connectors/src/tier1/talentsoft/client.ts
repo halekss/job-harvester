@@ -34,6 +34,18 @@ function extractAllTags(itemXml: string, tag: string): string[] {
   return Array.from(matches, (m) => decodeXmlEntities((m[1] ?? "").trim()));
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// JOB-audit-2026-08-20 : query.keywords (mots-cles de la campagne, ex. "data") n'etait jamais lu
+// ici - une entreprise ciblee remontait donc TOUT son flux RSS, sans rapport avec le metier vise
+// par la campagne. Meme filtre par limite de mot que Workday/WTTJ/SmartRecruiters.
+function matchesKeywords(text: string, keywords: string[]): boolean {
+  if (keywords.length === 0) return true;
+  return keywords.some((keyword) => new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text));
+}
+
 // JOB-31 : vérifié en direct — format RSS standard du handler générique Talentsoft
 // (`/handlers/offerRss.ashx`), pas besoin d'une lib XML complète pour ce format simple.
 function parseRssItems(xml: string): TalentsoftRssItem[] {
@@ -115,6 +127,8 @@ export async function* fetchTalentsoftOffers(
     }
 
     for (const item of items) {
+      const searchableText = `${item.title} ${item.description}`;
+      if (!matchesKeywords(searchableText, query.keywords)) continue;
       yield { domain, item };
     }
   }
