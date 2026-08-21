@@ -20,7 +20,7 @@ export async function probeTalentsoft(slug: string, fetchImpl: typeof fetch): Pr
     const allowed = await isAllowedByRobots(rootUrl, USER_AGENT, fetchImpl);
     if (!allowed) continue;
     try {
-      const response = await fetchImpl(rootUrl, { headers: { "User-Agent": USER_AGENT } });
+      const response = await fetchImpl(rootUrl, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(10_000) });
       if (!response.ok) continue;
       const html = await response.text();
       if (looksLikeTalentsoft(html)) return domain;

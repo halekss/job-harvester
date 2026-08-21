@@ -7,6 +7,7 @@ export async function probeDigitalRecruiters(slug: string, fetchImpl: typeof fet
     method: "POST",
     headers: { "User-Agent": USER_AGENT, "Content-Type": "application/json" },
     body: JSON.stringify({ filters: {}, coordinates: { lat: 0, lng: 0 } }),
+    signal: AbortSignal.timeout(10_000),
   });
   if (!response.ok) return undefined;
   const body = (await response.json()) as { count?: unknown };

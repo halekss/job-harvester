@@ -13,6 +13,7 @@ export async function probeWorkday(slug: string, fetchImpl: typeof fetch): Promi
         method: "POST",
         headers: { "Content-Type": "application/json", "User-Agent": USER_AGENT },
         body: JSON.stringify({ appliedFacets: {}, limit: 1, offset: 0, searchText: "" }),
+        signal: AbortSignal.timeout(10_000),
       });
       if (response.ok) return { tenant, site, dc };
     } catch {
