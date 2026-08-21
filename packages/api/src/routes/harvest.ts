@@ -1,7 +1,7 @@
 import type { Hono } from "hono";
 import { z } from "zod";
 import { ContractTypeSchema } from "@job-harvester/core";
-import { LocationConfigSchema, runCampaignAcrossConnectors, type HarvestOverrides } from "@job-harvester/harvester";
+import { LocationConfigSchema, discoverTargets, runCampaignAcrossConnectors, type HarvestOverrides } from "@job-harvester/harvester";
 import type { AppDeps } from "../app.js";
 
 // JOB-audit-2026-08-21 : filtres ad-hoc du bouton "Lancer la collecte" (métier/contrat/ville) -
@@ -13,7 +13,7 @@ const HarvestOverridesBodySchema = z.object({
   location: LocationConfigSchema.optional(),
 });
 
-export function registerHarvestRoutes(app: Hono, { db, connectors, campaigns, env }: AppDeps): void {
+export function registerHarvestRoutes(app: Hono, { db, connectors, campaigns, env, campaignsFilePath, discoveryFetchImpl }: AppDeps): void {
   app.post("/harvest/:campaignId/run", async (c) => {
     const campaign = campaigns.find((cmp) => cmp.id === c.req.param("campaignId"));
     if (!campaign) return c.json({ error: "campaign_not_found" }, 404);
@@ -31,6 +31,12 @@ export function registerHarvestRoutes(app: Hono, { db, connectors, campaigns, en
     // correspond simplement à aucun connecteur enregistré (JOB-29).
     if (summaries.length === 0) return c.json({ error: "no_connector_supports_campaign" }, 422);
 
-    return c.json({ summaries });
+    // Découverte de cibles : uniquement quand le chemin du fichier de campagnes est fourni
+    // (jamais en test sans configuration explicite, jamais sur le cron — voir server.ts).
+    const discoveries = campaignsFilePath
+      ? await discoverTargets(db, campaignsFilePath, { fetchImpl: discoveryFetchImpl })
+      : { probed: 0, found: [] };
+
+    return c.json({ summaries, discoveries });
   });
 }

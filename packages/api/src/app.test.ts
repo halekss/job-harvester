@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from "vitest";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { createDb, offers as offersTable, applicationEvents as applicationEventsTable, offerToRow } from "@job-harvester/db";
@@ -473,6 +473,72 @@ describe("POST /harvest/:campaignId/run", () => {
     });
 
     expect(res.status).toBe(400);
+  });
+
+  it("runs target discovery after a successful harvest when campaignsFilePath is provided, and reports it in the response", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const dir = mkdtempSync(path.join(tmpdir(), "job-harvester-discovery-route-"));
+    tmpDirs.push(dir);
+    const campaignsFilePath = path.join(dir, "campaigns.yaml");
+    writeFileSync(
+      campaignsFilePath,
+      `campaigns:
+  - id: discovery-route-test
+    romeCodes: [M1403]
+    keywords: []
+    locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }]
+    contractTypes: [apprentissage]
+`,
+      "utf-8",
+    );
+    const connector = {
+      id: "observing",
+      tier: 0 as const,
+      supports: () => true,
+      async *fetch() {},
+      normalize: (raw: { payload: unknown }) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const discoveryFetchImpl = async () => new Response(JSON.stringify({ count: 1 }), { status: 200 });
+    const app = createApp({ db, connectors: [connector], campaigns: [{ id: "discovery-route-test", romeCodes: ["M1403"], keywords: [], locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }], contractTypes: ["apprentissage"] }], env: {}, campaignsFilePath, discoveryFetchImpl });
+
+    const res = await app.request("/harvest/discovery-route-test/run", { method: "POST" });
+    const body = (await res.json()) as { discoveries: { probed: number; found: unknown[] } };
+
+    expect(res.status).toBe(200);
+    expect(body.discoveries.probed).toBe(1);
+    expect(body.discoveries.found.length).toBeGreaterThan(0);
+  });
+
+  it("omits real discovery work when campaignsFilePath is not provided (back-compat)", async () => {
+    const db = createDb(tmpDbPath());
+    const connector = {
+      id: "observing-no-discovery",
+      tier: 0 as const,
+      supports: () => true,
+      async *fetch() {},
+      normalize: (raw: { payload: unknown }) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing-no-discovery", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const campaign: CampaignConfig = {
+      id: "no-discovery-test",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+    };
+    const app = createApp({ db, connectors: [connector], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/no-discovery-test/run", { method: "POST" });
+    const body = (await res.json()) as { discoveries: { probed: number; found: unknown[] } };
+
+    expect(res.status).toBe(200);
+    expect(body.discoveries).toEqual({ probed: 0, found: [] });
   });
 });
 

@@ -14,6 +14,8 @@ export interface AppDeps {
   connectors: Connector[];
   campaigns: CampaignConfig[];
   env: Record<string, string | undefined>;
+  campaignsFilePath?: string;
+  discoveryFetchImpl?: typeof fetch;
 }
 
 export function createApp(deps: AppDeps): Hono {
