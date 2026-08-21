@@ -378,6 +378,102 @@ describe("POST /harvest/:campaignId/run", () => {
     const res = await app.request("/harvest/does-not-exist/run", { method: "POST" });
     expect(res.status).toBe(404);
   });
+
+  // JOB-audit-2026-08-21 : filtres ad-hoc (métier/contrat/ville) du bouton "Lancer la collecte" -
+  // un corps JSON optionnel remplace les champs correspondants de la campagne pour cette
+  // collecte, sans jamais réécrire campaigns.yaml.
+  it("applies keyword/contractType/location overrides from an optional request body", async () => {
+    const db = createDb(tmpDbPath());
+    let receivedQuery: { keywords: string[]; contractTypes: string[]; location: { label: string } } | undefined;
+    const observingConnector = {
+      id: "observing",
+      tier: 0 as const,
+      supports: () => true,
+      async *fetch(query: unknown) {
+        receivedQuery = query as typeof receivedQuery;
+      },
+      normalize: (raw: { payload: unknown }) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const campaign: CampaignConfig = {
+      id: "overrides-test",
+      romeCodes: ["M1403"],
+      keywords: ["data"],
+      locations: [
+        { label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 },
+        { label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 },
+      ],
+      contractTypes: ["apprentissage"],
+    };
+    const app = createApp({ db, connectors: [observingConnector], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/overrides-test/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        keywords: ["marketing"],
+        contractTypes: ["autre"],
+        location: { label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 },
+      }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(receivedQuery?.keywords).toEqual(["marketing"]);
+    expect(receivedQuery?.contractTypes).toEqual(["autre"]);
+    expect(receivedQuery?.location).toEqual({ label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 });
+  });
+
+  it("behaves exactly as before when no request body is sent (back-compat)", async () => {
+    const db = createDb(tmpDbPath());
+    let fetchCallCount = 0;
+    const observingConnector = {
+      id: "observing-no-body",
+      tier: 0 as const,
+      supports: () => true,
+      async *fetch() {
+        fetchCallCount += 1;
+      },
+      normalize: (raw: { payload: unknown }) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing-no-body", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const campaign: CampaignConfig = {
+      id: "no-body-test",
+      romeCodes: ["M1403"],
+      keywords: ["data"],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+    };
+    const app = createApp({ db, connectors: [observingConnector], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/no-body-test/run", { method: "POST" });
+
+    expect(res.status).toBe(200);
+    expect(fetchCallCount).toBe(1);
+  });
+
+  it("returns 400 for an invalid overrides body", async () => {
+    const db = createDb(tmpDbPath());
+    const campaign: CampaignConfig = {
+      id: "invalid-body-test",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+      contractTypes: ["apprentissage"],
+    };
+    const app = createApp({ db, connectors: [], campaigns: [campaign], env: {} });
+
+    const res = await app.request("/harvest/invalid-body-test/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ contractTypes: ["not-a-real-contract-type"] }),
+    });
+
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("POST /harvest/:campaignId/run — multi-connector", () => {

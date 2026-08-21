@@ -4,7 +4,7 @@ import { isFuzzyDuplicate, mergeOffers, type Connector, type NormalizedOffer } f
 import { offers as offersTable, connectorRuns, offerToRow, rowToOffer, type Db } from "@job-harvester/db";
 import type { CampaignConfig } from "./config/campaign-schema.js";
 import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
-import { buildHarvestQuery } from "./build-harvest-query.js";
+import { buildHarvestQuery, type HarvestOverrides } from "./build-harvest-query.js";
 import { reportIncident, resolveIncidentIfHealthy } from "./linear/incident-reporter.js";
 
 // Une baseline calculée sur moins de runs que ça n'est pas fiable : on préfère ne pas
@@ -104,6 +104,7 @@ export async function runCampaign(
   connector: Connector,
   db: Db,
   env: Record<string, string | undefined>,
+  overrides: HarvestOverrides = {},
 ): Promise<RunSummary> {
   const guardedFetch = sharedGuardedFetch;
   const startedAt = new Date().toISOString();
@@ -112,9 +113,12 @@ export async function runCampaign(
   let rejectedCount = 0;
   let errorMessage: string | undefined;
 
+  // Filtre ville ad-hoc (JOB-audit-2026-08-21) : une seule localisation au lieu de la boucle sur
+  // toutes celles de la campagne, quand l'utilisateur a choisi une ville pour cette collecte.
+  const locations = overrides.location ? [overrides.location] : campaign.locations;
   let hasFetchedOnce = false;
-  for (const location of campaign.locations) {
-    const query = buildHarvestQuery(campaign, location);
+  for (const location of locations) {
+    const query = buildHarvestQuery(campaign, location, overrides);
     if (!connector.supports(query)) continue;
     if (connector.locationScoped === false) {
       if (hasFetchedOnce) continue;
@@ -172,14 +176,16 @@ export async function runCampaignAcrossConnectors(
   connectors: Connector[],
   db: Db,
   env: Record<string, string | undefined>,
+  overrides: HarvestOverrides = {},
 ): Promise<RunSummary[]> {
+  const locations = overrides.location ? [overrides.location] : campaign.locations;
   const supportedConnectors = connectors.filter((connector) =>
-    campaign.locations.some((location) => connector.supports(buildHarvestQuery(campaign, location))),
+    locations.some((location) => connector.supports(buildHarvestQuery(campaign, location, overrides))),
   );
 
   const summaries: RunSummary[] = [];
   for (const connector of supportedConnectors) {
-    summaries.push(await runCampaign(campaign, connector, db, env));
+    summaries.push(await runCampaign(campaign, connector, db, env, overrides));
   }
   return summaries;
 }

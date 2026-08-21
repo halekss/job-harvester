@@ -234,6 +234,62 @@ describe("runCampaign — locationScoped connectors", () => {
   });
 });
 
+describe("runCampaign — ad-hoc filter overrides (JOB-audit-2026-08-21)", () => {
+  it("passes overridden keywords/contractTypes through to connector.fetch's query", async () => {
+    const db = createDb(tmpDbPath());
+    let receivedQuery: { keywords: string[]; contractTypes: string[] } | undefined;
+    const observingConnector: Connector = {
+      id: "observing-overrides",
+      tier: 0,
+      supports: () => true,
+      async *fetch(query) {
+        receivedQuery = query as { keywords: string[]; contractTypes: string[] };
+      },
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing-overrides", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    await runCampaign(campaign, observingConnector, db, {}, { keywords: ["marketing"], contractTypes: ["autre"] });
+
+    expect(receivedQuery?.keywords).toEqual(["marketing"]);
+    expect(receivedQuery?.contractTypes).toEqual(["autre"]);
+  });
+
+  it("restricts the run to a single overridden location instead of looping over every campaign location", async () => {
+    const db = createDb(tmpDbPath());
+    const multiLocationCampaign: CampaignConfig = {
+      id: "multi-location-override-test",
+      romeCodes: ["M1403"],
+      keywords: [],
+      locations: [
+        { label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 },
+        { label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 },
+      ],
+      contractTypes: ["apprentissage"],
+    };
+    const seenLocations: string[] = [];
+    const observingConnector: Connector = {
+      id: "observing-location",
+      tier: 0,
+      supports: () => true,
+      async *fetch(query) {
+        seenLocations.push((query as { location: { label: string } }).location.label);
+      },
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "observing-location", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+    const amiens = multiLocationCampaign.locations[1]!;
+
+    await runCampaign(multiLocationCampaign, observingConnector, db, {}, { location: amiens });
+
+    expect(seenLocations).toEqual(["Amiens"]);
+  });
+});
+
 describe("runCampaignAcrossConnectors", () => {
   it("runs only the connectors that support the campaign and returns one summary each", async () => {
     const db = createDb(tmpDbPath());

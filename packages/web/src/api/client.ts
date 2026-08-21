@@ -68,8 +68,18 @@ export interface RunSummary {
   errorMessage?: string;
 }
 
-export async function runHarvest(campaignId: string): Promise<RunSummary[]> {
-  const res = await fetch(`/harvest/${campaignId}/run`, { method: "POST" });
+export interface HarvestFilters {
+  keywords?: string[];
+  contractTypes?: string[];
+  location?: { label: string; lat: number; lng: number; radiusKm: number };
+}
+
+export async function runHarvest(campaignId: string, filters?: HarvestFilters): Promise<RunSummary[]> {
+  const hasFilters = filters && (filters.keywords?.length || filters.contractTypes?.length || filters.location);
+  const res = await fetch(`/harvest/${campaignId}/run`, {
+    method: "POST",
+    ...(hasFilters ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(filters) } : {}),
+  });
   const body = await res.json();
   if (!res.ok) throw new Error(body.error ?? `POST /harvest/${campaignId}/run failed: HTTP ${res.status}`);
   return body.summaries;
