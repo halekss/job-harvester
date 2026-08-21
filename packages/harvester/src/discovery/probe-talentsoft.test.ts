@@ -16,6 +16,11 @@ describe("probeTalentsoft", () => {
     const result = await probeTalentsoft("acme", fetchImpl);
 
     expect(result).toBe("acme-recrute.talent-soft.com");
+
+    // The robots.txt fetch (the first request per candidate domain) must also carry a timeout,
+    // even though it's issued internally by isAllowedByRobots() with no init of its own.
+    const robotsCall = fetchImpl.mock.calls.find(([input]) => String(input).endsWith("/robots.txt"));
+    expect(robotsCall?.[1]?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it("returns undefined when none of the candidate domains carry Talentsoft markers", async () => {
