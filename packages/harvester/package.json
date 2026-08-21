@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@job-harvester/connectors": "workspace:*",
     "@job-harvester/core": "workspace:*",
     "@job-harvester/db": "workspace:*",
     "croner": "^10.0.1",
