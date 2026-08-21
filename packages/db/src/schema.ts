@@ -63,3 +63,12 @@ export const connectorRuns = sqliteTable("connector_runs", {
   ok: integer("ok", { mode: "boolean" }).notNull(),
   errorMessage: text("error_message"),
 });
+
+export const discoveryProbes = sqliteTable("discovery_probes", {
+  id: text("id").primaryKey(),
+  companySlug: text("company_slug").notNull(),
+  platform: text("platform").notNull(),
+  found: integer("found", { mode: "boolean" }).notNull(),
+  target: text("target", { mode: "json" }).$type<string | { tenant: string; site: string; dc: string }>(),
+  probedAt: text("probed_at").notNull(),
+});
