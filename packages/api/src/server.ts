@@ -27,7 +27,8 @@ try {
 }
 
 const db = createDb(path.resolve(repoRoot, process.env.DB_PATH ?? "./job-harvester.sqlite"));
-const campaigns = loadCampaigns(path.resolve(repoRoot, process.env.CAMPAIGNS_FILE ?? "./config/campaigns.yaml"));
+const campaignsFilePath = path.resolve(repoRoot, process.env.CAMPAIGNS_FILE ?? "./config/campaigns.yaml");
+const campaigns = loadCampaigns(campaignsFilePath);
 const connectors = [
   labonnealternanceConnector,
   francetravailConnector,
@@ -40,7 +41,7 @@ const connectors = [
   welcometothejungleConnector,
 ];
 
-const app = createApp({ db, connectors, campaigns, env: process.env });
+const app = createApp({ db, connectors, campaigns, env: process.env, campaignsFilePath });
 
 if (process.env.ENABLE_SCHEDULER === "true") {
   startScheduler(campaigns, connectors, db, process.env);
