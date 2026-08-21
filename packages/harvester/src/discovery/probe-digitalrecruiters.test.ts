@@ -20,4 +20,14 @@ describe("probeDigitalRecruiters", () => {
 
     expect(result).toBeUndefined();
   });
+
+  it("returns undefined when the API returns 200 but the count field is not numeric", async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => {
+      return new Response(JSON.stringify({ items: [] }), { status: 200 });
+    });
+
+    const result = await probeDigitalRecruiters("test-company", fetchImpl);
+
+    expect(result).toBeUndefined();
+  });
 });
