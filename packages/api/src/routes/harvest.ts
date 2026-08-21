@@ -1,7 +1,13 @@
 import type { Hono } from "hono";
 import { z } from "zod";
 import { ContractTypeSchema } from "@job-harvester/core";
-import { LocationConfigSchema, discoverTargets, runCampaignAcrossConnectors, type HarvestOverrides } from "@job-harvester/harvester";
+import {
+  LocationConfigSchema,
+  discoverTargets,
+  runCampaignAcrossConnectors,
+  type DiscoveredTarget,
+  type HarvestOverrides,
+} from "@job-harvester/harvester";
 import type { AppDeps } from "../app.js";
 
 // JOB-audit-2026-08-21 : filtres ad-hoc du bouton "Lancer la collecte" (métier/contrat/ville) -
@@ -33,9 +39,17 @@ export function registerHarvestRoutes(app: Hono, { db, connectors, campaigns, en
 
     // Découverte de cibles : uniquement quand le chemin du fichier de campagnes est fourni
     // (jamais en test sans configuration explicite, jamais sur le cron — voir server.ts).
-    const discoveries = campaignsFilePath
-      ? await discoverTargets(db, campaignsFilePath, { fetchImpl: discoveryFetchImpl })
-      : { probed: 0, found: [] };
+    // Jamais bloquant si un sondage échoue : à ce stade la collecte a déjà réussi et ses
+    // résultats sont déjà persistés en base, donc une erreur de découverte ne doit jamais
+    // faire échouer la réponse HTTP.
+    let discoveries: { probed: number; found: DiscoveredTarget[] } = { probed: 0, found: [] };
+    if (campaignsFilePath) {
+      try {
+        discoveries = await discoverTargets(db, campaignsFilePath, { fetchImpl: discoveryFetchImpl });
+      } catch (err) {
+        console.error("[discovery] échec non bloquant :", err);
+      }
+    }
 
     return c.json({ summaries, discoveries });
   });
