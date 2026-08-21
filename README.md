@@ -30,10 +30,10 @@ Les offres apparaissent ensuite dans le jobboard (`pnpm dev:web`).
 ## Planifier des collectes automatiques (cron)
 
 Chaque campagne de `config/campaigns.yaml` peut définir un champ `schedule` (expression cron,
-ex. `"0 7 * * *"` pour 7h chaque jour). Le serveur API programme alors automatiquement
-`POST /harvest/:campaignId/run` pour cette campagne à l'horaire indiqué — mais seulement si la
-variable d'environnement `ENABLE_SCHEDULER=true` est définie (désactivé par défaut, pour ne pas
-lancer de collectes réelles à chaque redémarrage en développement local).
+ex. `"0 7 * * *"` pour 7h chaque jour). Le serveur API exécute alors automatiquement la collecte
+de cette campagne à l'horaire indiqué (en interne, sans passer par la route HTTP ci-dessus) —
+mais seulement si la variable d'environnement `ENABLE_SCHEDULER=true` est définie (désactivé par
+défaut, pour ne pas lancer de collectes réelles à chaque redémarrage en développement local).
 
 ## Ajouter une source
 
@@ -100,8 +100,9 @@ Talentsoft, DigitalRecruiters) ; celles qui répondent positivement sont ajouté
 sous `targets.<plateforme>` de chaque campagne. Concrètement, `git status` peut donc afficher des
 modifications non indexées sur ce fichier après avoir lancé une collecte en local — c'est normal,
 il suffit de relire le diff et de committer si les cibles ajoutées sont pertinentes. Ce
-comportement n'a lieu que sur les collectes déclenchées depuis l'interface (bouton "Lancer la
-collecte"), jamais sur les exécutions planifiées par le cron.
+comportement a lieu sur tout appel à la route de collecte (`POST /harvest/:campaignId/run`, que
+ce soit via le bouton "Lancer la collecte" ou un appel direct comme `curl`), jamais sur les
+exécutions planifiées par le cron.
 
 Contrairement à La Bonne Alternance et France Travail (qui recherchent sur tout le marché),
 les connecteurs `workday` et `smartrecruiters` ciblent des entreprises précises, déclarées
