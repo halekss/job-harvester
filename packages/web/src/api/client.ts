@@ -74,7 +74,18 @@ export interface HarvestFilters {
   location?: { label: string; lat: number; lng: number; radiusKm: number };
 }
 
-export async function runHarvest(campaignId: string, filters?: HarvestFilters): Promise<RunSummary[]> {
+export interface DiscoveredTarget {
+  companySlug: string;
+  platform: string;
+  target: string | { tenant: string; site: string; dc: string };
+}
+
+export interface HarvestRunResult {
+  summaries: RunSummary[];
+  discoveries: { probed: number; found: DiscoveredTarget[] };
+}
+
+export async function runHarvest(campaignId: string, filters?: HarvestFilters): Promise<HarvestRunResult> {
   const hasFilters = filters && (filters.keywords?.length || filters.contractTypes?.length || filters.location);
   const res = await fetch(`/harvest/${campaignId}/run`, {
     method: "POST",
@@ -82,7 +93,9 @@ export async function runHarvest(campaignId: string, filters?: HarvestFilters): 
   });
   const body = await res.json();
   if (!res.ok) throw new Error(body.error ?? `POST /harvest/${campaignId}/run failed: HTTP ${res.status}`);
-  return body.summaries;
+  // discoveries est optionnel côté réponse (routes/tests qui ne le fournissent pas encore) -
+  // valeur neutre par défaut plutôt qu'un accès undefined côté composant.
+  return { summaries: body.summaries, discoveries: body.discoveries ?? { probed: 0, found: [] } };
 }
 
 export async function postEvent(

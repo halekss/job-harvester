@@ -107,4 +107,31 @@ describe("HarvestControl — ad-hoc filters", () => {
       expect(body.location).toEqual({ label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 });
     });
   });
+
+  it("displays discovered targets after a harvest run", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/campaigns")) {
+        return new Response(JSON.stringify({ campaigns: [{ id: "alternance-data-hdf" }] }), { status: 200 });
+      }
+      if (url.includes("/harvest/")) {
+        return new Response(
+          JSON.stringify({
+            summaries: [],
+            discoveries: { probed: 3, found: [{ companySlug: "acme", platform: "digitalRecruiters", target: "joinus.acme.fr" }] },
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderWithClient(<HarvestControl />);
+
+    await user.click(await screen.findByRole("button", { name: "Lancer la collecte" }));
+
+    expect(await screen.findByText(/1 nouvelle cible découverte/)).toBeInTheDocument();
+    expect(screen.getByText(/acme.*digitalRecruiters.*joinus\.acme\.fr/)).toBeInTheDocument();
+  });
 });

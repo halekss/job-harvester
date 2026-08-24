@@ -22,17 +22,18 @@ Les campagnes sont déclarées dans `config/campaigns.yaml`. Pour lancer la camp
 curl -X POST http://localhost:3000/harvest/alternance-data-hdf/run
 ```
 
-La réponse a la forme `{ summaries: [...] }` : un résumé (`rawCount`, `normalizedCount`,
-`rejectedCount`) par connecteur supportant la campagne. Les offres apparaissent ensuite dans
-le jobboard (`pnpm dev:web`).
+La réponse a la forme `{ summaries: [...], discoveries: { probed, found } }` : `summaries` est
+un résumé (`rawCount`, `normalizedCount`, `rejectedCount`) par connecteur supportant la
+campagne, et `discoveries` rend compte de la découverte de nouvelles cibles (voir plus bas).
+Les offres apparaissent ensuite dans le jobboard (`pnpm dev:web`).
 
 ## Planifier des collectes automatiques (cron)
 
 Chaque campagne de `config/campaigns.yaml` peut définir un champ `schedule` (expression cron,
-ex. `"0 7 * * *"` pour 7h chaque jour). Le serveur API programme alors automatiquement
-`POST /harvest/:campaignId/run` pour cette campagne à l'horaire indiqué — mais seulement si la
-variable d'environnement `ENABLE_SCHEDULER=true` est définie (désactivé par défaut, pour ne pas
-lancer de collectes réelles à chaque redémarrage en développement local).
+ex. `"0 7 * * *"` pour 7h chaque jour). Le serveur API exécute alors automatiquement la collecte
+de cette campagne à l'horaire indiqué (en interne, sans passer par la route HTTP ci-dessus) —
+mais seulement si la variable d'environnement `ENABLE_SCHEDULER=true` est définie (désactivé par
+défaut, pour ne pas lancer de collectes réelles à chaque redémarrage en développement local).
 
 ## Ajouter une source
 
@@ -90,6 +91,18 @@ Voir `docs/sources.md` pour le détail de l'API. Les identifiants (`client_id` e
 renseignent dans `.env` sous `FRANCE_TRAVAIL_CLIENT_ID` et `FRANCE_TRAVAIL_CLIENT_SECRET`.
 
 ## Configurer les cibles Workday et SmartRecruiters
+
+Depuis l'ajout de la découverte automatique de cibles, `config/campaigns.yaml` n'est plus
+uniquement lu : il est aussi réécrit automatiquement par l'application elle-même après chaque
+collecte déclenchée manuellement. À chaque `POST /harvest/:campaignId/run`, les entreprises
+nouvellement vues sont sondées sur les quatre plateformes cibles (Workday, SmartRecruiters,
+Talentsoft, DigitalRecruiters) ; celles qui répondent positivement sont ajoutées automatiquement
+sous `targets.<plateforme>` de chaque campagne. Concrètement, `git status` peut donc afficher des
+modifications non indexées sur ce fichier après avoir lancé une collecte en local — c'est normal,
+il suffit de relire le diff et de committer si les cibles ajoutées sont pertinentes. Ce
+comportement a lieu sur tout appel à la route de collecte (`POST /harvest/:campaignId/run`, que
+ce soit via le bouton "Lancer la collecte" ou un appel direct comme `curl`), jamais sur les
+exécutions planifiées par le cron.
 
 Contrairement à La Bonne Alternance et France Travail (qui recherchent sur tout le marché),
 les connecteurs `workday` et `smartrecruiters` ciblent des entreprises précises, déclarées

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getCampaigns, runHarvest, type HarvestFilters, type RunSummary } from "../api/client.js";
+import { getCampaigns, runHarvest, type HarvestFilters, type HarvestRunResult, type RunSummary } from "../api/client.js";
 
-type LastResult = { campaignId: string; summaries: RunSummary[] } | { campaignId: string; error: string };
+type LastResult = ({ campaignId: string } & HarvestRunResult) | { campaignId: string; error: string };
 
 // JOB-audit-2026-08-21 : filtres ad-hoc du bouton "Lancer la collecte" - remplacent les champs
 // correspondants de la campagne pour CETTE collecte uniquement, sans jamais toucher
@@ -33,8 +33,8 @@ export function HarvestControl() {
 
   const mutation = useMutation({
     mutationFn: ({ campaignId, filters }: { campaignId: string; filters: HarvestFilters }) => runHarvest(campaignId, filters),
-    onSuccess: (summaries, { campaignId }) => {
-      setLastResult({ campaignId, summaries });
+    onSuccess: (result, { campaignId }) => {
+      setLastResult({ campaignId, ...result });
       queryClient.invalidateQueries({ queryKey: ["offers"] });
     },
     onError: (error, { campaignId }) => {
@@ -125,6 +125,18 @@ export function HarvestControl() {
         </ul>
       )}
       {lastResult && "error" in lastResult && <p className="text-xs text-red-400">Erreur : {lastResult.error}</p>}
+      {lastResult && "discoveries" in lastResult && lastResult.discoveries.found.length > 0 && (
+        <div className="text-xs text-[var(--color-text-muted)]">
+          <p>{lastResult.discoveries.found.length} nouvelle{lastResult.discoveries.found.length > 1 ? "s" : ""} cible{lastResult.discoveries.found.length > 1 ? "s" : ""} découverte{lastResult.discoveries.found.length > 1 ? "s" : ""} (sur {lastResult.discoveries.probed} entreprise{lastResult.discoveries.probed > 1 ? "s" : ""} sondée{lastResult.discoveries.probed > 1 ? "s" : ""}) :</p>
+          <ul>
+            {lastResult.discoveries.found.map((d) => (
+              <li key={`${d.companySlug}-${d.platform}`}>
+                {d.companySlug} — {d.platform} — {typeof d.target === "string" ? d.target : `${d.target.tenant}.${d.target.dc}`}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

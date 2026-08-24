@@ -16,3 +16,5 @@ export * from "./tier1/digitalrecruiters/connector.js";
 export * from "./tier1/digitalrecruiters/normalize.js";
 export * from "./tier1/welcometothejungle/connector.js";
 export * from "./tier1/welcometothejungle/normalize.js";
+export * from "./lib/user-agent.js";
+export * from "./lib/robots.js";

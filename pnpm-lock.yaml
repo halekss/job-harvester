@@ -132,6 +132,9 @@ importers:
 
   packages/harvester:
     dependencies:
+      '@job-harvester/connectors':
+        specifier: workspace:*
+        version: link:../connectors
       '@job-harvester/core':
         specifier: workspace:*
         version: link:../core
