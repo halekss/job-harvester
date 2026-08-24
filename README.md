@@ -27,6 +27,17 @@ un résumé (`rawCount`, `normalizedCount`, `rejectedCount`) par connecteur supp
 campagne, et `discoveries` rend compte de la découverte de nouvelles cibles (voir plus bas).
 Les offres apparaissent ensuite dans le jobboard (`pnpm dev:web`).
 
+## Filtre de campagne centralisé
+
+Après `normalize()`, chaque offre — quel que soit le connecteur (tier0 ou tier1, qu'il applique
+ou non son propre pré-filtre) — est vérifiée par rapport au `contractTypes`/`keywords`/aux
+localisations effectifs de la campagne avant d'être persistée. Un connecteur qui ne filtre pas
+lui-même (ou filtre mal) ne peut donc plus laisser passer d'offres hors périmètre : le rejet
+correspondant est comptabilisé dans `rejectedCount` (voir ci-dessus et section `GET
+/connectors/health`). Cas particulier : une offre dont la localisation ne peut pas être résolue
+en département, alors que la campagne a un filtre de localisation actif, est exclue plutôt
+qu'acceptée par défaut (fail-closed), avec un `console.warn` pour le signaler.
+
 ## Planifier des collectes automatiques (cron)
 
 Chaque campagne de `config/campaigns.yaml` peut définir un champ `schedule` (expression cron,
@@ -51,8 +62,11 @@ Retourne, pour chaque connecteur enregistré, deux informations distinctes :
 
 - `lastRun` : le dernier run de collecte connu en base (`rawCount`, `normalizedCount`,
   `rejectedCount`, `ok`, `errorMessage`). `null` si le connecteur n'a encore jamais été
-  exécuté. Un `rejectedCount` élevé par rapport à `rawCount` indique un connecteur dont le
-  format de réponse a changé.
+  exécuté. Un `rejectedCount` élevé par rapport à `rawCount` peut avoir deux causes bien
+  distinctes : un échec de `normalize()` (le format de réponse du connecteur a changé — à
+  investiguer) ou un rejet par le filtre centralisé de campagne (contrat/mots-clés/localisation
+  — cas nominal, signifie simplement que le connecteur a ramené des offres hors du périmètre
+  demandé).
 - `live` : le résultat d'un vrai appel `healthCheck()` fait à l'instant de la requête
   (`ok`, `latencyMs`, `message` en cas d'échec) — indépendant de `lastRun`, donc utile pour
   détecter un problème (clé expirée, panne de la source) même si aucune collecte n'a encore
@@ -135,7 +149,11 @@ targets:
   smartrecruiters: ["MAZARS"]
 ```
 
-Les deux connecteurs filtrent déjà les offres non pertinentes (mot-clé "alternance" dans le
-titre côté Workday, titre contenant "alternance"/"apprentissage"/"apprenti" côté
-SmartRecruiters) — inutile de cibler une entreprise pour un métier qu'elle ne recrute
-manifestement pas en alternance, le connecteur ramènerait simplement 0 résultat.
+Les deux connecteurs dérivent leur pré-filtre du `contractTypes` effectif de la campagne plutôt
+que d'un mot-clé figé : recherche/filtrage sur "alternance" quand la campagne cible
+apprentissage/professionnalisation, sur "stage" quand elle cible un stage, et aucun terme (pas
+de pré-filtre côté connecteur) pour les autres types de contrat, faute de mot-clé unique fiable.
+Ce pré-filtre reste une optimisation réseau (limiter ce qui est ramené) — c'est le filtre
+centralisé post-`normalize()` (voir "Filtre de campagne centralisé" plus haut) qui garantit le
+résultat final, y compris si une entreprise ciblée ne recrute manifestement pas dans le
+périmètre demandé : le connecteur ramènera alors simplement 0 résultat après filtrage.
