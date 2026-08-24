@@ -76,7 +76,14 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
           return makeOffer(payload.id, payload.url, { title: "Développeur mobile", descriptionText: "React Native, Kotlin" });
         }
         if (payload.id === "cdi-wrong-contract") {
-          return makeOffer(payload.id, payload.url, { contractType: "autre" });
+          // Entreprise distincte de "data-ok" : même ville/titre, sinon isFuzzyDuplicate
+          // (packages/core/src/dedup/merge.ts) fusionnerait les deux offres en une seule ligne
+          // et masquerait une régression du filtre contractType (storedIds resterait correct
+          // même si le check contractType était cassé).
+          return makeOffer(payload.id, payload.url, {
+            contractType: "autre",
+            company: { name: "Gamma Corp", normalizedName: "gamma corp" },
+          });
         }
         return makeOffer(payload.id, payload.url);
       },
@@ -104,7 +111,12 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
         }
         if (payload.id === "no-department") {
           // Cas Workday : pas de département résolu du tout -> fail-closed attendu.
-          return makeOffer(payload.id, payload.url, { location: { label: "Lille", city: "Lille" } });
+          // Entreprise distincte de "data-ok" pour la même raison que cdi-wrong-contract
+          // ci-dessus : éviter qu'isFuzzyDuplicate masque une régression du fail-closed.
+          return makeOffer(payload.id, payload.url, {
+            location: { label: "Lille", city: "Lille" },
+            company: { name: "Delta Corp", normalizedName: "delta corp" },
+          });
         }
         // Entreprise distincte de "data-ok" (tier0Like) : même ville, même titre/mots-clés —
         // sans ça, isFuzzyDuplicate (packages/core/src/dedup/merge.ts) fusionne les deux offres
@@ -119,11 +131,20 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
     };
 
     const db = createDb(tmpDbPath());
-    await runCampaignAcrossConnectors(dataCampaign, [tier0Like, tier1Like], db, {});
+    const summaries = await runCampaignAcrossConnectors(dataCampaign, [tier0Like, tier1Like], db, {});
 
     const stored = db.select().from(offersTable).all();
     const storedIds = stored.map((row) => row.sourceOfferId).sort();
 
     expect(storedIds).toEqual(["data-ok", "lille-ok"]);
+
+    // Preuve que chaque rejet a bien eu lieu (et pas juste que storedIds "tombe juste") :
+    // devweb-offtopic (mots-clés), marseille-offtopic (département), cdi-wrong-contract
+    // (type de contrat), no-department (fail-closed) doivent chacun être rejetés. Sans cette
+    // assertion, storedIds seul ne détecterait pas une régression sur cdi-wrong-contract ou
+    // no-department : leurs offres partagent ville/titre avec data-ok et seraient simplement
+    // fusionnées par isFuzzyDuplicate si le filtre correspondant cessait de les rejeter.
+    const totalRejected = summaries.reduce((sum, summary) => sum + summary.rejectedCount, 0);
+    expect(totalRejected).toBe(4);
   });
 });
