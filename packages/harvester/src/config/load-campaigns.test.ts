@@ -44,12 +44,7 @@ campaigns:
 
     const devweb = findCampaign(campaigns, "alternance-devweb-hdf");
     expect(devweb?.romeCodes).toEqual(["M1802", "M1805", "M1811"]);
-    expect(devweb?.locations.map((location) => location.label)).toEqual([
-      "Lille 59000",
-      "Amiens 80000",
-      "Lens/Vendin-le-Vieil 62880",
-      "Paris 75000",
-    ]);
+    expect(devweb?.locations.map((location) => location.label)).toEqual(["Lille 59000", "Amiens 80000", "Paris 75000"]);
 
     const data = findCampaign(campaigns, "alternance-data-hdf");
     expect(data?.locations.map((location) => location.label)).toContain("Paris 75000");
