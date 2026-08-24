@@ -140,10 +140,11 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
 
     // Preuve que chaque rejet a bien eu lieu (et pas juste que storedIds "tombe juste") :
     // devweb-offtopic (mots-clés), marseille-offtopic (département), cdi-wrong-contract
-    // (type de contrat), no-department (fail-closed) doivent chacun être rejetés. Sans cette
-    // assertion, storedIds seul ne détecterait pas une régression sur cdi-wrong-contract ou
-    // no-department : leurs offres partagent ville/titre avec data-ok et seraient simplement
-    // fusionnées par isFuzzyDuplicate si le filtre correspondant cessait de les rejeter.
+    // (type de contrat), no-department (fail-closed) doivent chacun être rejetés. Les companies
+    // distinctes données à cdi-wrong-contract/no-department (voir plus haut) sont ce qui évite
+    // qu'isFuzzyDuplicate les masque et rend storedIds seul déjà probant ; cette assertion sur
+    // rejectedCount est une seconde ligne de défense, au cas où une future fixture rejetée
+    // repartagerait ville/company/titre avec une autre offre conservée.
     const totalRejected = summaries.reduce((sum, summary) => sum + summary.rejectedCount, 0);
     expect(totalRejected).toBe(4);
   });
