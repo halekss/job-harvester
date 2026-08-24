@@ -29,11 +29,13 @@ campaigns:
     locations:
       - { label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 }
       - { label: "Amiens 80000", lat: 49.903041, lng: 2.292605, radiusKm: 30 }
-      - { label: "Lens/Vendin-le-Vieil 62880", lat: 50.4344, lng: 2.8115, radiusKm: 20 }
       - { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 }
     contractTypes: [apprentissage, professionnalisation]
     schedule: "0 7 * * *"
     targets:
+      workday:
+        - { tenant: valeo, site: valeo_jobs, dc: wd3 }
+      smartrecruiters: ["MAZARS"]
       talentsoft:
         - "agirc-arrco-career.talent-soft.com"
         - "cnp-recrute.talent-soft.com"
