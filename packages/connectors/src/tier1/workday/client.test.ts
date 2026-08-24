@@ -181,6 +181,63 @@ describe("fetchWorkdayOffers", () => {
     };
     await expect(iterate()).rejects.toThrow(/HTTP 500/);
   });
+
+  it("searches for 'stage' instead of 'alternance' when contractTypes is ['stage'] (JOB-74)", async () => {
+    let searchBody: unknown;
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        searchBody = JSON.parse(init!.body as string);
+        return new Response(JSON.stringify({ total: 0, jobPostings: [] }), { status: 200 });
+      }
+      return new Response(detailResponseBody, { status: 200 });
+    });
+
+    const stageQuery: HarvestQuery = { ...query, contractTypes: ["stage"] };
+    for await (const _item of fetchWorkdayOffers(stageQuery, { fetchImpl })) {
+      // drain
+    }
+
+    expect(searchBody).toMatchObject({ searchText: "stage" });
+  });
+
+  it("searches with an empty searchText (no keyword constraint) when contractTypes is ['autre'] — no single reliable term exists", async () => {
+    let searchBody: unknown;
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        searchBody = JSON.parse(init!.body as string);
+        return new Response(JSON.stringify({ total: 0, jobPostings: [] }), { status: 200 });
+      }
+      return new Response(detailResponseBody, { status: 200 });
+    });
+
+    const cdiQuery: HarvestQuery = { ...query, contractTypes: ["autre"] };
+    for await (const _item of fetchWorkdayOffers(cdiQuery, { fetchImpl })) {
+      // drain
+    }
+
+    expect(searchBody).toMatchObject({ searchText: "" });
+  });
+
+  it("still searches for 'alternance' when contractTypes is apprentissage/professionnalisation (back-compat)", async () => {
+    let searchBody: unknown;
+    const fetchImpl = vi.fn<typeof fetch>(async (input, init) => {
+      const url = String(input);
+      if (url.endsWith("/jobs")) {
+        searchBody = JSON.parse(init!.body as string);
+        return new Response(JSON.stringify({ total: 0, jobPostings: [] }), { status: 200 });
+      }
+      return new Response(detailResponseBody, { status: 200 });
+    });
+
+    // `query` (fixture du fichier) a déjà contractTypes: ["apprentissage"].
+    for await (const _item of fetchWorkdayOffers(query, { fetchImpl })) {
+      // drain
+    }
+
+    expect(searchBody).toMatchObject({ searchText: "alternance" });
+  });
 });
 
 describe("checkWorkdayHealth", () => {

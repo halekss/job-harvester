@@ -1,4 +1,4 @@
-import { timedHealthCheck, stripHtml, type ConnectorHealth, type HarvestQuery, type WorkdayTarget } from "@job-harvester/core";
+import { timedHealthCheck, stripHtml, type ConnectorHealth, type ContractType, type HarvestQuery, type WorkdayTarget } from "@job-harvester/core";
 import { WorkdaySearchResponseSchema, WorkdayJobDetailSchema } from "./types.js";
 import { USER_AGENT } from "../../lib/user-agent.js";
 
@@ -66,6 +66,19 @@ function matchesKeywords(text: string, keywords: string[]): boolean {
   return keywords.some((keyword) => new RegExp(`\\b${escapeRegExp(keyword)}\\b`, "i").test(text));
 }
 
+// JOB-74 : l'API Workday n'expose qu'une recherche texte libre (`searchText`), pas de filtre
+// structuré par type de contrat. Un seul terme fiable existe par catégorie ; "autre" (CDI/CDD,
+// catégorie fourre-tout) et les jeux de contractTypes mixtes n'ont pas de terme unique fiable —
+// on préfère alors ne poser aucune contrainte de recherche (tout récupérer) et laisser le
+// filtre centralisé (JOB-73, en aval dans runCampaign) trancher sur le contractType inféré par
+// offre, plutôt que de deviner un mot-clé qui exclurait des résultats à tort.
+function searchTextForContractTypes(contractTypes: ContractType[]): string {
+  if (contractTypes.length === 0) return "";
+  if (contractTypes.every((type) => type === "apprentissage" || type === "professionnalisation")) return "alternance";
+  if (contractTypes.every((type) => type === "stage")) return "stage";
+  return "";
+}
+
 async function fetchJobDetail(
   target: WorkdayTarget,
   externalPath: string,
@@ -83,7 +96,7 @@ export async function* fetchWorkdayOffers(query: HarvestQuery, options: WorkdayC
   const fetchImpl = options.fetchImpl ?? fetch;
   const targets = query.targets?.workday ?? [];
   for (const target of targets) {
-    const listItems = await fetchJobList(target, "alternance", fetchImpl);
+    const listItems = await fetchJobList(target, searchTextForContractTypes(query.contractTypes), fetchImpl);
     for (const item of listItems) {
       const listing = item as { externalPath?: string };
       if (!listing.externalPath) continue;
