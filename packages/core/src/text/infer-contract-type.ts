@@ -8,5 +8,6 @@ export function inferContractTypeFromText(text: string): ContractType {
   // rather than losing the offer to "autre", which a strict-equality UI filter would exclude
   // entirely (JOB-33). Revisit if a source distinguishes the two more precisely.
   if (/alternan(t|ce)/i.test(text)) return "apprentissage";
+  if (/\bstages?\b|stagiaire/i.test(text)) return "stage";
   return "autre";
 }
