@@ -13,6 +13,7 @@ const CONTRACT_OPTIONS: Record<string, string[]> = {
   Alternance: ["apprentissage", "professionnalisation"],
   CDI: ["autre"],
   CDD: ["autre"],
+  Stage: ["stage"],
 };
 
 // Mêmes coordonnées/rayon que config/campaigns.yaml - une seule localisation au lieu de
@@ -20,6 +21,7 @@ const CONTRACT_OPTIONS: Record<string, string[]> = {
 const CITY_LOCATIONS: Record<string, { label: string; lat: number; lng: number; radiusKm: number }> = {
   Lille: { label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 },
   Amiens: { label: "Amiens 80000", lat: 49.903041, lng: 2.292605, radiusKm: 30 },
+  Paris: { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 },
 };
 
 export function HarvestControl() {
@@ -90,6 +92,7 @@ export function HarvestControl() {
             <option value="Alternance">Alternance</option>
             <option value="CDI">CDI</option>
             <option value="CDD">CDD</option>
+            <option value="Stage">Stage</option>
           </select>
         </label>
         <label className="flex items-center gap-1 text-sm">
@@ -102,6 +105,7 @@ export function HarvestControl() {
             <option value="">Toutes</option>
             <option value="Lille">Lille</option>
             <option value="Amiens">Amiens</option>
+            <option value="Paris">Paris</option>
           </select>
         </label>
         <button

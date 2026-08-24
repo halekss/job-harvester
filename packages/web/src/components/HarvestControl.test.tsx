@@ -108,6 +108,38 @@ describe("HarvestControl — ad-hoc filters", () => {
     });
   });
 
+  it("sends contractTypes: ['stage'] when Contrat=Stage is selected (JOB-62)", async () => {
+    const fetchMock = stubFetch();
+    const user = userEvent.setup();
+    renderWithClient(<HarvestControl />);
+
+    await user.selectOptions(await screen.findByLabelText("Contrat"), "Stage");
+    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
+
+    await waitFor(() => {
+      const harvestCall = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
+      expect(harvestCall).toBeDefined();
+      const body = JSON.parse(String(harvestCall![1]?.body ?? "{}"));
+      expect(body).toMatchObject({ contractTypes: ["stage"] });
+    });
+  });
+
+  it("sends the Paris location when Ville=Paris is selected (JOB-63)", async () => {
+    const fetchMock = stubFetch();
+    const user = userEvent.setup();
+    renderWithClient(<HarvestControl />);
+
+    await user.selectOptions(await screen.findByLabelText("Ville"), "Paris");
+    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
+
+    await waitFor(() => {
+      const harvestCall = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
+      expect(harvestCall).toBeDefined();
+      const body = JSON.parse(String(harvestCall![1]?.body ?? "{}"));
+      expect(body).toMatchObject({ location: { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 } });
+    });
+  });
+
   it("displays discovered targets after a harvest run", async () => {
     const fetchMock = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);
