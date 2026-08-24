@@ -238,8 +238,12 @@ describe("fetchFranceTravailOffers", () => {
       return new Response(JSON.stringify({ resultats: [] }), { status: 200 });
     });
 
-    const iterator = fetchFranceTravailOffers(noPostalCodeQuery, { clientId: "cid", clientSecret: "csecret", fetchImpl });
-    await expect(iterator.next()).rejects.toThrow(/Lille/);
+    const iterable = fetchFranceTravailOffers(noPostalCodeQuery, { clientId: "cid", clientSecret: "csecret", fetchImpl });
+    // fetchFranceTravailOffers is typed as the narrower AsyncIterable<unknown> (matching every
+    // other connector client's public return type in this codebase) — AsyncIterable has no
+    // .next() of its own, only [Symbol.asyncIterator](), which does. Going through the
+    // standard protocol method keeps the production return type unchanged for this fix.
+    await expect(iterable[Symbol.asyncIterator]().next()).rejects.toThrow(/Lille/);
   });
 
   it("throws a validation error when the token response is missing access_token", async () => {
