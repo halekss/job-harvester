@@ -176,6 +176,118 @@ describe("runCampaign", () => {
     expect(secondCapture.fetchImpl).toBeDefined();
     expect(secondCapture.fetchImpl).toBe(firstCapture.fetchImpl);
   });
+
+  it("rejects an offer whose contractType doesn't match the campaign's contractTypes, without upserting it (JOB-73)", async () => {
+    const stageOffer: RawOffer = { source: "fake", payload: { id: "stage-1", url: "https://example.com/jobs/stage-1" } };
+    const apprentissageOffer: RawOffer = { source: "fake", payload: { id: "appr-1", url: "https://example.com/jobs/appr-1" } };
+    const mixedConnector: Connector = {
+      id: "fake",
+      tier: 0,
+      supports: () => true,
+      async *fetch() {
+        yield stageOffer;
+        yield apprentissageOffer;
+      },
+      normalize(raw) {
+        const payload = raw.payload as { id: string; url: string };
+        const offer = makeOffer(payload.id, payload.url);
+        return { ...offer, contractType: payload.id === "stage-1" ? "stage" : "apprentissage" };
+      },
+      async healthCheck() {
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const db = createDb(tmpDbPath());
+    // `campaign` (fixture partagée du fichier) a contractTypes: ["apprentissage"].
+    const summary = await runCampaign(campaign, mixedConnector, db, {});
+
+    expect(summary).toMatchObject({ rawCount: 2, normalizedCount: 2, rejectedCount: 1 });
+    const stored = db.select().from(offersTable).all();
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.contractType).toBe("apprentissage");
+  });
+
+  it("rejects an offer outside every location covered by the run, without upserting it (JOB-73)", async () => {
+    const parisianCampaign: CampaignConfig = {
+      ...campaign,
+      locations: [
+        { label: "Lille 59000", lat: 50.63, lng: 3.05, radiusKm: 30 },
+        { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 },
+      ],
+    };
+    const marseilleOffer: RawOffer = { source: "fake", payload: { id: "mrs-1", url: "https://example.com/jobs/mrs-1" } };
+    const parisOffer: RawOffer = { source: "fake", payload: { id: "par-1", url: "https://example.com/jobs/par-1" } };
+    const geoConnector: Connector = {
+      id: "fake",
+      tier: 0,
+      // locationScoped absent (undefined !== false) : se comporte comme location-scoped,
+      // fetché à chaque itération de la boucle des localisations — les deux offres sont
+      // donc yield à la même itération ici pour simplifier le test, peu importe pour ce
+      // qui est vérifié (le filtre compare à l'ENSEMBLE des départements du run).
+      supports: () => true,
+      async *fetch() {
+        yield marseilleOffer;
+        yield parisOffer;
+      },
+      normalize(raw) {
+        const payload = raw.payload as { id: string; url: string };
+        const offer = makeOffer(payload.id, payload.url);
+        return {
+          ...offer,
+          location:
+            payload.id === "mrs-1"
+              ? { label: "Marseille 13000", city: "Marseille", department: "13" }
+              : { label: "Paris 75000", city: "Paris", department: "75" },
+        };
+      },
+      async healthCheck() {
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const db = createDb(tmpDbPath());
+    const summary = await runCampaign(parisianCampaign, geoConnector, db, {});
+
+    // Le connecteur est locationScoped (pas false) donc fetché à chaque itération (2
+    // localisations) : 2 appels x 2 offres yield = 4 raw au total, mais chaque offre est
+    // traitée à chaque itération -> on ne vérifie ici que l'invariant qui importe : l'offre
+    // parisienne survit (75 est dans locations), l'offre marseillaise est systématiquement
+    // rejetée (13 n'y est jamais).
+    const stored = db.select().from(offersTable).all();
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.department).toBe("75");
+    expect(summary.rejectedCount).toBeGreaterThan(0);
+  });
+
+  it("applies no location constraint when the campaign's locations have no resolvable department (back-compat with existing fixtures)", async () => {
+    // La fixture `campaign` partagée du fichier a locations: [{label: "Lille", ...}] (sans code
+    // postal) — ce test verrouille explicitement que ça n'active AUCUNE contrainte de
+    // localisation, pour que le test historique "normalizes, dedups, and stores offers..."
+    // (rawCount: 3, normalizedCount: 2, rejectedCount: 1) reste inchangé par ce ticket.
+    const rawOffers: RawOffer[] = [{ source: "fake", payload: { id: "1", url: "https://example.com/jobs/1" } }];
+    const fakeConnector: Connector = {
+      id: "fake",
+      tier: 0,
+      supports: () => true,
+      async *fetch() {
+        for (const raw of rawOffers) yield raw;
+      },
+      normalize(raw) {
+        const payload = raw.payload as { id: string; url: string };
+        return makeOffer(payload.id, payload.url);
+      },
+      async healthCheck() {
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const db = createDb(tmpDbPath());
+    const summary = await runCampaign(campaign, fakeConnector, db, {});
+
+    expect(summary).toMatchObject({ rawCount: 1, normalizedCount: 1, rejectedCount: 0 });
+    expect(db.select().from(offersTable).all()).toHaveLength(1);
+  });
 });
 
 describe("runCampaign — locationScoped connectors", () => {

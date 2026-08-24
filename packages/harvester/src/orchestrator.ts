@@ -6,6 +6,7 @@ import type { CampaignConfig } from "./config/campaign-schema.js";
 import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
 import { buildHarvestQuery, type HarvestOverrides } from "./build-harvest-query.js";
 import { reportIncident, resolveIncidentIfHealthy } from "./linear/incident-reporter.js";
+import { offerMatchesQuery, acceptableDepartmentsFromLocations } from "./query-filter.js";
 
 // Une baseline calculée sur moins de runs que ça n'est pas fiable : on préfère ne pas
 // alerter plutôt que de crier au loup sur les tout premiers runs d'un connecteur.
@@ -116,6 +117,11 @@ export async function runCampaign(
   // Filtre ville ad-hoc (JOB-audit-2026-08-21) : une seule localisation au lieu de la boucle sur
   // toutes celles de la campagne, quand l'utilisateur a choisi une ville pour cette collecte.
   const locations = overrides.location ? [overrides.location] : campaign.locations;
+  // JOB-73 : calculé une fois pour TOUT le run, pas par itération — un connecteur
+  // locationScoped:false n'est fetché qu'une fois avec la première localisation (voir plus
+  // bas), ses offres doivent quand même pouvoir matcher n'importe laquelle des localisations
+  // couvertes par ce run, pas seulement la première.
+  const acceptableDepartments = acceptableDepartmentsFromLocations(locations);
   let hasFetchedOnce = false;
   for (const location of locations) {
     const query = buildHarvestQuery(campaign, location, overrides);
@@ -131,6 +137,15 @@ export async function runCampaign(
         try {
           const normalized = connector.normalize(raw);
           normalizedCount += 1;
+          const matches = offerMatchesQuery(normalized, {
+            contractTypes: query.contractTypes,
+            keywords: query.keywords,
+            acceptableDepartments,
+          });
+          if (!matches) {
+            rejectedCount += 1;
+            continue;
+          }
           upsertOffer(db, normalized);
         } catch {
           rejectedCount += 1;
