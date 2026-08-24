@@ -125,6 +125,65 @@ describe("fetchSmartRecruitersOffers", () => {
     };
     await expect(iterate()).rejects.toThrow(/HTTP 500/);
   });
+
+  it("keeps postings whose name mentions 'stage' when contractTypes is ['stage'], drops alternance-only ones (JOB-74)", async () => {
+    const detailUrls: string[] = [];
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/postings?limit=50")) {
+        return new Response(
+          JSON.stringify({
+            content: [
+              { id: "1", name: "Stage Data Analyst H/F" },
+              { id: "2", name: "Alternance Data Analyst H/F" },
+            ],
+            totalFound: 2,
+          }),
+          { status: 200 },
+        );
+      }
+      detailUrls.push(url);
+      return new Response(JSON.stringify({ id: "1", name: "Stage Data Analyst H/F" }), { status: 200 });
+    });
+
+    const stageQuery: HarvestQuery = { ...query, contractTypes: ["stage"] };
+    const results: unknown[] = [];
+    for await (const item of fetchSmartRecruitersOffers(stageQuery, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(1);
+    expect(detailUrls[0]).toContain("/postings/1");
+  });
+
+  it("keeps every posting (no client-side contract pre-filter) when contractTypes is ['autre'] — no single reliable term exists", async () => {
+    const detailUrls: string[] = [];
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("/postings?limit=50")) {
+        return new Response(
+          JSON.stringify({
+            content: [
+              { id: "1", name: "Comptable H/F" },
+              { id: "2", name: "Alternance Data Analyst H/F" },
+            ],
+            totalFound: 2,
+          }),
+          { status: 200 },
+        );
+      }
+      detailUrls.push(url);
+      return new Response(JSON.stringify({ id: "1", name: "Comptable H/F" }), { status: 200 });
+    });
+
+    const cdiQuery: HarvestQuery = { ...query, contractTypes: ["autre"] };
+    const results: unknown[] = [];
+    for await (const item of fetchSmartRecruitersOffers(cdiQuery, { fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toHaveLength(2);
+  });
 });
 
 describe("checkSmartRecruitersHealth", () => {

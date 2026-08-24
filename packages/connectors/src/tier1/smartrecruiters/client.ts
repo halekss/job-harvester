@@ -1,4 +1,4 @@
-import { timedHealthCheck, stripHtml, type ConnectorHealth, type HarvestQuery } from "@job-harvester/core";
+import { timedHealthCheck, stripHtml, type ConnectorHealth, type ContractType, type HarvestQuery } from "@job-harvester/core";
 import { SmartRecruitersPostingDetailSchema, SmartRecruitersSearchResponseSchema } from "./types.js";
 import { USER_AGENT } from "../../lib/user-agent.js";
 
@@ -14,8 +14,21 @@ function headers(): Record<string, string> {
   return { "User-Agent": USER_AGENT };
 }
 
-function isAlternanceRelevant(text: string): boolean {
-  return /alternance|apprentissage|apprenti/i.test(text);
+// JOB-74 : le nom de la fiche (seul champ disponible avant de fetcher le détail) ne permet
+// qu'une heuristique texte, pas un vrai filtre structuré. "autre" (CDI/CDD, catégorie
+// fourre-tout) et les jeux de contractTypes mixtes n'ont pas de terme unique fiable — on
+// préfère alors ne poser aucune contrainte (tout garder pour fetch du détail) et laisser le
+// filtre centralisé (JOB-73, en aval dans runCampaign) trancher sur le contractType inféré une
+// fois le détail récupéré, plutôt que de deviner un mot-clé qui exclurait des résultats à tort.
+function matchesContractTypesHint(text: string, contractTypes: ContractType[]): boolean {
+  if (contractTypes.length === 0) return true;
+  if (contractTypes.every((type) => type === "apprentissage" || type === "professionnalisation")) {
+    return /alternance|apprentissage|apprenti/i.test(text);
+  }
+  if (contractTypes.every((type) => type === "stage")) {
+    return /\bstages?\b|stagiaire/i.test(text);
+  }
+  return true;
 }
 
 function escapeRegExp(value: string): string {
@@ -70,7 +83,7 @@ export async function* fetchSmartRecruitersOffers(
     const list = await fetchPostingsList(company, fetchImpl);
     for (const item of list) {
       const listing = item as { id?: string; name?: string };
-      if (!listing.id || !isAlternanceRelevant(listing.name ?? "")) continue;
+      if (!listing.id || !matchesContractTypesHint(listing.name ?? "", query.contractTypes)) continue;
       const detail = await fetchPostingDetail(company, listing.id, fetchImpl);
       const parsedDetail = SmartRecruitersPostingDetailSchema.safeParse(detail);
       if (parsedDetail.success) {
