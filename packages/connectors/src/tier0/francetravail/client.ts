@@ -102,15 +102,17 @@ function buildSearchUrl(query: Pick<HarvestQuery, "location" | "romeCodes">): UR
     url.searchParams.set("codeROME", query.romeCodes.join(","));
   }
   const departement = extractDepartement(query.location.label);
-  if (departement) {
-    url.searchParams.set("departement", departement);
-  } else {
-    // JOB-23 : sans code postal dans le label de localisation, la recherche devient nationale
-    // au lieu d'être géo-filtrée — un avertissement visible vaut mieux qu'une perte silencieuse.
-    console.warn(
-      `francetravail: aucun code postal trouvé dans le label de localisation "${query.location.label}" — recherche non filtrée par département.`,
+  if (!departement) {
+    // JOB-64 : un console.warn seul laissait passer une recherche nationale non bornée sans
+    // que personne ne le voie jamais (pas de trace côté UI/résumé de collecte) — lever une
+    // erreur explicite est l'un des deux comportements que la DoD accepte ("refus de lancer la
+    // recherche pour ce connecteur"), et se traduit par un ✗ échec visible dans le résumé de
+    // collecte via le try/catch déjà en place dans runCampaign (JOB-22).
+    throw new Error(
+      `francetravail: aucun code postal trouvé dans le label de localisation "${query.location.label}" — recherche refusée plutôt que non bornée silencieusement.`,
     );
   }
+  url.searchParams.set("departement", departement);
   return url;
 }
 
