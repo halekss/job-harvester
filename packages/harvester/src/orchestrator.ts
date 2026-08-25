@@ -59,9 +59,16 @@ const sharedGuardedFetch = createRateLimitedFetch(fetch);
 
 export interface RunSummary {
   runId: string;
+  connectorId: string;
   rawCount: number;
   normalizedCount: number;
   rejectedCount: number;
+  // Sous-ensemble de rejectedCount : offres rejetées faute de département résolu sur l'offre
+  // alors qu'un filtre de localisation est actif (ex. Workday, qui ne renvoie qu'un nom de
+  // ville libre — JOB-31). Distinct d'un rejet "mauvais département" : signale un connecteur
+  // qui ne peut PAS garantir le filtre ville plutôt qu'une offre simplement hors périmètre
+  // (audit 2026-08-24, root cause #1 — "jamais silencieux").
+  unresolvedLocationCount: number;
   ok: boolean;
   errorMessage?: string;
 }
@@ -112,6 +119,7 @@ export async function runCampaign(
   let rawCount = 0;
   let normalizedCount = 0;
   let rejectedCount = 0;
+  let unresolvedLocationCount = 0;
   let errorMessage: string | undefined;
 
   // Filtre ville ad-hoc (JOB-audit-2026-08-21) : une seule localisation au lieu de la boucle sur
@@ -137,6 +145,9 @@ export async function runCampaign(
         try {
           const normalized = connector.normalize(raw);
           normalizedCount += 1;
+          if (acceptableDepartments.length > 0 && !normalized.location.department) {
+            unresolvedLocationCount += 1;
+          }
           const matches = offerMatchesQuery(normalized, {
             contractTypes: query.contractTypes,
             keywords: query.keywords,
@@ -183,7 +194,7 @@ export async function runCampaign(
     console.error(`[JOB-8] connector observability failed for ${connector.id}:`, error);
   }
 
-  return { runId, rawCount, normalizedCount, rejectedCount, ok, errorMessage };
+  return { runId, connectorId: connector.id, rawCount, normalizedCount, rejectedCount, unresolvedLocationCount, ok, errorMessage };
 }
 
 export async function runCampaignAcrossConnectors(

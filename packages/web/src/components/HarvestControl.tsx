@@ -122,8 +122,13 @@ export function HarvestControl() {
           {lastResult.summaries.map((summary) => (
             <li key={summary.runId}>
               {summary.ok
-                ? `✓ ${summary.rawCount} offre(s) récupérée(s), ${summary.normalizedCount} normalisée(s), ${summary.rejectedCount} rejetée(s)`
-                : `✗ échec — ${summary.errorMessage}`}
+                ? `✓ [${summary.connectorId}] ${summary.rawCount} offre(s) récupérée(s), ${summary.normalizedCount} normalisée(s), ${summary.rejectedCount} rejetée(s)`
+                : `✗ [${summary.connectorId}] échec — ${summary.errorMessage}`}
+              {summary.unresolvedLocationCount > 0 && (
+                <p className="text-amber-500">
+                  ⚠ {summary.unresolvedLocationCount} offre(s) exclue(s) — localisation non vérifiable pour ce connecteur
+                </p>
+              )}
             </li>
           ))}
         </ul>

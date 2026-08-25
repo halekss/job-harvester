@@ -290,6 +290,92 @@ describe("runCampaign", () => {
   });
 });
 
+describe("runCampaign — location filter visibility (audit 2026-08-24, root cause #1)", () => {
+  const lilleCampaign: CampaignConfig = {
+    id: "lille-visibility-test",
+    romeCodes: ["M1403"],
+    keywords: [],
+    locations: [{ label: "Lille 59000", lat: 50.63, lng: 3.05, radiusKm: 30 }],
+    contractTypes: ["apprentissage"],
+  };
+
+  it("tags each summary with the connectorId it belongs to, so a degraded-location warning can be attributed to the right connector", async () => {
+    const db = createDb(tmpDbPath());
+    const connector: Connector = {
+      id: "attributed-fake",
+      tier: 1,
+      supports: () => true,
+      async *fetch() {},
+      normalize: (raw) => raw.payload as never,
+      async healthCheck() {
+        return { connectorId: "attributed-fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const summary = await runCampaign(lilleCampaign, connector, db, {});
+
+    expect(summary.connectorId).toBe("attributed-fake");
+  });
+
+  it("counts offers rejected for an unresolvable location separately from offers rejected for a wrong (but resolved) department — Workday-style connectors never populate department (JOB-31)", async () => {
+    const unresolvedOffer: RawOffer = { source: "fake", payload: { id: "unresolved-1", url: "https://example.com/jobs/unresolved-1" } };
+    const wrongDeptOffer: RawOffer = { source: "fake", payload: { id: "wrong-dept-1", url: "https://example.com/jobs/wrong-dept-1" } };
+    const connector: Connector = {
+      id: "fake",
+      tier: 1,
+      locationScoped: false,
+      supports: () => true,
+      async *fetch() {
+        yield unresolvedOffer;
+        yield wrongDeptOffer;
+      },
+      normalize(raw) {
+        const payload = raw.payload as { id: string; url: string };
+        const offer = makeOffer(payload.id, payload.url);
+        return {
+          ...offer,
+          location: payload.id === "unresolved-1" ? { label: "Lille", city: "Lille" } : { label: "Paris 75000", city: "Paris", department: "75" },
+        };
+      },
+      async healthCheck() {
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const db = createDb(tmpDbPath());
+    const summary = await runCampaign(lilleCampaign, connector, db, {});
+
+    expect(summary.rejectedCount).toBe(2);
+    expect(summary.unresolvedLocationCount).toBe(1);
+  });
+
+  it("keeps unresolvedLocationCount at 0 when no location filter is active on the run", async () => {
+    const unresolvedOffer: RawOffer = { source: "fake", payload: { id: "unresolved-1", url: "https://example.com/jobs/unresolved-1" } };
+    const connector: Connector = {
+      id: "fake",
+      tier: 1,
+      supports: () => true,
+      async *fetch() {
+        yield unresolvedOffer;
+      },
+      normalize(raw) {
+        const payload = raw.payload as { id: string; url: string };
+        return { ...makeOffer(payload.id, payload.url), location: { label: "Lille", city: "Lille" } };
+      },
+      async healthCheck() {
+        return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
+      },
+    };
+
+    const db = createDb(tmpDbPath());
+    // `campaign` (fixture partagée du fichier) a locations: [{label: "Lille", ...}] sans code
+    // postal -> acceptableDepartments est vide -> aucune contrainte de localisation active.
+    const summary = await runCampaign(campaign, connector, db, {});
+
+    expect(summary.unresolvedLocationCount).toBe(0);
+  });
+});
+
 describe("runCampaign — locationScoped connectors", () => {
   const multiLocationCampaign: CampaignConfig = {
     id: "multi-location-test",

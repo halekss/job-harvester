@@ -61,9 +61,11 @@ export async function getCampaigns(): Promise<Campaign[]> {
 
 export interface RunSummary {
   runId: string;
+  connectorId: string;
   rawCount: number;
   normalizedCount: number;
   rejectedCount: number;
+  unresolvedLocationCount: number;
   ok: boolean;
   errorMessage?: string;
 }

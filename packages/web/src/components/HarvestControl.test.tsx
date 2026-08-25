@@ -140,6 +140,34 @@ describe("HarvestControl — ad-hoc filters", () => {
     });
   });
 
+  it("warns visibly when a connector couldn't verify the location filter on some offers (audit 2026-08-24, root cause #1)", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/campaigns")) {
+        return new Response(JSON.stringify({ campaigns: [{ id: "alternance-data-hdf" }] }), { status: 200 });
+      }
+      if (url.includes("/harvest/")) {
+        return new Response(
+          JSON.stringify({
+            summaries: [
+              { runId: "r1", connectorId: "workday", rawCount: 5, normalizedCount: 5, rejectedCount: 3, unresolvedLocationCount: 2, ok: true },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderWithClient(<HarvestControl />);
+
+    await user.click(await screen.findByRole("button", { name: "Lancer la collecte" }));
+
+    expect(await screen.findByText(/workday/)).toBeInTheDocument();
+    expect(screen.getByText(/2 offre\(s\) exclue\(s\).*localisation non vérifiable/)).toBeInTheDocument();
+  });
+
   it("displays discovered targets after a harvest run", async () => {
     const fetchMock = vi.fn(async (input: string | URL | Request) => {
       const url = String(input);

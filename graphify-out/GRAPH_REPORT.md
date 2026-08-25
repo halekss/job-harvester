@@ -1,7 +1,7 @@
 # Graph Report - job-harvester  (2026-08-25)
 
 ## Corpus Check
-- 221 files · ~105,499 words
+- 221 files · ~106,168 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `52564cfa`
+- Built from commit: `f9a73906`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
