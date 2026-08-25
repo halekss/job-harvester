@@ -110,8 +110,14 @@ export function resolveLocationVerdict(offer: NormalizedOffer, acceptable: Accep
 
   const offerCity = offer.location.city ? normalizeCityName(offer.location.city) : "";
   if (offerCity) {
+    // Un nom de ville non vide EST une information de localisation exploitable, même quand il ne
+    // correspond à aucune localisation acceptée : "Saint-Denis" face à un filtre "Lille" est hors
+    // zone (out-of-zone), pas "non vérifiable" (unresolved) — bug constaté le 2026-08-26 sur une
+    // vraie collecte (workday), où ce cas retombait à tort dans le fail-closed générique et
+    // polluait unresolvedLocationCount/le console.warn avec des rejets pourtant parfaitement
+    // normaux.
     const acceptableCities = new Set(acceptable.map((location) => normalizeCityName(cityFromLabel(location.label))));
-    if (acceptableCities.has(offerCity)) return "matched";
+    return acceptableCities.has(offerCity) ? "matched" : "out-of-zone";
   }
 
   return "unresolved";

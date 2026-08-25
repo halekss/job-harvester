@@ -5,6 +5,7 @@ import {
   departmentFromLabel,
   acceptableLocationsFromLocations,
   haversineDistanceKm,
+  resolveLocationVerdict,
   type QueryFilter,
   type AcceptableLocation,
 } from "./query-filter.js";
@@ -197,6 +198,21 @@ describe("offerMatchesQuery — location", () => {
       expect(offerMatchesQuery(makeOffer({ source: "workday", location: { label: "Marseille", city: "Marseille" } }), filter)).toBe(
         false,
       );
+    });
+
+    it("is 'out-of-zone', not 'unresolved', when the city is recognized but doesn't match (regression: 2026-08-26, réel run Ville=Lille exclu workday à Saint-Denis avec le mauvais message)", () => {
+      // Un nom de ville non vide EST une information exploitable. resolveLocationVerdict doit
+      // trancher "out-of-zone" ici, jamais "unresolved" — sinon le rejet (correct) se retrouve à
+      // tort comptabilisé dans unresolvedLocationCount et déclenche le console.warn
+      // "localisation non vérifiable", alors que la ville était parfaitement identifiée.
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      const offer = makeOffer({ source: "workday", location: { label: "Saint-Denis", city: "Saint-Denis" } });
+      expect(resolveLocationVerdict(offer, filter.acceptableLocations)).toBe("out-of-zone");
+
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect(offerMatchesQuery(offer, filter)).toBe(false);
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
     });
   });
 
