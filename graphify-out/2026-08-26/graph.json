@@ -343,47 +343,21 @@
       "_origin": "ast",
       "id": "packages_core_src_schemas_connector_rawoffer",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "rawoffer"
     },
     {
-      "label": "Lifecycle",
+      "label": "NormalizedOffer",
       "file_type": "code",
       "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L10",
+      "source_location": "L65",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_lifecycle",
+      "id": "packages_core_src_schemas_normalized_offer_normalizedoffer",
       "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "lifecycle"
-    },
-    {
-      "label": "RemotePolicy",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L7",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_remotepolicy",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "remotepolicy"
-    },
-    {
-      "label": "SourceRef",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L17",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_sourceref",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "sourceref"
+      "community_name": "NormalizedOffer",
+      "norm_label": "normalizedoffer"
     },
     {
       "label": "JobPosting",
@@ -395,7 +369,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_types_jobposting",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jobposting"
     },
     {
@@ -408,7 +382,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_types_jsonldrawoffer",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jsonldrawoffer"
     },
     {
@@ -449,19 +423,6 @@
       "community": 2,
       "community_name": "app.ts",
       "norm_label": "applicationeventtype"
-    },
-    {
-      "label": "NormalizedOffer",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L65",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_normalizedoffer",
-      "community": 2,
-      "community_name": "app.ts",
-      "norm_label": "normalizedoffer"
     },
     {
       "label": "Db",
@@ -553,6 +514,19 @@
       "community": 32,
       "community_name": "core/src/index.ts",
       "norm_label": "jsonldgenericclientoptions"
+    },
+    {
+      "label": "ResizeObserverStub",
+      "file_type": "code",
+      "source_file": "packages/web/src/setupTests.ts",
+      "source_location": "L9",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_web_src_setuptests_resizeobserverstub",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": "resizeobserverstub"
     },
     {
       "label": "Assertion",
@@ -711,6 +685,58 @@
       "norm_label": "tokenbucket"
     },
     {
+      "label": "ContractType",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L4",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_contracttype",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "contracttype"
+    },
+    {
+      "label": "HarvestOverrides",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/build-harvest-query.ts",
+      "source_location": "L9",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_build_harvest_query_harvestoverrides",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "harvestoverrides"
+    },
+    {
+      "label": "CampaignConfig",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/campaign-schema.ts",
+      "source_location": "L21",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_campaign_schema_campaignconfig",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "campaignconfig"
+    },
+    {
+      "label": "LocationConfig",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/campaign-schema.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_campaign_schema_locationconfig",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "locationconfig"
+    },
+    {
       "label": "BulkActionBarProps",
       "file_type": "code",
       "source_file": "packages/web/src/components/BulkActionBar.tsx",
@@ -724,84 +750,6 @@
       "norm_label": "bulkactionbarprops"
     },
     {
-      "label": "Connector",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/connector.ts",
-      "source_location": "L57",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_connector_connector",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "connector"
-    },
-    {
-      "label": "ContractType",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L4",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_contracttype",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "contracttype"
-    },
-    {
-      "label": "HarvestOverrides",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/build-harvest-query.ts",
-      "source_location": "L9",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_build_harvest_query_harvestoverrides",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "harvestoverrides"
-    },
-    {
-      "label": "CampaignConfig",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/campaign-schema.ts",
-      "source_location": "L21",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_campaign_schema_campaignconfig",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "campaignconfig"
-    },
-    {
-      "label": "LocationConfig",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/campaign-schema.ts",
-      "source_location": "L10",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_campaign_schema_locationconfig",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "locationconfig"
-    },
-    {
-      "label": "RunSummary",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/orchestrator.ts",
-      "source_location": "L60",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_orchestrator_runsummary",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "runsummary"
-    },
-    {
       "label": "AcceptableLocation",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.ts",
@@ -811,7 +759,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_acceptablelocation",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "acceptablelocation"
     },
     {
@@ -824,7 +772,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_locationverdict",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "locationverdict"
     },
     {
@@ -837,21 +785,8 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_queryfilter",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "queryfilter"
-    },
-    {
-      "label": "Scheduler",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.ts",
-      "source_location": "L8",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_scheduler",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "scheduler"
     },
     {
       "label": "ConnectorContext",
@@ -1114,17 +1049,82 @@
       "norm_label": "harvesttargets"
     },
     {
-      "label": "ResizeObserverStub",
+      "label": "Connector",
       "file_type": "code",
-      "source_file": "packages/web/src/setupTests.ts",
-      "source_location": "L9",
+      "source_file": "packages/core/src/schemas/connector.ts",
+      "source_location": "L57",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "id": "packages_web_src_setuptests_resizeobserverstub",
+      "id": "packages_core_src_schemas_connector_connector",
       "community": 52,
-      "community_name": "ResizeObserverStub",
-      "norm_label": "resizeobserverstub"
+      "community_name": "orchestrator.ts",
+      "norm_label": "connector"
+    },
+    {
+      "label": "RunSummary",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/orchestrator.ts",
+      "source_location": "L60",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_orchestrator_runsummary",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": "runsummary"
+    },
+    {
+      "label": "Scheduler",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.ts",
+      "source_location": "L8",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler_scheduler",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "scheduler"
+    },
+    {
+      "label": "Lifecycle",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_lifecycle",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "lifecycle"
+    },
+    {
+      "label": "RemotePolicy",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L7",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_remotepolicy",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "remotepolicy"
+    },
+    {
+      "label": "SourceRef",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L17",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_sourceref",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "sourceref"
     },
     {
       "label": "Robots",
@@ -1675,18 +1675,6 @@
       "norm_label": "requestaccesstoken()"
     },
     {
-      "label": "__resetTokenCacheForTests()",
-      "file_type": "code",
-      "source_file": "packages/connectors/src/tier0/francetravail/client.ts",
-      "source_location": "L42",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_connectors_src_tier0_francetravail_client_resettokencachefortests",
-      "community": 10,
-      "community_name": "francetravail/client.ts",
-      "norm_label": "__resettokencachefortests()"
-    },
-    {
       "label": "tokenCacheKey()",
       "file_type": "code",
       "source_file": "packages/connectors/src/tier0/francetravail/client.ts",
@@ -1971,32 +1959,20 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_normalize_normalizeworkdayoffer",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "normalizeworkdayoffer()"
     },
     {
-      "label": "loadFixture()",
+      "label": "stripHtml()",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_file": "packages/core/src/text/strip-html.ts",
       "source_location": "L10",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_connectors_src_tier1_workday_normalize_test_loadfixture",
+      "id": "packages_core_src_text_strip_html_striphtml",
       "community": 16,
-      "community_name": "RawOffer",
-      "norm_label": "loadfixture()"
-    },
-    {
-      "label": "loadRawOfferPayload()",
-      "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
-      "source_location": "L17",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_connectors_src_tier1_workday_normalize_test_loadrawofferpayload",
-      "community": 16,
-      "community_name": "RawOffer",
-      "norm_label": "loadrawofferpayload()"
+      "community_name": "connectors/src/index.ts",
+      "norm_label": "striphtml()"
     },
     {
       "label": "isDuplicate()",
@@ -2007,7 +1983,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_isduplicate",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "isduplicate()"
     },
     {
@@ -2019,7 +1995,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_isexactduplicate",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "isexactduplicate()"
     },
     {
@@ -2031,7 +2007,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_isfuzzyduplicate",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "isfuzzyduplicate()"
     },
     {
@@ -2043,7 +2019,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_mergeoffers",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "mergeoffers()"
     },
     {
@@ -2055,7 +2031,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_test_makeoffer",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "makeoffer()"
     },
     {
@@ -2067,7 +2043,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_unionsourcerefs",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "unionsourcerefs()"
     },
     {
@@ -2079,7 +2055,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_similarity_trigrams",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "trigrams()"
     },
     {
@@ -2091,7 +2067,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_similarity_trigramsimilarity",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "trigramsimilarity()"
     },
     {
@@ -2103,7 +2079,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_orchestrator_upsertoffer",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "upsertoffer()"
     },
     {
@@ -2115,7 +2091,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize_normalizejsonldoffer",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "normalizejsonldoffer()"
     },
     {
@@ -2127,7 +2103,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize_sourceofferidfromurl",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "sourceofferidfromurl()"
     },
     {
@@ -2139,7 +2115,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize_test_loadfixture",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "loadfixture()"
     },
     {
@@ -2151,7 +2127,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize_test_loadrawofferpayload",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "loadrawofferpayload()"
     },
     {
@@ -2163,7 +2139,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_sitemap_crawler_normalize_test_loadrawofferpayload",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "loadrawofferpayload()"
     },
     {
@@ -2623,16 +2599,16 @@
       "norm_label": "loadhits()"
     },
     {
-      "label": "inferContractTypeFromText()",
+      "label": "canonicalizeUrl()",
       "file_type": "code",
-      "source_file": "packages/core/src/text/infer-contract-type.ts",
-      "source_location": "L3",
+      "source_file": "packages/core/src/url/canonicalize.ts",
+      "source_location": "L4",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_core_src_text_infer_contract_type_infercontracttypefromtext",
+      "id": "packages_core_src_url_canonicalize_canonicalizeurl",
       "community": 24,
       "community_name": "welcometothejungle/normalize.ts",
-      "norm_label": "infercontracttypefromtext()"
+      "norm_label": "canonicalizeurl()"
     },
     {
       "label": ".constructor()",
@@ -2863,16 +2839,16 @@
       "norm_label": "offerpayload()"
     },
     {
-      "label": "stripHtml()",
+      "label": "inferContractTypeFromText()",
       "file_type": "code",
-      "source_file": "packages/core/src/text/strip-html.ts",
-      "source_location": "L10",
+      "source_file": "packages/core/src/text/infer-contract-type.ts",
+      "source_location": "L3",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_core_src_text_strip_html_striphtml",
+      "id": "packages_core_src_text_infer_contract_type_infercontracttypefromtext",
       "community": 28,
       "community_name": "talentsoft/normalize.ts",
-      "norm_label": "striphtml()"
+      "norm_label": "infercontracttypefromtext()"
     },
     {
       "label": "fetchRenderedHtml()",
@@ -2947,6 +2923,30 @@
       "norm_label": "basequery()"
     },
     {
+      "label": "loadFixture()",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test_loadfixture",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": "loadfixture()"
+    },
+    {
+      "label": "loadRawOfferPayload()",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
+      "source_location": "L14",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test_loadrawofferpayload",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": "loadrawofferpayload()"
+    },
+    {
       "label": "renderWithClient()",
       "file_type": "code",
       "source_file": "packages/web/src/components/EventButtons.test.tsx",
@@ -2981,6 +2981,54 @@
       "community": 33,
       "community_name": "vitest",
       "norm_label": "stubfetch()"
+    },
+    {
+      "label": ".constructor()",
+      "file_type": "code",
+      "source_file": "packages/web/src/setupTests.ts",
+      "source_location": "L12",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_web_src_setuptests_resizeobserverstub_constructor",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": ".constructor()"
+    },
+    {
+      "label": ".disconnect()",
+      "file_type": "code",
+      "source_file": "packages/web/src/setupTests.ts",
+      "source_location": "L22",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_web_src_setuptests_resizeobserverstub_disconnect",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": ".disconnect()"
+    },
+    {
+      "label": ".observe()",
+      "file_type": "code",
+      "source_file": "packages/web/src/setupTests.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_web_src_setuptests_resizeobserverstub_observe",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": ".observe()"
+    },
+    {
+      "label": ".unobserve()",
+      "file_type": "code",
+      "source_file": "packages/web/src/setupTests.ts",
+      "source_location": "L21",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_web_src_setuptests_resizeobserverstub_unobserve",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": ".unobserve()"
     },
     {
       "label": ".toHaveNoViolations()",
@@ -3259,78 +3307,6 @@
       "norm_label": ".take()"
     },
     {
-      "label": "normalizeSmartRecruitersOffer()",
-      "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.ts",
-      "source_location": "L15",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_normalizesmartrecruitersoffer",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "normalizesmartrecruitersoffer()"
-    },
-    {
-      "label": "loadFixture()",
-      "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
-      "source_location": "L10",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test_loadfixture",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "loadfixture()"
-    },
-    {
-      "label": "loadRawOfferPayload()",
-      "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
-      "source_location": "L14",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test_loadrawofferpayload",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "loadrawofferpayload()"
-    },
-    {
-      "label": "exactDedupKeyFromSource()",
-      "file_type": "code",
-      "source_file": "packages/core/src/dedup/dedup-key.ts",
-      "source_location": "L11",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_dedup_dedup_key_exactdedupkeyfromsource",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "exactdedupkeyfromsource()"
-    },
-    {
-      "label": "exactDedupKeyFromUrl()",
-      "file_type": "code",
-      "source_file": "packages/core/src/dedup/dedup-key.ts",
-      "source_location": "L7",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_dedup_dedup_key_exactdedupkeyfromurl",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "exactdedupkeyfromurl()"
-    },
-    {
-      "label": "sha1()",
-      "file_type": "code",
-      "source_file": "packages/core/src/dedup/dedup-key.ts",
-      "source_location": "L3",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_dedup_dedup_key_sha1",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "sha1()"
-    },
-    {
       "label": "BulkActionBar()",
       "file_type": "code",
       "source_file": "packages/web/src/components/BulkActionBar.tsx",
@@ -3355,126 +3331,6 @@
       "norm_label": ".scrollto()"
     },
     {
-      "label": ".fetch()",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/connector.ts",
-      "source_location": "L62",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_connector_connector_fetch",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": ".fetch()"
-    },
-    {
-      "label": ".healthCheck()",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/connector.ts",
-      "source_location": "L64",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_connector_connector_healthcheck",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": ".healthcheck()"
-    },
-    {
-      "label": ".normalize()",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/connector.ts",
-      "source_location": "L63",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_connector_connector_normalize",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": ".normalize()"
-    },
-    {
-      "label": ".supports()",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/connector.ts",
-      "source_location": "L61",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_connector_connector_supports",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": ".supports()"
-    },
-    {
-      "label": "buildHarvestQuery()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/build-harvest-query.ts",
-      "source_location": "L19",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_build_harvest_query_buildharvestquery",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "buildharvestquery()"
-    },
-    {
-      "label": "findCampaign()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.ts",
-      "source_location": "L10",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns_findcampaign",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "findcampaign()"
-    },
-    {
-      "label": "loadCampaigns()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.ts",
-      "source_location": "L5",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns_loadcampaigns",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "loadcampaigns()"
-    },
-    {
-      "label": "writeCampaignsFile()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
-      "source_location": "L15",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns_test_writecampaignsfile",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "writecampaignsfile()"
-    },
-    {
-      "label": "runCampaign()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/orchestrator.ts",
-      "source_location": "L110",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_orchestrator_runcampaign",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "runcampaign()"
-    },
-    {
-      "label": "runCampaignAcrossConnectors()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/orchestrator.ts",
-      "source_location": "L200",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_orchestrator_runcampaignacrossconnectors",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "runcampaignacrossconnectors()"
-    },
-    {
       "label": "acceptableLocationsFromLocations()",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.ts",
@@ -3483,7 +3339,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_acceptablelocationsfromlocations",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "acceptablelocationsfromlocations()"
     },
     {
@@ -3495,7 +3351,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_cityfromlabel",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "cityfromlabel()"
     },
     {
@@ -3507,7 +3363,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_departmentfromlabel",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "departmentfromlabel()"
     },
     {
@@ -3519,7 +3375,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_escaperegexp",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "escaperegexp()"
     },
     {
@@ -3531,68 +3387,8 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_haversinedistancekm",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "haversinedistancekm()"
-    },
-    {
-      "label": "fetch()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L68",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_fetch",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "fetch()"
-    },
-    {
-      "label": "healthCheck()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L90",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_healthcheck",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "healthcheck()"
-    },
-    {
-      "label": "makeOffer()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L29",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_makeoffer",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "makeoffer()"
-    },
-    {
-      "label": "normalize()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L73",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_normalize",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "normalize()"
-    },
-    {
-      "label": "tmpDbPath()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L23",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_tmpdbpath",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "tmpdbpath()"
     },
     {
       "label": "matchesKeywords()",
@@ -3603,7 +3399,7 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_matcheskeywords",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "matcheskeywords()"
     },
     {
@@ -3615,19 +3411,19 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_normalizecityname",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "normalizecityname()"
     },
     {
       "label": "offerMatchesQuery()",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.ts",
-      "source_location": "L120",
+      "source_location": "L126",
       "_callable": true,
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_offermatchesquery",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "offermatchesquery()"
     },
     {
@@ -3639,19 +3435,19 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_resolvelocationverdict",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "resolvelocationverdict()"
     },
     {
       "label": "makeOffer()",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "_callable": true,
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_test_makeoffer",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "makeoffer()"
     },
     {
@@ -3663,92 +3459,20 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_toradians",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "toradians()"
     },
     {
-      "label": "hasSchedule()",
+      "label": "__resetTokenCacheForTests()",
       "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.ts",
-      "source_location": "L12",
+      "source_file": "packages/connectors/src/tier0/francetravail/client.ts",
+      "source_location": "L42",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_hasschedule",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "hasschedule()"
-    },
-    {
-      "label": ".stop()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.ts",
-      "source_location": "L9",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_scheduler_stop",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": ".stop()"
-    },
-    {
-      "label": "startScheduler()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_startscheduler",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "startscheduler()"
-    },
-    {
-      "label": "makeConnector()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.test.ts",
-      "source_location": "L22",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_test_makeconnector",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "makeconnector()"
-    },
-    {
-      "label": "makeThrowingConnector()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.test.ts",
-      "source_location": "L43",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_test_makethrowingconnector",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "makethrowingconnector()"
-    },
-    {
-      "label": "tmpDbPath()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.test.ts",
-      "source_location": "L16",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_test_tmpdbpath",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "tmpdbpath()"
-    },
-    {
-      "label": "wait()",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.test.ts",
-      "source_location": "L58",
-      "_callable": true,
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_test_wait",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "wait()"
+      "id": "packages_connectors_src_tier0_francetravail_client_resettokencachefortests",
+      "community": 47,
+      "community_name": "HarvestQuery",
+      "norm_label": "__resettokencachefortests()"
     },
     {
       "label": "companyNameFromDomain()",
@@ -4111,52 +3835,292 @@
       "norm_label": "timedhealthcheck()"
     },
     {
-      "label": ".constructor()",
+      "label": ".fetch()",
       "file_type": "code",
-      "source_file": "packages/web/src/setupTests.ts",
+      "source_file": "packages/core/src/schemas/connector.ts",
+      "source_location": "L62",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_connector_connector_fetch",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": ".fetch()"
+    },
+    {
+      "label": ".healthCheck()",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/connector.ts",
+      "source_location": "L64",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_connector_connector_healthcheck",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": ".healthcheck()"
+    },
+    {
+      "label": ".normalize()",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/connector.ts",
+      "source_location": "L63",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_connector_connector_normalize",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": ".normalize()"
+    },
+    {
+      "label": ".supports()",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/connector.ts",
+      "source_location": "L61",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_connector_connector_supports",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": ".supports()"
+    },
+    {
+      "label": "buildHarvestQuery()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/build-harvest-query.ts",
+      "source_location": "L19",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_build_harvest_query_buildharvestquery",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": "buildharvestquery()"
+    },
+    {
+      "label": "runCampaign()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/orchestrator.ts",
+      "source_location": "L110",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_orchestrator_runcampaign",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": "runcampaign()"
+    },
+    {
+      "label": "runCampaignAcrossConnectors()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/orchestrator.ts",
+      "source_location": "L200",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_orchestrator_runcampaignacrossconnectors",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": "runcampaignacrossconnectors()"
+    },
+    {
+      "label": "hasSchedule()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.ts",
       "source_location": "L12",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_web_src_setuptests_resizeobserverstub_constructor",
-      "community": 52,
-      "community_name": "ResizeObserverStub",
-      "norm_label": ".constructor()"
+      "id": "packages_harvester_src_scheduler_hasschedule",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "hasschedule()"
     },
     {
-      "label": ".disconnect()",
+      "label": ".stop()",
       "file_type": "code",
-      "source_file": "packages/web/src/setupTests.ts",
-      "source_location": "L22",
+      "source_file": "packages/harvester/src/scheduler.ts",
+      "source_location": "L9",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_web_src_setuptests_resizeobserverstub_disconnect",
-      "community": 52,
-      "community_name": "ResizeObserverStub",
-      "norm_label": ".disconnect()"
+      "id": "packages_harvester_src_scheduler_scheduler_stop",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": ".stop()"
     },
     {
-      "label": ".observe()",
+      "label": "startScheduler()",
       "file_type": "code",
-      "source_file": "packages/web/src/setupTests.ts",
+      "source_file": "packages/harvester/src/scheduler.ts",
       "source_location": "L16",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_web_src_setuptests_resizeobserverstub_observe",
-      "community": 52,
-      "community_name": "ResizeObserverStub",
-      "norm_label": ".observe()"
+      "id": "packages_harvester_src_scheduler_startscheduler",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "startscheduler()"
     },
     {
-      "label": ".unobserve()",
+      "label": "makeConnector()",
       "file_type": "code",
-      "source_file": "packages/web/src/setupTests.ts",
-      "source_location": "L21",
+      "source_file": "packages/harvester/src/scheduler.test.ts",
+      "source_location": "L22",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_web_src_setuptests_resizeobserverstub_unobserve",
-      "community": 52,
-      "community_name": "ResizeObserverStub",
-      "norm_label": ".unobserve()"
+      "id": "packages_harvester_src_scheduler_test_makeconnector",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "makeconnector()"
+    },
+    {
+      "label": "makeThrowingConnector()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.test.ts",
+      "source_location": "L43",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler_test_makethrowingconnector",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "makethrowingconnector()"
+    },
+    {
+      "label": "tmpDbPath()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.test.ts",
+      "source_location": "L16",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler_test_tmpdbpath",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "tmpdbpath()"
+    },
+    {
+      "label": "wait()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.test.ts",
+      "source_location": "L58",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler_test_wait",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "wait()"
+    },
+    {
+      "label": "findCampaign()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns_findcampaign",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "findcampaign()"
+    },
+    {
+      "label": "loadCampaigns()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.ts",
+      "source_location": "L5",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns_loadcampaigns",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "loadcampaigns()"
+    },
+    {
+      "label": "writeCampaignsFile()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
+      "source_location": "L15",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns_test_writecampaignsfile",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "writecampaignsfile()"
+    },
+    {
+      "label": "fetch()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L68",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_fetch",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "fetch()"
+    },
+    {
+      "label": "healthCheck()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L90",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_healthcheck",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "healthcheck()"
+    },
+    {
+      "label": "makeOffer()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L29",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_makeoffer",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "makeoffer()"
+    },
+    {
+      "label": "normalize()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L73",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_normalize",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "normalize()"
+    },
+    {
+      "label": "tmpDbPath()",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L23",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_tmpdbpath",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "tmpdbpath()"
+    },
+    {
+      "label": "loadFixture()",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_location": "L10",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_workday_normalize_test_loadfixture",
+      "community": 58,
+      "community_name": "workday/normalize.test.ts",
+      "norm_label": "loadfixture()"
+    },
+    {
+      "label": "loadRawOfferPayload()",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_location": "L17",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_workday_normalize_test_loadrawofferpayload",
+      "community": 58,
+      "community_name": "workday/normalize.test.ts",
+      "norm_label": "loadrawofferpayload()"
     },
     {
       "label": "mapContractType()",
@@ -4167,7 +4131,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_mapcontracttype",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "mapcontracttype()"
     },
     {
@@ -4179,7 +4143,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_maporiginsource",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "maporiginsource()"
     },
     {
@@ -4191,7 +4155,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_normalizelbaoffer",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "normalizelbaoffer()"
     },
     {
@@ -4203,7 +4167,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_parsefrenchaddress",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "parsefrenchaddress()"
     },
     {
@@ -4215,20 +4179,56 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_test_loadfixture",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "loadfixture()"
     },
     {
-      "label": "canonicalizeUrl()",
+      "label": "normalizeSmartRecruitersOffer()",
       "file_type": "code",
-      "source_file": "packages/core/src/url/canonicalize.ts",
-      "source_location": "L4",
+      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.ts",
+      "source_location": "L15",
       "_callable": true,
       "_origin": "ast",
-      "id": "packages_core_src_url_canonicalize_canonicalizeurl",
+      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_normalizesmartrecruitersoffer",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
-      "norm_label": "canonicalizeurl()"
+      "community_name": "exactDedupKeyFromSource",
+      "norm_label": "normalizesmartrecruitersoffer()"
+    },
+    {
+      "label": "exactDedupKeyFromSource()",
+      "file_type": "code",
+      "source_file": "packages/core/src/dedup/dedup-key.ts",
+      "source_location": "L11",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_dedup_dedup_key_exactdedupkeyfromsource",
+      "community": 59,
+      "community_name": "exactDedupKeyFromSource",
+      "norm_label": "exactdedupkeyfromsource()"
+    },
+    {
+      "label": "exactDedupKeyFromUrl()",
+      "file_type": "code",
+      "source_file": "packages/core/src/dedup/dedup-key.ts",
+      "source_location": "L7",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_dedup_dedup_key_exactdedupkeyfromurl",
+      "community": 59,
+      "community_name": "exactDedupKeyFromSource",
+      "norm_label": "exactdedupkeyfromurl()"
+    },
+    {
+      "label": "sha1()",
+      "file_type": "code",
+      "source_file": "packages/core/src/dedup/dedup-key.ts",
+      "source_location": "L3",
+      "_callable": true,
+      "_origin": "ast",
+      "id": "packages_core_src_dedup_dedup_key_sha1",
+      "community": 59,
+      "community_name": "exactDedupKeyFromSource",
+      "norm_label": "sha1()"
     },
     {
       "label": "getRobots()",
@@ -5906,6 +5906,28 @@
       "norm_label": "smartrecruiterssearchresponseschema"
     },
     {
+      "label": "connectors/src/index.ts",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/index.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_connectors_src_index",
+      "community": 16,
+      "community_name": "connectors/src/index.ts",
+      "norm_label": "connectors/src/index.ts"
+    },
+    {
+      "label": "smartrecruiters/normalize.ts",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_smartrecruiters_normalize",
+      "community": 16,
+      "community_name": "connectors/src/index.ts",
+      "norm_label": "smartrecruiters/normalize.ts"
+    },
+    {
       "label": "WORKDAY_CONNECTOR_ID",
       "file_type": "code",
       "source_file": "packages/connectors/src/tier1/workday/client.ts",
@@ -5913,7 +5935,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_client_workday_connector_id",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "workday_connector_id"
     },
     {
@@ -5924,7 +5946,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_connector",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "workday/connector.ts"
     },
     {
@@ -5935,7 +5957,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_connector_test",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "workday/connector.test.ts"
     },
     {
@@ -5946,7 +5968,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_connector_test_query",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "query"
     },
     {
@@ -5957,7 +5979,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_connector_workdayconnector",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "workdayconnector"
     },
     {
@@ -5968,41 +5990,41 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier1_workday_normalize",
       "community": 16,
-      "community_name": "RawOffer",
+      "community_name": "connectors/src/index.ts",
       "norm_label": "workday/normalize.ts"
     },
     {
-      "label": "workday/normalize.test.ts",
+      "label": "strip-html.ts",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_file": "packages/core/src/text/strip-html.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_connectors_src_tier1_workday_normalize_test",
+      "id": "packages_core_src_text_strip_html",
       "community": 16,
-      "community_name": "RawOffer",
-      "norm_label": "workday/normalize.test.ts"
+      "community_name": "connectors/src/index.ts",
+      "norm_label": "strip-html.ts"
     },
     {
-      "label": "fixturesDir",
+      "label": "ENTITY_REPLACEMENTS",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
-      "source_location": "L8",
+      "source_file": "packages/core/src/text/strip-html.ts",
+      "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_connectors_src_tier1_workday_normalize_test_fixturesdir",
+      "id": "packages_core_src_text_strip_html_entity_replacements",
       "community": 16,
-      "community_name": "RawOffer",
-      "norm_label": "fixturesdir"
+      "community_name": "connectors/src/index.ts",
+      "norm_label": "entity_replacements"
     },
     {
-      "label": "target",
+      "label": "strip-html.test.ts",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
-      "source_location": "L14",
+      "source_file": "packages/core/src/text/strip-html.test.ts",
+      "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_connectors_src_tier1_workday_normalize_test_target",
+      "id": "packages_core_src_text_strip_html_test",
       "community": 16,
-      "community_name": "RawOffer",
-      "norm_label": "target"
+      "community_name": "connectors/src/index.ts",
+      "norm_label": "strip-html.test.ts"
     },
     {
       "label": "merge.ts",
@@ -6012,7 +6034,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "merge.ts"
     },
     {
@@ -6023,7 +6045,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_fuzzy_match_threshold",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "fuzzy_match_threshold"
     },
     {
@@ -6034,7 +6056,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_merge_test",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "merge.test.ts"
     },
     {
@@ -6045,7 +6067,7 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_similarity",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "similarity.ts"
     },
     {
@@ -6056,85 +6078,8 @@
       "_origin": "ast",
       "id": "packages_core_src_dedup_similarity_test",
       "community": 17,
-      "community_name": "normalized-offer.ts",
+      "community_name": "NormalizedOffer",
       "norm_label": "similarity.test.ts"
-    },
-    {
-      "label": "normalized-offer.ts",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "normalized-offer.ts"
-    },
-    {
-      "label": "LifecycleSchema",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L9",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_lifecycleschema",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "lifecycleschema"
-    },
-    {
-      "label": "NormalizedOfferSchema",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L19",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_normalizedofferschema",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "normalizedofferschema"
-    },
-    {
-      "label": "RemotePolicySchema",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L6",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_remotepolicyschema",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "remotepolicyschema"
-    },
-    {
-      "label": "SourceRefSchema",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L12",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_sourcerefschema",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "sourcerefschema"
-    },
-    {
-      "label": "normalized-offer.test.ts",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_test",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "normalized-offer.test.ts"
-    },
-    {
-      "label": "validOffer",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.test.ts",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_test_validoffer",
-      "community": 17,
-      "community_name": "normalized-offer.ts",
-      "norm_label": "validoffer"
     },
     {
       "label": "core/package.json",
@@ -6368,17 +6313,6 @@
       "norm_label": "zod"
     },
     {
-      "label": "connectors/src/index.ts",
-      "file_type": "code",
-      "source_file": "packages/connectors/src/index.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_connectors_src_index",
-      "community": 19,
-      "community_name": "connectors/src/index.ts",
-      "norm_label": "connectors/src/index.ts"
-    },
-    {
       "label": "jsonld-generic/normalize.ts",
       "file_type": "code",
       "source_file": "packages/connectors/src/tier2/jsonld-generic/normalize.ts",
@@ -6386,7 +6320,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jsonld-generic/normalize.ts"
     },
     {
@@ -6397,7 +6331,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize_test",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jsonld-generic/normalize.test.ts"
     },
     {
@@ -6408,7 +6342,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_normalize_test_fixturesdir",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "fixturesdir"
     },
     {
@@ -6419,7 +6353,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_types",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jsonld-generic/types.ts"
     },
     {
@@ -6430,7 +6364,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_types_jobpostingschema",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jobpostingschema"
     },
     {
@@ -6441,7 +6375,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_jsonld_generic_types_jsonldrawofferschema",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "jsonldrawofferschema"
     },
     {
@@ -6452,7 +6386,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_sitemap_crawler_normalize",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "sitemap-crawler/normalize.ts"
     },
     {
@@ -6463,7 +6397,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_sitemap_crawler_normalize_test",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "sitemap-crawler/normalize.test.ts"
     },
     {
@@ -6474,7 +6408,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier2_sitemap_crawler_normalize_test_fixturesdir",
       "community": 19,
-      "community_name": "connectors/src/index.ts",
+      "community_name": "jsonld-generic/normalize.ts",
       "norm_label": "fixturesdir"
     },
     {
@@ -7567,26 +7501,48 @@
       "norm_label": "fixturesdir"
     },
     {
-      "label": "infer-contract-type.ts",
+      "label": "canonicalize.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/text/infer-contract-type.ts",
+      "source_file": "packages/core/src/url/canonicalize.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_text_infer_contract_type",
+      "id": "packages_core_src_url_canonicalize",
       "community": 24,
       "community_name": "welcometothejungle/normalize.ts",
-      "norm_label": "infer-contract-type.ts"
+      "norm_label": "canonicalize.ts"
     },
     {
-      "label": "infer-contract-type.test.ts",
+      "label": "canonicalize.test.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/text/infer-contract-type.test.ts",
+      "source_file": "packages/core/src/url/canonicalize.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_text_infer_contract_type_test",
+      "id": "packages_core_src_url_canonicalize_test",
       "community": 24,
       "community_name": "welcometothejungle/normalize.ts",
-      "norm_label": "infer-contract-type.test.ts"
+      "norm_label": "canonicalize.test.ts"
+    },
+    {
+      "label": "TRACKING_PARAM_PREFIXES",
+      "file_type": "code",
+      "source_file": "packages/core/src/url/canonicalize.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_core_src_url_canonicalize_tracking_param_prefixes",
+      "community": 24,
+      "community_name": "welcometothejungle/normalize.ts",
+      "norm_label": "tracking_param_prefixes"
+    },
+    {
+      "label": "TRACKING_PARAMS_EXACT",
+      "file_type": "code",
+      "source_file": "packages/core/src/url/canonicalize.ts",
+      "source_location": "L2",
+      "_origin": "ast",
+      "id": "packages_core_src_url_canonicalize_tracking_params_exact",
+      "community": 24,
+      "community_name": "welcometothejungle/normalize.ts",
+      "norm_label": "tracking_params_exact"
     },
     {
       "label": "domain-politeness.ts",
@@ -7897,37 +7853,26 @@
       "norm_label": "talentsoft/normalize.test.ts"
     },
     {
-      "label": "strip-html.ts",
+      "label": "infer-contract-type.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/text/strip-html.ts",
+      "source_file": "packages/core/src/text/infer-contract-type.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_text_strip_html",
+      "id": "packages_core_src_text_infer_contract_type",
       "community": 28,
       "community_name": "talentsoft/normalize.ts",
-      "norm_label": "strip-html.ts"
+      "norm_label": "infer-contract-type.ts"
     },
     {
-      "label": "ENTITY_REPLACEMENTS",
+      "label": "infer-contract-type.test.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/text/strip-html.ts",
+      "source_file": "packages/core/src/text/infer-contract-type.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_text_strip_html_entity_replacements",
+      "id": "packages_core_src_text_infer_contract_type_test",
       "community": 28,
       "community_name": "talentsoft/normalize.ts",
-      "norm_label": "entity_replacements"
-    },
-    {
-      "label": "strip-html.test.ts",
-      "file_type": "code",
-      "source_file": "packages/core/src/text/strip-html.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_core_src_text_strip_html_test",
-      "community": 28,
-      "community_name": "talentsoft/normalize.ts",
-      "norm_label": "strip-html.test.ts"
+      "norm_label": "infer-contract-type.test.ts"
     },
     {
       "label": "api/tsconfig.json",
@@ -8282,6 +8227,28 @@
       "norm_label": "core/src/index.ts"
     },
     {
+      "label": "smartrecruiters/normalize.test.ts",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": "smartrecruiters/normalize.test.ts"
+    },
+    {
+      "label": "fixturesDir",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test_fixturesdir",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": "fixturesdir"
+    },
+    {
       "label": "EventButtons.test.tsx",
       "file_type": "code",
       "source_file": "packages/web/src/components/EventButtons.test.tsx",
@@ -8302,6 +8269,17 @@
       "community": 33,
       "community_name": "vitest",
       "norm_label": "harvestcontrol.test.tsx"
+    },
+    {
+      "label": "setupTests.ts",
+      "file_type": "code",
+      "source_file": "packages/web/src/setupTests.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_web_src_setuptests",
+      "community": 33,
+      "community_name": "vitest",
+      "norm_label": "setuptests.ts"
     },
     {
       "label": "vitest",
@@ -8773,59 +8751,103 @@
       "norm_label": "task 9: orchestrateur `discovertargets`"
     },
     {
-      "label": "smartrecruiters/normalize.ts",
+      "label": "harvest.ts",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.ts",
+      "source_file": "packages/api/src/routes/harvest.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_connectors_src_tier1_smartrecruiters_normalize",
+      "id": "packages_api_src_routes_harvest",
       "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "smartrecruiters/normalize.ts"
+      "community_name": "campaign-schema.ts",
+      "norm_label": "harvest.ts"
     },
     {
-      "label": "smartrecruiters/normalize.test.ts",
+      "label": "HarvestOverridesBodySchema",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
+      "source_file": "packages/api/src/routes/harvest.ts",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "packages_api_src_routes_harvest_harvestoverridesbodyschema",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "harvestoverridesbodyschema"
+    },
+    {
+      "label": "ContractTypeSchema",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L3",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_contracttypeschema",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "contracttypeschema"
+    },
+    {
+      "label": "build-harvest-query.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/build-harvest-query.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test",
+      "id": "packages_harvester_src_build_harvest_query",
       "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "smartrecruiters/normalize.test.ts"
+      "community_name": "campaign-schema.ts",
+      "norm_label": "build-harvest-query.ts"
     },
     {
-      "label": "fixturesDir",
+      "label": "build-harvest-query.test.ts",
       "file_type": "code",
-      "source_file": "packages/connectors/src/tier1/smartrecruiters/normalize.test.ts",
-      "source_location": "L8",
-      "_origin": "ast",
-      "id": "packages_connectors_src_tier1_smartrecruiters_normalize_test_fixturesdir",
-      "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "fixturesdir"
-    },
-    {
-      "label": "dedup-key.ts",
-      "file_type": "code",
-      "source_file": "packages/core/src/dedup/dedup-key.ts",
+      "source_file": "packages/harvester/src/build-harvest-query.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_dedup_dedup_key",
+      "id": "packages_harvester_src_build_harvest_query_test",
       "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "dedup-key.ts"
+      "community_name": "campaign-schema.ts",
+      "norm_label": "build-harvest-query.test.ts"
     },
     {
-      "label": "dedup-key.test.ts",
+      "label": "campaign-schema.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/dedup/dedup-key.test.ts",
+      "source_file": "packages/harvester/src/config/campaign-schema.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_dedup_dedup_key_test",
+      "id": "packages_harvester_src_config_campaign_schema",
       "community": 37,
-      "community_name": "exactDedupKeyFromSource",
-      "norm_label": "dedup-key.test.ts"
+      "community_name": "campaign-schema.ts",
+      "norm_label": "campaign-schema.ts"
+    },
+    {
+      "label": "CampaignConfigSchema",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/campaign-schema.ts",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_campaign_schema_campaignconfigschema",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "campaignconfigschema"
+    },
+    {
+      "label": "LocationConfigSchema",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/campaign-schema.ts",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_campaign_schema_locationconfigschema",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "locationconfigschema"
+    },
+    {
+      "label": "harvester/src/index.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/index.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_harvester_src_index",
+      "community": 37,
+      "community_name": "campaign-schema.ts",
+      "norm_label": "harvester/src/index.ts"
     },
     {
       "label": "BulkActionBar.tsx",
@@ -9578,182 +9600,6 @@
       "norm_label": "verification finale (a la fin de task 9, avant la revue de branche)"
     },
     {
-      "label": "harvest.ts",
-      "file_type": "code",
-      "source_file": "packages/api/src/routes/harvest.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_api_src_routes_harvest",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "harvest.ts"
-    },
-    {
-      "label": "HarvestOverridesBodySchema",
-      "file_type": "code",
-      "source_file": "packages/api/src/routes/harvest.ts",
-      "source_location": "L16",
-      "_origin": "ast",
-      "id": "packages_api_src_routes_harvest_harvestoverridesbodyschema",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "harvestoverridesbodyschema"
-    },
-    {
-      "label": "ContractTypeSchema",
-      "file_type": "code",
-      "source_file": "packages/core/src/schemas/normalized-offer.ts",
-      "source_location": "L3",
-      "_origin": "ast",
-      "id": "packages_core_src_schemas_normalized_offer_contracttypeschema",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "contracttypeschema"
-    },
-    {
-      "label": "build-harvest-query.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/build-harvest-query.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_build_harvest_query",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "build-harvest-query.ts"
-    },
-    {
-      "label": "build-harvest-query.test.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/build-harvest-query.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_build_harvest_query_test",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "build-harvest-query.test.ts"
-    },
-    {
-      "label": "campaign-schema.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/campaign-schema.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_campaign_schema",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "campaign-schema.ts"
-    },
-    {
-      "label": "CampaignConfigSchema",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/campaign-schema.ts",
-      "source_location": "L12",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_campaign_schema_campaignconfigschema",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "campaignconfigschema"
-    },
-    {
-      "label": "CampaignsFileSchema",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/campaign-schema.ts",
-      "source_location": "L23",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_campaign_schema_campaignsfileschema",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "campaignsfileschema"
-    },
-    {
-      "label": "LocationConfigSchema",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/campaign-schema.ts",
-      "source_location": "L4",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_campaign_schema_locationconfigschema",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "locationconfigschema"
-    },
-    {
-      "label": "load-campaigns.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "load-campaigns.ts"
-    },
-    {
-      "label": "load-campaigns.test.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns_test",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "load-campaigns.test.ts"
-    },
-    {
-      "label": "repoRoot",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
-      "source_location": "L8",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns_test_reporoot",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "reporoot"
-    },
-    {
-      "label": "tmpDirs",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
-      "source_location": "L10",
-      "_origin": "ast",
-      "id": "packages_harvester_src_config_load_campaigns_test_tmpdirs",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "tmpdirs"
-    },
-    {
-      "label": "harvester/src/index.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/index.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_index",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "harvester/src/index.ts"
-    },
-    {
-      "label": "orchestrator.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/orchestrator.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_orchestrator",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "orchestrator.ts"
-    },
-    {
-      "label": "sharedGuardedFetch",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/orchestrator.ts",
-      "source_location": "L58",
-      "_origin": "ast",
-      "id": "packages_harvester_src_orchestrator_sharedguardedfetch",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "sharedguardedfetch"
-    },
-    {
       "label": "query-filter.ts",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.ts",
@@ -9761,41 +9607,8 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "query-filter.ts"
-    },
-    {
-      "label": "query-filter.integration.test.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "query-filter.integration.test.ts"
-    },
-    {
-      "label": "dataCampaign",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L52",
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_datacampaign",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "datacampaign"
-    },
-    {
-      "label": "tmpDirs",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
-      "source_location": "L18",
-      "_origin": "ast",
-      "id": "packages_harvester_src_query_filter_integration_test_tmpdirs",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "tmpdirs"
     },
     {
       "label": "query-filter.test.ts",
@@ -9805,74 +9618,41 @@
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_test",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "query-filter.test.ts"
     },
     {
       "label": "AMIENS",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_test_amiens",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "amiens"
     },
     {
       "label": "LILLE",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_test_lille",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "lille"
     },
     {
       "label": "permissiveFilter",
       "file_type": "code",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "_origin": "ast",
       "id": "packages_harvester_src_query_filter_test_permissivefilter",
       "community": 46,
-      "community_name": "orchestrator.ts",
+      "community_name": "query-filter.ts",
       "norm_label": "permissivefilter"
-    },
-    {
-      "label": "scheduler.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "scheduler.ts"
-    },
-    {
-      "label": "scheduler.test.ts",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.test.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_test",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "scheduler.test.ts"
-    },
-    {
-      "label": "tmpDirs",
-      "file_type": "code",
-      "source_file": "packages/harvester/src/scheduler.test.ts",
-      "source_location": "L11",
-      "_origin": "ast",
-      "id": "packages_harvester_src_scheduler_test_tmpdirs",
-      "community": 46,
-      "community_name": "orchestrator.ts",
-      "norm_label": "tmpdirs"
     },
     {
       "label": "FRANCE_TRAVAIL_CONNECTOR_ID",
@@ -10523,15 +10303,59 @@
       "norm_label": "s (petit, < 0.5 jour)"
     },
     {
-      "label": "setupTests.ts",
+      "label": "orchestrator.ts",
       "file_type": "code",
-      "source_file": "packages/web/src/setupTests.ts",
+      "source_file": "packages/harvester/src/orchestrator.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_web_src_setuptests",
+      "id": "packages_harvester_src_orchestrator",
       "community": 52,
-      "community_name": "ResizeObserverStub",
-      "norm_label": "setuptests.ts"
+      "community_name": "orchestrator.ts",
+      "norm_label": "orchestrator.ts"
+    },
+    {
+      "label": "sharedGuardedFetch",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/orchestrator.ts",
+      "source_location": "L58",
+      "_origin": "ast",
+      "id": "packages_harvester_src_orchestrator_sharedguardedfetch",
+      "community": 52,
+      "community_name": "orchestrator.ts",
+      "norm_label": "sharedguardedfetch"
+    },
+    {
+      "label": "scheduler.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "scheduler.ts"
+    },
+    {
+      "label": "scheduler.test.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler_test",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "scheduler.test.ts"
+    },
+    {
+      "label": "tmpDirs",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/scheduler.test.ts",
+      "source_location": "L11",
+      "_origin": "ast",
+      "id": "packages_harvester_src_scheduler_test_tmpdirs",
+      "community": 53,
+      "community_name": "scheduler.test.ts",
+      "norm_label": "tmpdirs"
     },
     {
       "label": "2026-08-24-fiabiliser-filtres-collecte-design.md",
@@ -10630,6 +10454,204 @@
       "norm_label": "root causes confirmees par lecture directe du code (2026-08-24)"
     },
     {
+      "label": "normalized-offer.ts",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "normalized-offer.ts"
+    },
+    {
+      "label": "LifecycleSchema",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_lifecycleschema",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "lifecycleschema"
+    },
+    {
+      "label": "NormalizedOfferSchema",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_normalizedofferschema",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "normalizedofferschema"
+    },
+    {
+      "label": "RemotePolicySchema",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_remotepolicyschema",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "remotepolicyschema"
+    },
+    {
+      "label": "SourceRefSchema",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.ts",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_sourcerefschema",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "sourcerefschema"
+    },
+    {
+      "label": "normalized-offer.test.ts",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_test",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "normalized-offer.test.ts"
+    },
+    {
+      "label": "validOffer",
+      "file_type": "code",
+      "source_file": "packages/core/src/schemas/normalized-offer.test.ts",
+      "source_location": "L4",
+      "_origin": "ast",
+      "id": "packages_core_src_schemas_normalized_offer_test_validoffer",
+      "community": 55,
+      "community_name": "normalized-offer.ts",
+      "norm_label": "validoffer"
+    },
+    {
+      "label": "CampaignsFileSchema",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/campaign-schema.ts",
+      "source_location": "L23",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_campaign_schema_campaignsfileschema",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "campaignsfileschema"
+    },
+    {
+      "label": "load-campaigns.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "load-campaigns.ts"
+    },
+    {
+      "label": "load-campaigns.test.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns_test",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "load-campaigns.test.ts"
+    },
+    {
+      "label": "repoRoot",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns_test_reporoot",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "reporoot"
+    },
+    {
+      "label": "tmpDirs",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/config/load-campaigns.test.ts",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "packages_harvester_src_config_load_campaigns_test_tmpdirs",
+      "community": 56,
+      "community_name": "load-campaigns.ts",
+      "norm_label": "tmpdirs"
+    },
+    {
+      "label": "query-filter.integration.test.ts",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "query-filter.integration.test.ts"
+    },
+    {
+      "label": "dataCampaign",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L52",
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_datacampaign",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "datacampaign"
+    },
+    {
+      "label": "tmpDirs",
+      "file_type": "code",
+      "source_file": "packages/harvester/src/query-filter.integration.test.ts",
+      "source_location": "L18",
+      "_origin": "ast",
+      "id": "packages_harvester_src_query_filter_integration_test_tmpdirs",
+      "community": 57,
+      "community_name": "query-filter.integration.test.ts",
+      "norm_label": "tmpdirs"
+    },
+    {
+      "label": "workday/normalize.test.ts",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_workday_normalize_test",
+      "community": 58,
+      "community_name": "workday/normalize.test.ts",
+      "norm_label": "workday/normalize.test.ts"
+    },
+    {
+      "label": "fixturesDir",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_workday_normalize_test_fixturesdir",
+      "community": 58,
+      "community_name": "workday/normalize.test.ts",
+      "norm_label": "fixturesdir"
+    },
+    {
+      "label": "target",
+      "file_type": "code",
+      "source_file": "packages/connectors/src/tier1/workday/normalize.test.ts",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "packages_connectors_src_tier1_workday_normalize_test_target",
+      "community": 58,
+      "community_name": "workday/normalize.test.ts",
+      "norm_label": "target"
+    },
+    {
       "label": "labonnealternance/normalize.ts",
       "file_type": "code",
       "source_file": "packages/connectors/src/tier0/labonnealternance/normalize.ts",
@@ -10637,7 +10659,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "labonnealternance/normalize.ts"
     },
     {
@@ -10648,7 +10670,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_self_partner_labels",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "self_partner_labels"
     },
     {
@@ -10659,7 +10681,7 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_test",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "labonnealternance/normalize.test.ts"
     },
     {
@@ -10670,52 +10692,30 @@
       "_origin": "ast",
       "id": "packages_connectors_src_tier0_labonnealternance_normalize_test_fixturesdir",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
+      "community_name": "exactDedupKeyFromSource",
       "norm_label": "fixturesdir"
     },
     {
-      "label": "canonicalize.ts",
+      "label": "dedup-key.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/url/canonicalize.ts",
+      "source_file": "packages/core/src/dedup/dedup-key.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_url_canonicalize",
+      "id": "packages_core_src_dedup_dedup_key",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
-      "norm_label": "canonicalize.ts"
+      "community_name": "exactDedupKeyFromSource",
+      "norm_label": "dedup-key.ts"
     },
     {
-      "label": "canonicalize.test.ts",
+      "label": "dedup-key.test.ts",
       "file_type": "code",
-      "source_file": "packages/core/src/url/canonicalize.test.ts",
+      "source_file": "packages/core/src/dedup/dedup-key.test.ts",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "packages_core_src_url_canonicalize_test",
+      "id": "packages_core_src_dedup_dedup_key_test",
       "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
-      "norm_label": "canonicalize.test.ts"
-    },
-    {
-      "label": "TRACKING_PARAM_PREFIXES",
-      "file_type": "code",
-      "source_file": "packages/core/src/url/canonicalize.ts",
-      "source_location": "L1",
-      "_origin": "ast",
-      "id": "packages_core_src_url_canonicalize_tracking_param_prefixes",
-      "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
-      "norm_label": "tracking_param_prefixes"
-    },
-    {
-      "label": "TRACKING_PARAMS_EXACT",
-      "file_type": "code",
-      "source_file": "packages/core/src/url/canonicalize.ts",
-      "source_location": "L2",
-      "_origin": "ast",
-      "id": "packages_core_src_url_canonicalize_tracking_params_exact",
-      "community": 59,
-      "community_name": "labonnealternance/normalize.ts",
-      "norm_label": "tracking_params_exact"
+      "community_name": "exactDedupKeyFromSource",
+      "norm_label": "dedup-key.test.ts"
     },
     {
       "label": "robots.ts",
@@ -15429,7 +15429,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.ts",
-      "source_location": "L124",
+      "source_location": "L130",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_offermatchesquery",
@@ -15441,7 +15441,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.ts",
-      "source_location": "L128",
+      "source_location": "L134",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_offermatchesquery",
@@ -15477,7 +15477,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.ts",
-      "source_location": "L113",
+      "source_location": "L119",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_resolvelocationverdict",
@@ -23030,6 +23030,18 @@
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_test",
       "target": "packages_harvester_src_query_filter_queryfilter",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "packages/harvester/src/query-filter.test.ts",
+      "source_location": "L3",
+      "weight": 1.0,
+      "_origin": "ast",
+      "source": "packages_harvester_src_query_filter_test",
+      "target": "packages_harvester_src_query_filter_resolvelocationverdict",
       "confidence_score": 1.0
     },
     {
@@ -34315,7 +34327,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.ts",
-      "source_location": "L120",
+      "source_location": "L126",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter",
@@ -34524,7 +34536,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L12",
+      "source_location": "L13",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_test",
@@ -34535,7 +34547,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_test",
@@ -34546,7 +34558,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L36",
+      "source_location": "L37",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_test",
@@ -34557,7 +34569,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packages/harvester/src/query-filter.test.ts",
-      "source_location": "L45",
+      "source_location": "L46",
       "weight": 1.0,
       "_origin": "ast",
       "source": "packages_harvester_src_query_filter_test",
@@ -37256,5 +37268,5 @@
       "source_file": "docs/sources.md"
     }
   ],
-  "built_at_commit": "765f5cb01cd2c1d88a99b2c82feff7d2501d4b17"
+  "built_at_commit": "4c649c6cee1e9c7ba73e2b4c3e3f785c4c51d605"
 }

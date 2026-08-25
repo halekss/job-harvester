@@ -1,23 +1,23 @@
 # Graph Report - job-harvester  (2026-08-26)
 
 ## Corpus Check
-- 221 files · ~176,616 words
+- 221 files · ~176,443 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1076 nodes · 2121 edges · 61 communities (58 shown, 3 thin omitted)
-- Extraction: 99% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 10 edges (avg confidence: 0.76)
+- 1074 nodes · 2125 edges · 63 communities (58 shown, 5 thin omitted)
+- Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 11 edges (avg confidence: 0.76)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4c649c6c`
+- Built from commit: `4f3e5241`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- digitalrecruiters/client.ts
-- orchestrator.test.ts
-- app.ts
+- core/src/index.ts
+- linear/client.ts
+- NormalizedOffer
 - ADR-0002: Connector tier cascade
 - devDependencies
 - api/client.ts
@@ -31,10 +31,10 @@
 - db/package.json
 - welcometothejungle/client.ts
 - smartrecruiters/client.ts
-- connectors/src/index.ts
-- NormalizedOffer
+- RawOffer
+- normalized-offer.ts
 - core/package.json
-- jsonld-generic/normalize.ts
+- connectors/src/index.ts
 - scripts
 - normalizeCompanyName
 - compilerOptions
@@ -47,30 +47,32 @@
 - api/tsconfig.json
 - connectors/tsconfig.json
 - db/tsconfig.json
-- core/src/index.ts
-- vitest
+- HarvestQuery
+- application-event.ts
 - jest-axe-vitest.d.ts
 - discover-targets.ts
 - Découverte automatique de cibles Workday/SmartRecruiters/Talentsoft/DigitalRecruiters — Implementation Plan
-- campaign-schema.ts
+- app.ts
 - BulkActionBar.tsx
 - main.tsx
 - Global Constraints
-- query-filter.ts
-- HarvestQuery
+- orchestrator.test.ts
+- exactDedupKeyFromSource
 - Découverte automatique de cibles Workday/SmartRecruiters/Talentsoft/DigitalRecruiters
 - digitalrecruiters/normalize.ts
 - timedHealthCheck
 - Prompt développeur senior — Fiabiliser les filtres de collecte (contrat / ville / métier)
 - orchestrator.ts
-- scheduler.test.ts
+- offers.ts
 - Fiabiliser les filtres de collecte (contrat / ville / métier)
-- normalized-offer.ts
-- load-campaigns.ts
+- app.test.ts
+- server.ts
 - query-filter.integration.test.ts
-- workday/normalize.test.ts
-- exactDedupKeyFromSource
+- digitalrecruiters/types.ts
+- labonnealternance/normalize.ts
+- vitest
 - CLAUDE.md
+- extractJobPostings
 
 ## God Nodes (most connected - your core abstractions)
 1. `vitest` - 63 edges
@@ -104,19 +106,19 @@
 - **Tier 1 connectors against unauthenticated ATS/search JSON endpoints** — docs_sources_workday, docs_sources_smartrecruiters, docs_sources_welcometothejungle, docs_sources_talentsoft, docs_sources_digitalrecruiters [INFERRED 0.75]
 - **Tier 0 connectors implementing the shared Connector contract against official market-wide APIs** — docs_sources_labonnealternance, docs_sources_francetravail, docs_superpowers_specs_2026_08_15_labonnealternance_e2e_design_connector_contract [INFERRED 0.85]
 
-## Communities (61 total, 3 thin omitted)
+## Communities (63 total, 5 thin omitted)
 
-### Community 0 - "digitalrecruiters/client.ts"
+### Community 0 - "core/src/index.ts"
+Cohesion: 0.22
+Nodes (11): checkDigitalRecruitersHealth(), DIGITALRECRUITERS_CONNECTOR_ID, DigitalRecruitersClientOptions, escapeRegExp(), fetchDigitalRecruitersOffers(), fetchJobAdsPage(), headers(), matchesKeywords() (+3 more)
+
+### Community 1 - "linear/client.ts"
+Cohesion: 0.25
+Nodes (16): commentOnIssue(), createIssue(), LinearGraphQLResponse, LinearIssueRef, linearRequest(), requireTeamId(), resolveLabelIds(), searchIssueByTitle() (+8 more)
+
+### Community 2 - "NormalizedOffer"
 Cohesion: 0.14
-Nodes (17): checkDigitalRecruitersHealth(), DIGITALRECRUITERS_CONNECTOR_ID, DigitalRecruitersClientOptions, escapeRegExp(), fetchDigitalRecruitersOffers(), fetchJobAdsPage(), headers(), matchesKeywords() (+9 more)
-
-### Community 1 - "orchestrator.test.ts"
-Cohesion: 0.12
-Nodes (23): connectorRuns, commentOnIssue(), createIssue(), LinearGraphQLResponse, LinearIssueRef, linearRequest(), requireTeamId(), resolveLabelIds() (+15 more)
-
-### Community 2 - "app.ts"
-Cohesion: 0.06
-Nodes (48): AppDeps, createApp(), sampleOffer, tmpDirs, registerCampaignRoutes(), CreateEventBodySchema, registerEventRoutes(), registerHarvestRoutes() (+40 more)
+Nodes (19): NormalizedOffer, createDb(), __dirname, sampleOffer, tmpDirs, OfferInsert, OfferRow, offerToRow() (+11 more)
 
 ### Community 3 - "ADR-0002: Connector tier cascade"
 Cohesion: 0.07
@@ -127,8 +129,8 @@ Cohesion: 0.04
 Nodes (46): jest-axe, jsdom, dependencies, react, react-dom, @tanstack/react-query, @tanstack/react-virtual, devDependencies (+38 more)
 
 ### Community 5 - "api/client.ts"
-Cohesion: 0.07
-Nodes (38): Campaign, deleteEvent(), DiscoveredTarget, getCampaigns(), getOffers(), HarvestFilters, HarvestRunResult, OfferDetail (+30 more)
+Cohesion: 0.08
+Nodes (36): Campaign, deleteEvent(), DiscoveredTarget, getCampaigns(), getOffers(), HarvestRunResult, OfferDetail, OfferFilters (+28 more)
 
 ### Community 6 - "talentsoft/client.ts"
 Cohesion: 0.09
@@ -143,16 +145,16 @@ Cohesion: 0.06
 Nodes (32): croner, dependencies, croner, drizzle-orm, @job-harvester/connectors, @job-harvester/core, @job-harvester/db, ulid (+24 more)
 
 ### Community 9 - "workday/client.ts"
-Cohesion: 0.14
-Nodes (21): checkWorkdayHealth(), cxsBaseUrl(), escapeRegExp(), fetchJobDetail(), fetchJobList(), fetchWorkdayOffers(), headers(), HEALTH_CHECK_TARGET (+13 more)
+Cohesion: 0.08
+Nodes (38): checkWorkdayHealth(), cxsBaseUrl(), escapeRegExp(), fetchJobDetail(), fetchJobList(), fetchWorkdayOffers(), headers(), HEALTH_CHECK_TARGET (+30 more)
 
 ### Community 10 - "francetravail/client.ts"
-Cohesion: 0.13
-Nodes (21): authHeaders(), buildSearchUrl(), CachedToken, checkFranceTravailHealth(), extractDepartement(), fetchFranceTravailOffers(), FranceTravailClientOptions, getAccessToken() (+13 more)
+Cohesion: 0.11
+Nodes (25): authHeaders(), buildSearchUrl(), CachedToken, checkFranceTravailHealth(), extractDepartement(), fetchFranceTravailOffers(), FRANCE_TRAVAIL_CONNECTOR_ID, FranceTravailClientOptions (+17 more)
 
 ### Community 11 - "labonnealternance/client.ts"
-Cohesion: 0.15
-Nodes (15): USER_AGENT, authHeaders(), buildSearchUrl(), checkLbaHealth(), fetchLbaOffers(), LBA_CONNECTOR_ID, LbaClientOptions, query (+7 more)
+Cohesion: 0.14
+Nodes (16): USER_AGENT, authHeaders(), buildSearchUrl(), checkLbaHealth(), fetchLbaOffers(), LBA_CONNECTOR_ID, LbaClientOptions, query (+8 more)
 
 ### Community 12 - "connectors/package.json"
 Cohesion: 0.07
@@ -170,19 +172,19 @@ Nodes (21): buildParams(), checkWttjHealth(), escapeRegExp(), fetchWttjOffers(),
 Cohesion: 0.13
 Nodes (21): checkSmartRecruitersHealth(), escapeRegExp(), fetchPostingDetail(), fetchPostingsList(), fetchSmartRecruitersOffers(), headers(), matchesContractTypesHint(), matchesKeywords() (+13 more)
 
-### Community 16 - "connectors/src/index.ts"
-Cohesion: 0.24
-Nodes (7): WORKDAY_CONNECTOR_ID, query, workdayConnector, normalizeWorkdayOffer(), RawOffer, ENTITY_REPLACEMENTS, stripHtml()
+### Community 16 - "RawOffer"
+Cohesion: 0.23
+Nodes (9): WORKDAY_CONNECTOR_ID, query, workdayConnector, normalizeWorkdayOffer(), fixturesDir, loadFixture(), loadRawOfferPayload(), target (+1 more)
 
-### Community 17 - "NormalizedOffer"
-Cohesion: 0.24
-Nodes (11): FUZZY_MATCH_THRESHOLD, isDuplicate(), isExactDuplicate(), isFuzzyDuplicate(), mergeOffers(), makeOffer(), unionSourceRefs(), trigrams() (+3 more)
+### Community 17 - "normalized-offer.ts"
+Cohesion: 0.12
+Nodes (19): FUZZY_MATCH_THRESHOLD, isDuplicate(), isExactDuplicate(), isFuzzyDuplicate(), mergeOffers(), makeOffer(), unionSourceRefs(), trigrams() (+11 more)
 
 ### Community 18 - "core/package.json"
 Cohesion: 0.10
 Nodes (20): dependencies, ulid, zod, devDependencies, @types/node, typescript, vitest, exports (+12 more)
 
-### Community 19 - "jsonld-generic/normalize.ts"
+### Community 19 - "connectors/src/index.ts"
 Cohesion: 0.18
 Nodes (10): normalizeJsonLdOffer(), sourceOfferIdFromUrl(), fixturesDir, loadFixture(), loadRawOfferPayload(), JobPosting, JobPostingSchema, JsonLdRawOffer (+2 more)
 
@@ -203,12 +205,12 @@ Cohesion: 0.14
 Nodes (13): compilerOptions, jsx, lib, module, moduleResolution, rootDir, extends, include (+5 more)
 
 ### Community 24 - "welcometothejungle/normalize.ts"
-Cohesion: 0.24
-Nodes (7): buildCanonicalUrl(), mapRemotePolicy(), normalizeWttjOffer(), fixturesDir, canonicalizeUrl(), TRACKING_PARAM_PREFIXES, TRACKING_PARAMS_EXACT
+Cohesion: 0.31
+Nodes (5): buildCanonicalUrl(), mapRemotePolicy(), normalizeWttjOffer(), fixturesDir, inferContractTypeFromText()
 
 ### Community 25 - "sitemap-crawler/client.ts"
 Cohesion: 0.15
-Nodes (14): DomainRateLimiter, sharedLimiter, waitForDomain(), extractJobPostings(), flatten(), hasJobPostingType(), checkSitemapCrawlerHealth(), extractLocs() (+6 more)
+Nodes (14): DomainRateLimiter, sharedLimiter, waitForDomain(), fetchRenderedHtml(), checkSitemapCrawlerHealth(), extractLocs(), fetchSitemapCrawlerOffers(), fetchText() (+6 more)
 
 ### Community 26 - "core/tsconfig.json"
 Cohesion: 0.22
@@ -219,8 +221,8 @@ Cohesion: 0.22
 Nodes (8): compilerOptions, rootDir, types, extends, include, node, src, ../../tsconfig.base.json
 
 ### Community 28 - "talentsoft/normalize.ts"
-Cohesion: 0.27
-Nodes (7): companyNameFromDomain(), findAddressCategory(), normalizeTalentsoftOffer(), parseAddress(), PLATFORM_LABELS, stripReferencePrefix(), inferContractTypeFromText()
+Cohesion: 0.24
+Nodes (8): companyNameFromDomain(), findAddressCategory(), normalizeTalentsoftOffer(), parseAddress(), PLATFORM_LABELS, stripReferencePrefix(), ENTITY_REPLACEMENTS, stripHtml()
 
 ### Community 29 - "api/tsconfig.json"
 Cohesion: 0.29
@@ -234,13 +236,13 @@ Nodes (8): compilerOptions, rootDir, types, extends, include, node, src, ../../t
 Cohesion: 0.29
 Nodes (6): compilerOptions, rootDir, extends, include, src, ../../tsconfig.base.json
 
-### Community 32 - "core/src/index.ts"
-Cohesion: 0.23
-Nodes (9): fetchRenderedHtml(), checkJsonLdGenericHealth(), fetchJsonLdGenericOffers(), fetchStaticHtml(), headers(), JSONLD_GENERIC_CONNECTOR_ID, JsonLdGenericClientOptions, jsonldGenericConnector (+1 more)
+### Community 32 - "HarvestQuery"
+Cohesion: 0.26
+Nodes (9): checkJsonLdGenericHealth(), fetchJsonLdGenericOffers(), fetchStaticHtml(), headers(), JSONLD_GENERIC_CONNECTOR_ID, JsonLdGenericClientOptions, jsonldGenericConnector, query (+1 more)
 
-### Community 33 - "vitest"
-Cohesion: 0.13
-Nodes (5): fixturesDir, loadFixture(), loadRawOfferPayload(), ResizeObserverStub, vitest
+### Community 33 - "application-event.ts"
+Cohesion: 0.17
+Nodes (5): ApplicationEvent, ApplicationEventSchema, ApplicationEventType, ApplicationEventTypeSchema, ResizeObserverStub
 
 ### Community 34 - "jest-axe-vitest.d.ts"
 Cohesion: 0.33
@@ -254,21 +256,21 @@ Nodes (31): WorkdayTarget, ALL_PLATFORMS, DiscoveredTarget, discoverTargets(), D
 Cohesion: 0.11
 Nodes (17): Découverte automatique de cibles Workday/SmartRecruiters/Talentsoft/DigitalRecruiters — Implementation Plan, Global Constraints, Task 10: Export depuis `packages/harvester`, Task 11: Branchement dans la route `POST /harvest/:campaignId/run`, Task 12: Câblage `server.ts` (production), Task 13: Réponse enrichie côté client web, Task 14: Affichage des découvertes dans `HarvestControl`, Task 15: Vérification finale de bout en bout (+9 more)
 
-### Community 37 - "campaign-schema.ts"
-Cohesion: 0.29
-Nodes (8): HarvestOverridesBodySchema, ContractType, ContractTypeSchema, HarvestOverrides, CampaignConfig, CampaignConfigSchema, LocationConfig, LocationConfigSchema
+### Community 37 - "app.ts"
+Cohesion: 0.25
+Nodes (9): AppDeps, createApp(), registerCampaignRoutes(), CreateEventBodySchema, registerEventRoutes(), registerHealthRoutes(), APPLIED_TYPES, registerStatsRoutes() (+1 more)
 
 ### Community 45 - "Global Constraints"
 Cohesion: 0.15
 Nodes (12): Fiabiliser les filtres de collecte Implementation Plan, Global Constraints, Task 1: `inferContractTypeFromText` reconnaît "stage" (JOB-72), Task 2: Créer `query-filter.ts` — le post-filtre centralisé (JOB-73, partie 1/2), Task 3: Intégrer `query-filter.ts` dans `runCampaign()` (JOB-73, partie 2/2), Task 4: Workday — dériver la recherche de `contractTypes` au lieu de "alternance" en dur (JOB-74, 1/2), Task 5: SmartRecruiters — dériver le pré-filtre de `contractTypes` au lieu de "alternance" en dur (JOB-74, 2/2), Task 6: France Travail — erreur explicite au lieu du `console.warn` silencieux (JOB-64) (+4 more)
 
-### Community 46 - "query-filter.ts"
-Cohesion: 0.19
-Nodes (16): AcceptableLocation, acceptableLocationsFromLocations(), cityFromLabel(), departmentFromLabel(), escapeRegExp(), haversineDistanceKm(), LocationVerdict, matchesKeywords() (+8 more)
+### Community 46 - "orchestrator.test.ts"
+Cohesion: 0.18
+Nodes (7): connectorRuns, campaign, insertBaseline(), insertRun(), makeOffer(), normalize(), tmpDirs
 
-### Community 47 - "HarvestQuery"
-Cohesion: 0.24
-Nodes (8): FRANCE_TRAVAIL_CONNECTOR_ID, __resetTokenCacheForTests(), francetravailConnector, query, sitemapCrawlerConnector, query, ConnectorContext, HarvestQuery
+### Community 47 - "exactDedupKeyFromSource"
+Cohesion: 0.36
+Nodes (7): normalizeSmartRecruitersOffer(), fixturesDir, loadFixture(), loadRawOfferPayload(), exactDedupKeyFromSource(), exactDedupKeyFromUrl(), sha1()
 
 ### Community 48 - "Découverte automatique de cibles Workday/SmartRecruiters/Talentsoft/DigitalRecruiters"
 Cohesion: 0.18
@@ -287,36 +289,36 @@ Cohesion: 0.20
 Nodes (9): 1. Contexte pour l'agent/développeur qui reprend ce ticket, 2. Root causes identifiées (fichier:ligne), 3. Ce qui doit changer (spécification fonctionnelle), 4. Découpage en tickets Linear (par charge de travail), 5. Definition of Done pour l'ensemble, L (grand, 2+ jours), M (moyen, 0.5–1.5 jour), Prompt développeur senior — Fiabiliser les filtres de collecte (contrat / ville / métier) (+1 more)
 
 ### Community 52 - "orchestrator.ts"
-Cohesion: 0.33
-Nodes (6): Connector, buildHarvestQuery(), runCampaign(), runCampaignAcrossConnectors(), RunSummary, sharedGuardedFetch
+Cohesion: 0.12
+Nodes (16): registerHarvestRoutes(), Connector, Db, buildHarvestQuery(), CampaignConfig, CampaignConfigSchema, LocationConfig, LocationConfigSchema (+8 more)
 
-### Community 53 - "scheduler.test.ts"
-Cohesion: 0.22
-Nodes (4): hasSchedule(), Scheduler, startScheduler(), tmpDirs
+### Community 53 - "offers.ts"
+Cohesion: 0.40
+Nodes (9): activeEventsByOfferId(), decodeCursor(), deriveStatus(), encodeCursor(), fetchOffersPage(), nextFollowUpByOfferId(), registerOfferRoutes(), rowToOffer() (+1 more)
 
 ### Community 54 - "Fiabiliser les filtres de collecte (contrat / ville / métier)"
 Cohesion: 0.25
 Nodes (7): Ce que change chaque ticket, Contexte, Definition of Done (reprise du ticket parent JOB-61), Décision d'architecture : post-filtre centralisé, Fiabiliser les filtres de collecte (contrat / ville / métier), Limite connue et assumée (France Travail / `mapContractType`), Root causes confirmées par lecture directe du code (2026-08-24)
 
-### Community 55 - "normalized-offer.ts"
-Cohesion: 0.22
-Nodes (8): Lifecycle, LifecycleSchema, NormalizedOfferSchema, RemotePolicy, RemotePolicySchema, SourceRef, SourceRefSchema, validOffer
-
-### Community 56 - "load-campaigns.ts"
-Cohesion: 0.32
-Nodes (5): CampaignsFileSchema, findCampaign(), loadCampaigns(), repoRoot, tmpDirs
+### Community 56 - "server.ts"
+Cohesion: 0.15
+Nodes (11): app, campaigns, campaignsFilePath, connectors, db, repoRoot, CampaignsFileSchema, findCampaign() (+3 more)
 
 ### Community 57 - "query-filter.integration.test.ts"
 Cohesion: 0.29
 Nodes (4): dataCampaign, makeOffer(), normalize(), tmpDirs
 
-### Community 58 - "workday/normalize.test.ts"
-Cohesion: 0.50
-Nodes (4): fixturesDir, loadFixture(), loadRawOfferPayload(), target
+### Community 58 - "digitalrecruiters/types.ts"
+Cohesion: 0.29
+Nodes (6): DigitalRecruitersJobAd, DigitalRecruitersJobAdSchema, DigitalRecruitersRawOffer, DigitalRecruitersRawOfferSchema, DigitalRecruitersSearchResponse, DigitalRecruitersSearchResponseSchema
 
-### Community 59 - "exactDedupKeyFromSource"
-Cohesion: 0.26
-Nodes (10): mapContractType(), mapOriginSource(), normalizeLbaOffer(), parseFrenchAddress(), SELF_PARTNER_LABELS, fixturesDir, normalizeSmartRecruitersOffer(), exactDedupKeyFromSource() (+2 more)
+### Community 59 - "labonnealternance/normalize.ts"
+Cohesion: 0.21
+Nodes (9): mapContractType(), mapOriginSource(), normalizeLbaOffer(), parseFrenchAddress(), SELF_PARTNER_LABELS, fixturesDir, canonicalizeUrl(), TRACKING_PARAM_PREFIXES (+1 more)
+
+### Community 62 - "extractJobPostings"
+Cohesion: 0.70
+Nodes (3): extractJobPostings(), flatten(), hasJobPostingType()
 
 ## Ambiguous Edges - Review These
 - `Tier 3 headless browser (not implemented)` → `Source: jsonld-generic (Tier 2)`  [AMBIGUOUS]
@@ -325,9 +327,9 @@ Nodes (10): mapContractType(), mapOriginSource(), normalizeLbaOffer(), parseFren
   docs/sources.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **379 isolated node(s):** `name`, `private`, `type`, `test`, `typecheck` (+374 more)
+- **378 isolated node(s):** `name`, `private`, `type`, `test`, `typecheck` (+373 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **3 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
@@ -336,13 +338,13 @@ _Questions this graph is uniquely positioned to answer:_
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **What is the exact relationship between `robots.txt/CGU applies only to Tier 2 connectors` and `Source: welcometothejungle (Tier 1, via Algolia)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `vitest` connect `vitest` to `digitalrecruiters/client.ts`, `orchestrator.test.ts`, `app.ts`, `api/client.ts`, `talentsoft/client.ts`, `workday/client.ts`, `francetravail/client.ts`, `labonnealternance/client.ts`, `welcometothejungle/client.ts`, `smartrecruiters/client.ts`, `connectors/src/index.ts`, `NormalizedOffer`, `jsonld-generic/normalize.ts`, `normalizeCompanyName`, `welcometothejungle/normalize.ts`, `sitemap-crawler/client.ts`, `talentsoft/normalize.ts`, `connectors/tsconfig.json`, `core/src/index.ts`, `jest-axe-vitest.d.ts`, `discover-targets.ts`, `campaign-schema.ts`, `query-filter.ts`, `HarvestQuery`, `digitalrecruiters/normalize.ts`, `timedHealthCheck`, `scheduler.test.ts`, `normalized-offer.ts`, `load-campaigns.ts`, `query-filter.integration.test.ts`, `workday/normalize.test.ts`, `exactDedupKeyFromSource`?**
-  _High betweenness centrality (0.144) - this node is a cross-community bridge._
+- **Why does `vitest` connect `vitest` to `core/src/index.ts`, `NormalizedOffer`, `api/client.ts`, `talentsoft/client.ts`, `workday/client.ts`, `francetravail/client.ts`, `labonnealternance/client.ts`, `welcometothejungle/client.ts`, `smartrecruiters/client.ts`, `RawOffer`, `normalized-offer.ts`, `connectors/src/index.ts`, `normalizeCompanyName`, `welcometothejungle/normalize.ts`, `sitemap-crawler/client.ts`, `talentsoft/normalize.ts`, `connectors/tsconfig.json`, `HarvestQuery`, `application-event.ts`, `jest-axe-vitest.d.ts`, `discover-targets.ts`, `orchestrator.test.ts`, `exactDedupKeyFromSource`, `digitalrecruiters/normalize.ts`, `timedHealthCheck`, `orchestrator.ts`, `app.test.ts`, `server.ts`, `query-filter.integration.test.ts`, `labonnealternance/normalize.ts`, `extractJobPostings`?**
+  _High betweenness centrality (0.138) - this node is a cross-community bridge._
 - **Why does `types` connect `connectors/tsconfig.json` to `vitest`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
-- **Why does `HarvestQuery` connect `HarvestQuery` to `digitalrecruiters/client.ts`, `core/src/index.ts`, `campaign-schema.ts`, `talentsoft/client.ts`, `workday/client.ts`, `francetravail/client.ts`, `labonnealternance/client.ts`, `welcometothejungle/client.ts`, `smartrecruiters/client.ts`, `connectors/src/index.ts`, `timedHealthCheck`, `sitemap-crawler/client.ts`?**
+- **Why does `HarvestQuery` connect `HarvestQuery` to `core/src/index.ts`, `talentsoft/client.ts`, `workday/client.ts`, `francetravail/client.ts`, `labonnealternance/client.ts`, `welcometothejungle/client.ts`, `smartrecruiters/client.ts`, `RawOffer`, `timedHealthCheck`, `orchestrator.ts`, `sitemap-crawler/client.ts`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
 - **What connects `name`, `private`, `type` to the rest of the system?**
-  _379 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `digitalrecruiters/client.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.1383399209486166 - nodes in this community are weakly interconnected._
+  _378 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `NormalizedOffer` be split into smaller, more focused modules?**
+  _Cohesion score 0.13911290322580644 - nodes in this community are weakly interconnected._
