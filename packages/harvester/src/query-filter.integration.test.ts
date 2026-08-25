@@ -93,7 +93,7 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
     };
 
     // tier1-like locationScoped:false : un seul fetch, offres de villes variées — doit être
-    // filtré sur le DÉPARTEMENT de la campagne (59, Lille), pas seulement sur son propre avis.
+    // filtré sur la localisation de la campagne (Lille), pas seulement sur son propre avis.
     const tier1Like: Connector = {
       id: "tier1-fake",
       tier: 1,
@@ -102,20 +102,31 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
       async *fetch(): AsyncIterable<RawOffer> {
         yield { source: "tier1-fake", payload: { id: "lille-ok", url: "https://example.com/tier1/lille-ok" } };
         yield { source: "tier1-fake", payload: { id: "marseille-offtopic", url: "https://example.com/tier1/marseille" } };
-        yield { source: "tier1-fake", payload: { id: "no-department", url: "https://example.com/tier1/no-dept" } };
+        yield { source: "tier1-fake", payload: { id: "lille-bare-city-name", url: "https://example.com/tier1/lille-bare-city-name" } };
+        yield { source: "tier1-fake", payload: { id: "no-location-at-all", url: "https://example.com/tier1/no-location-at-all" } };
       },
       normalize(raw) {
         const payload = raw.payload as { id: string; url: string };
         if (payload.id === "marseille-offtopic") {
           return makeOffer(payload.id, payload.url, { location: { label: "Marseille 13000", city: "Marseille", department: "13" } });
         }
-        if (payload.id === "no-department") {
-          // Cas Workday : pas de département résolu du tout -> fail-closed attendu.
+        if (payload.id === "lille-bare-city-name") {
+          // Cas Workday (JOB-31/JOB-75) : ni coordonnées ni département, seulement un nom de
+          // ville libre — matche désormais par nom de ville contre les localisations de la
+          // campagne (niveau 3 de resolveLocationVerdict), au lieu d'être rejeté fail-closed.
           // Entreprise distincte de "data-ok" pour la même raison que cdi-wrong-contract
           // ci-dessus : éviter qu'isFuzzyDuplicate masque une régression du fail-closed.
           return makeOffer(payload.id, payload.url, {
             location: { label: "Lille", city: "Lille" },
             company: { name: "Delta Corp", normalizedName: "delta corp" },
+          });
+        }
+        if (payload.id === "no-location-at-all") {
+          // Aucune information de localisation exploitable (ni coordonnées, ni département, ni
+          // nom de ville reconnu) -> reste fail-closed après JOB-75.
+          return makeOffer(payload.id, payload.url, {
+            location: { label: "", city: "" },
+            company: { name: "Epsilon Corp", normalizedName: "epsilon corp" },
           });
         }
         // Entreprise distincte de "data-ok" (tier0Like) : même ville, même titre/mots-clés —
@@ -136,15 +147,15 @@ describe("query-filter integration — DoD scenario (JOB-70)", () => {
     const stored = db.select().from(offersTable).all();
     const storedIds = stored.map((row) => row.sourceOfferId).sort();
 
-    expect(storedIds).toEqual(["data-ok", "lille-ok"]);
+    expect(storedIds).toEqual(["data-ok", "lille-bare-city-name", "lille-ok"]);
 
     // Preuve que chaque rejet a bien eu lieu (et pas juste que storedIds "tombe juste") :
-    // devweb-offtopic (mots-clés), marseille-offtopic (département), cdi-wrong-contract
-    // (type de contrat), no-department (fail-closed) doivent chacun être rejetés. Les companies
-    // distinctes données à cdi-wrong-contract/no-department (voir plus haut) sont ce qui évite
-    // qu'isFuzzyDuplicate les masque et rend storedIds seul déjà probant ; cette assertion sur
-    // rejectedCount est une seconde ligne de défense, au cas où une future fixture rejetée
-    // repartagerait ville/company/titre avec une autre offre conservée.
+    // devweb-offtopic (mots-clés), marseille-offtopic (localisation hors zone), cdi-wrong-contract
+    // (type de contrat), no-location-at-all (fail-closed, JOB-75) doivent chacun être rejetés.
+    // Les companies distinctes données ci-dessus sont ce qui évite qu'isFuzzyDuplicate les masque
+    // et rend storedIds seul déjà probant ; cette assertion sur rejectedCount est une seconde
+    // ligne de défense, au cas où une future fixture rejetée repartagerait ville/company/titre
+    // avec une autre offre conservée.
     const totalRejected = summaries.reduce((sum, summary) => sum + summary.rejectedCount, 0);
     expect(totalRejected).toBe(4);
   });

@@ -6,7 +6,7 @@ import type { CampaignConfig } from "./config/campaign-schema.js";
 import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
 import { buildHarvestQuery, type HarvestOverrides } from "./build-harvest-query.js";
 import { reportIncident, resolveIncidentIfHealthy } from "./linear/incident-reporter.js";
-import { offerMatchesQuery, acceptableDepartmentsFromLocations } from "./query-filter.js";
+import { offerMatchesQuery, acceptableLocationsFromLocations, resolveLocationVerdict } from "./query-filter.js";
 
 // Une baseline calculée sur moins de runs que ça n'est pas fiable : on préfère ne pas
 // alerter plutôt que de crier au loup sur les tout premiers runs d'un connecteur.
@@ -63,11 +63,11 @@ export interface RunSummary {
   rawCount: number;
   normalizedCount: number;
   rejectedCount: number;
-  // Sous-ensemble de rejectedCount : offres rejetées faute de département résolu sur l'offre
-  // alors qu'un filtre de localisation est actif (ex. Workday, qui ne renvoie qu'un nom de
-  // ville libre — JOB-31). Distinct d'un rejet "mauvais département" : signale un connecteur
-  // qui ne peut PAS garantir le filtre ville plutôt qu'une offre simplement hors périmètre
-  // (audit 2026-08-24, root cause #1 — "jamais silencieux").
+  // Sous-ensemble de rejectedCount : offres rejetées faute de localisation vérifiable (ni
+  // coordonnées, ni département, ni nom de ville reconnu) alors qu'un filtre de localisation
+  // est actif — voir resolveLocationVerdict() dans query-filter.ts (JOB-75). Distinct d'un rejet
+  // "hors zone" : signale un connecteur qui ne peut PAS garantir le filtre ville plutôt qu'une
+  // offre simplement hors périmètre (audit 2026-08-24, root cause #1 — "jamais silencieux").
   unresolvedLocationCount: number;
   ok: boolean;
   errorMessage?: string;
@@ -129,7 +129,7 @@ export async function runCampaign(
   // locationScoped:false n'est fetché qu'une fois avec la première localisation (voir plus
   // bas), ses offres doivent quand même pouvoir matcher n'importe laquelle des localisations
   // couvertes par ce run, pas seulement la première.
-  const acceptableDepartments = acceptableDepartmentsFromLocations(locations);
+  const acceptableLocations = acceptableLocationsFromLocations(locations);
   let hasFetchedOnce = false;
   for (const location of locations) {
     const query = buildHarvestQuery(campaign, location, overrides);
@@ -145,13 +145,13 @@ export async function runCampaign(
         try {
           const normalized = connector.normalize(raw);
           normalizedCount += 1;
-          if (acceptableDepartments.length > 0 && !normalized.location.department) {
+          if (acceptableLocations.length > 0 && resolveLocationVerdict(normalized, acceptableLocations) === "unresolved") {
             unresolvedLocationCount += 1;
           }
           const matches = offerMatchesQuery(normalized, {
             contractTypes: query.contractTypes,
             keywords: query.keywords,
-            acceptableDepartments,
+            acceptableLocations,
           });
           if (!matches) {
             rejectedCount += 1;

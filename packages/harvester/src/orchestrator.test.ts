@@ -260,11 +260,13 @@ describe("runCampaign", () => {
     expect(summary.rejectedCount).toBeGreaterThan(0);
   });
 
-  it("applies no location constraint when the campaign's locations have no resolvable department (back-compat with existing fixtures)", async () => {
+  it("matches by city name when the campaign's location label has no postal code (back-compat with existing fixtures)", async () => {
     // La fixture `campaign` partagée du fichier a locations: [{label: "Lille", ...}] (sans code
-    // postal) — ce test verrouille explicitement que ça n'active AUCUNE contrainte de
-    // localisation, pour que le test historique "normalizes, dedups, and stores offers..."
-    // (rawCount: 3, normalizedCount: 2, rejectedCount: 1) reste inchangé par ce ticket.
+    // postal, donc pas de département dérivable) et `makeOffer` pose city: "Lille" sans
+    // coordonnées ni département — ça matche désormais au niveau 3 (nom de ville, JOB-75) plutôt
+    // que de ne poser aucune contrainte. Ce test verrouille que le test historique "normalizes,
+    // dedups, and stores offers..." (rawCount: 3, normalizedCount: 2, rejectedCount: 1) reste
+    // inchangé par ce ticket.
     const rawOffers: RawOffer[] = [{ source: "fake", payload: { id: "1", url: "https://example.com/jobs/1" } }];
     const fakeConnector: Connector = {
       id: "fake",
@@ -317,25 +319,30 @@ describe("runCampaign — location filter visibility (audit 2026-08-24, root cau
     expect(summary.connectorId).toBe("attributed-fake");
   });
 
-  it("counts offers rejected for an unresolvable location separately from offers rejected for a wrong (but resolved) department — Workday-style connectors never populate department (JOB-31)", async () => {
-    const unresolvedOffer: RawOffer = { source: "fake", payload: { id: "unresolved-1", url: "https://example.com/jobs/unresolved-1" } };
+  it("counts offers rejected for a truly unresolvable location separately from offers rejected for a wrong (but resolved) department", async () => {
+    // JOB-75 : un nom de ville nu (sans code postal ni coordonnées, cas Workday — JOB-31) n'est
+    // plus "unresolved" depuis le correctif — il matche par nom contre les localisations de la
+    // campagne (niveau 3 de resolveLocationVerdict). Seule une offre sans AUCUNE information de
+    // localisation exploitable (ville vide) reste comptée dans unresolvedLocationCount.
+    const cityNameOffer: RawOffer = { source: "fake", payload: { id: "city-name-1", url: "https://example.com/jobs/city-name-1" } };
     const wrongDeptOffer: RawOffer = { source: "fake", payload: { id: "wrong-dept-1", url: "https://example.com/jobs/wrong-dept-1" } };
+    const trulyUnresolvedOffer: RawOffer = { source: "fake", payload: { id: "unresolved-1", url: "https://example.com/jobs/unresolved-1" } };
     const connector: Connector = {
       id: "fake",
       tier: 1,
       locationScoped: false,
       supports: () => true,
       async *fetch() {
-        yield unresolvedOffer;
+        yield cityNameOffer;
         yield wrongDeptOffer;
+        yield trulyUnresolvedOffer;
       },
       normalize(raw) {
         const payload = raw.payload as { id: string; url: string };
         const offer = makeOffer(payload.id, payload.url);
-        return {
-          ...offer,
-          location: payload.id === "unresolved-1" ? { label: "Lille", city: "Lille" } : { label: "Paris 75000", city: "Paris", department: "75" },
-        };
+        if (payload.id === "city-name-1") return { ...offer, location: { label: "Lille", city: "Lille" } };
+        if (payload.id === "wrong-dept-1") return { ...offer, location: { label: "Paris 75000", city: "Paris", department: "75" } };
+        return { ...offer, location: { label: "", city: "" } };
       },
       async healthCheck() {
         return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
@@ -347,20 +354,26 @@ describe("runCampaign — location filter visibility (audit 2026-08-24, root cau
 
     expect(summary.rejectedCount).toBe(2);
     expect(summary.unresolvedLocationCount).toBe(1);
+
+    const stored = db.select().from(offersTable).all();
+    expect(stored.map((row) => row.sourceOfferId)).toEqual(["city-name-1"]);
   });
 
-  it("keeps unresolvedLocationCount at 0 when no location filter is active on the run", async () => {
-    const unresolvedOffer: RawOffer = { source: "fake", payload: { id: "unresolved-1", url: "https://example.com/jobs/unresolved-1" } };
+  it("does not count an offer as unresolved when it matches by geo-radius despite a differing department (I-2)", async () => {
+    // Lens (62) est à ~27km de Lille (50.63, 3.05), donc dans le rayon de 30km déclaré par
+    // lilleCampaign, mais dans un département voisin — resolveLocationVerdict doit matcher au
+    // niveau 1 (rayon) sans jamais tomber sur le niveau département/ville.
+    const lensOffer: RawOffer = { source: "fake", payload: { id: "lens-1", url: "https://example.com/jobs/lens-1" } };
     const connector: Connector = {
       id: "fake",
       tier: 1,
       supports: () => true,
       async *fetch() {
-        yield unresolvedOffer;
+        yield lensOffer;
       },
       normalize(raw) {
         const payload = raw.payload as { id: string; url: string };
-        return { ...makeOffer(payload.id, payload.url), location: { label: "Lille", city: "Lille" } };
+        return { ...makeOffer(payload.id, payload.url), location: { label: "Lens", city: "Lens", department: "62", lat: 50.4331, lng: 2.8319 } };
       },
       async healthCheck() {
         return { connectorId: "fake", ok: true, latencyMs: 0, checkedAt: new Date().toISOString() };
@@ -368,11 +381,12 @@ describe("runCampaign — location filter visibility (audit 2026-08-24, root cau
     };
 
     const db = createDb(tmpDbPath());
-    // `campaign` (fixture partagée du fichier) a locations: [{label: "Lille", ...}] sans code
-    // postal -> acceptableDepartments est vide -> aucune contrainte de localisation active.
-    const summary = await runCampaign(campaign, connector, db, {});
+    const summary = await runCampaign(lilleCampaign, connector, db, {});
 
     expect(summary.unresolvedLocationCount).toBe(0);
+    expect(summary.rejectedCount).toBe(0);
+    const stored = db.select().from(offersTable).all();
+    expect(stored.map((row) => row.sourceOfferId)).toEqual(["lens-1"]);
   });
 });
 

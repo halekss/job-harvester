@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from "vitest";
 import type { NormalizedOffer } from "@job-harvester/core";
-import { offerMatchesQuery, departmentFromLabel, acceptableDepartmentsFromLocations, type QueryFilter } from "./query-filter.js";
+import {
+  offerMatchesQuery,
+  departmentFromLabel,
+  acceptableLocationsFromLocations,
+  haversineDistanceKm,
+  type QueryFilter,
+  type AcceptableLocation,
+} from "./query-filter.js";
 
 function makeOffer(overrides: Partial<NormalizedOffer> = {}): NormalizedOffer {
   return {
@@ -24,7 +31,18 @@ function makeOffer(overrides: Partial<NormalizedOffer> = {}): NormalizedOffer {
   };
 }
 
-const permissiveFilter: QueryFilter = { contractTypes: [], keywords: [], acceptableDepartments: [] };
+// Lille (centre de gravité utilisé dans la plupart des scénarios ci-dessous).
+const LILLE: AcceptableLocation = { label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 };
+const AMIENS: AcceptableLocation = { label: "Amiens 80000", lat: 49.903041, lng: 2.292605, radiusKm: 30 };
+// Lens (Pas-de-Calais, dept 62) : à ~27 km de Lille, donc dans le rayon de 30 km ci-dessus mais
+// dans un département voisin — sert à vérifier que le rayon prime sur l'égalité de département.
+const LENS_LAT = 50.4331;
+const LENS_LNG = 2.8319;
+// Marseille : loin de toutes les localisations ci-dessus, ni dans un rayon ni dans un département accepté.
+const MARSEILLE_LAT = 43.2965;
+const MARSEILLE_LNG = 5.3698;
+
+const permissiveFilter: QueryFilter = { contractTypes: [], keywords: [], acceptableLocations: [] };
 
 describe("departmentFromLabel", () => {
   it("extracts a department from a label containing a 5-digit postal code", () => {
@@ -41,19 +59,29 @@ describe("departmentFromLabel", () => {
   });
 });
 
-describe("acceptableDepartmentsFromLocations", () => {
-  it("returns the deduplicated set of departments across all locations", () => {
+describe("haversineDistanceKm", () => {
+  it("returns 0 for identical coordinates", () => {
+    expect(haversineDistanceKm(50.63, 3.05, 50.63, 3.05)).toBe(0);
+  });
+
+  it("returns a plausible distance for two known French cities (Lille -> Paris, ~220km great-circle)", () => {
+    const distance = haversineDistanceKm(50.630951, 3.045391, 48.8566, 2.3522);
+    expect(distance).toBeGreaterThan(200);
+    expect(distance).toBeLessThan(240);
+  });
+});
+
+describe("acceptableLocationsFromLocations", () => {
+  it("carries lat/lng/radiusKm through unchanged, one entry per input location", () => {
     expect(
-      acceptableDepartmentsFromLocations([{ label: "Lille 59000" }, { label: "Amiens 80000" }, { label: "Paris 75000" }]),
-    ).toEqual(["59", "80", "75"]);
-  });
-
-  it("skips locations with no resolvable department", () => {
-    expect(acceptableDepartmentsFromLocations([{ label: "Lille" }, { label: "Amiens 80000" }])).toEqual(["80"]);
-  });
-
-  it("returns an empty array when no location has a resolvable department", () => {
-    expect(acceptableDepartmentsFromLocations([{ label: "Lille" }])).toEqual([]);
+      acceptableLocationsFromLocations([
+        { label: "Lille 59000", lat: 50.63, lng: 3.05, radiusKm: 30 },
+        { label: "Amiens 80000", lat: 49.9, lng: 2.29, radiusKm: 30 },
+      ]),
+    ).toEqual([
+      { label: "Lille 59000", lat: 50.63, lng: 3.05, radiusKm: 30 },
+      { label: "Amiens 80000", lat: 49.9, lng: 2.29, radiusKm: 30 },
+    ]);
   });
 });
 
@@ -95,37 +123,97 @@ describe("offerMatchesQuery — keywords", () => {
 });
 
 describe("offerMatchesQuery — location", () => {
-  it("applies no location constraint when acceptableDepartments is empty", () => {
-    const filter: QueryFilter = { ...permissiveFilter, acceptableDepartments: [] };
+  it("applies no location constraint when acceptableLocations is empty", () => {
+    const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [] };
     expect(offerMatchesQuery(makeOffer({ location: { label: "Marseille 13000", city: "Marseille", department: "13" } }), filter)).toBe(
       true,
     );
   });
 
-  it("accepts an offer whose department is in the acceptable set", () => {
-    const filter: QueryFilter = { ...permissiveFilter, acceptableDepartments: ["59", "75"] };
-    expect(offerMatchesQuery(makeOffer({ location: { label: "Paris 75000", city: "Paris", department: "75" } }), filter)).toBe(true);
+  describe("niveau 1 — rayon géographique (offre avec coordonnées, JOB-75)", () => {
+    it("accepts an offer within radius of an acceptable location", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      expect(
+        offerMatchesQuery(
+          makeOffer({ location: { label: "Lille", city: "Lille", lat: 50.63, lng: 3.05 } }),
+          filter,
+        ),
+      ).toBe(true);
+    });
+
+    it("accepts an offer within radius even when its department differs from the location's (I-2 regression guard)", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      expect(
+        offerMatchesQuery(
+          makeOffer({ location: { label: "Lens", city: "Lens", department: "62", lat: LENS_LAT, lng: LENS_LNG } }),
+          filter,
+        ),
+      ).toBe(true);
+    });
+
+    it("rejects an offer with coordinates outside every acceptable radius, even if department matched textually", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      expect(
+        offerMatchesQuery(
+          makeOffer({ location: { label: "Marseille", city: "Marseille", lat: MARSEILLE_LAT, lng: MARSEILLE_LNG } }),
+          filter,
+        ),
+      ).toBe(false);
+    });
   });
 
-  it("rejects an offer whose department is outside the acceptable set", () => {
-    const filter: QueryFilter = { ...permissiveFilter, acceptableDepartments: ["59", "75"] };
-    expect(offerMatchesQuery(makeOffer({ location: { label: "Marseille 13000", city: "Marseille", department: "13" } }), filter)).toBe(
-      false,
-    );
+  describe("niveau 2 — égalité de département (offre sans coordonnées, avec département résolu)", () => {
+    it("accepts an offer whose department is in the acceptable set", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE, AMIENS] };
+      expect(offerMatchesQuery(makeOffer({ location: { label: "Paris 75000", city: "Paris", department: "75" } }), filter)).toBe(
+        false,
+      );
+      expect(offerMatchesQuery(makeOffer({ location: { label: "Amiens 80000", city: "Amiens", department: "80" } }), filter)).toBe(
+        true,
+      );
+    });
+
+    it("rejects an offer whose department is outside the acceptable set", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      expect(offerMatchesQuery(makeOffer({ location: { label: "Marseille 13000", city: "Marseille", department: "13" } }), filter)).toBe(
+        false,
+      );
+    });
   });
 
-  it("fail-closed: rejects an offer with no resolvable department when a department constraint is active (Workday case)", () => {
-    const filter: QueryFilter = { ...permissiveFilter, acceptableDepartments: ["59"] };
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-    expect(offerMatchesQuery(makeOffer({ source: "workday", location: { label: "Lille", city: "Lille" } }), filter)).toBe(false);
-    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("workday"));
-    warnSpy.mockRestore();
+  describe("niveau 3 — nom de ville normalisé (offre sans coordonnées ni département, cas Workday)", () => {
+    it("accepts a bare city name matching an acceptable location's label", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      expect(offerMatchesQuery(makeOffer({ source: "workday", location: { label: "Lille", city: "Lille" } }), filter)).toBe(true);
+    });
+
+    it("is case- and accent-insensitive", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [AMIENS] };
+      expect(offerMatchesQuery(makeOffer({ source: "workday", location: { label: "AMIENS", city: "AMIENS" } }), filter)).toBe(true);
+    });
+
+    it("rejects a city name that matches no acceptable location", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      expect(offerMatchesQuery(makeOffer({ source: "workday", location: { label: "Marseille", city: "Marseille" } }), filter)).toBe(
+        false,
+      );
+    });
+  });
+
+  describe("niveau 4 — fail-closed (aucune information de localisation exploitable)", () => {
+    it("rejects an offer with no coordinates, no department, and an unrecognized city name", () => {
+      const filter: QueryFilter = { ...permissiveFilter, acceptableLocations: [LILLE] };
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect(offerMatchesQuery(makeOffer({ source: "some-source", location: { label: "", city: "" } }), filter)).toBe(false);
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("some-source"));
+      warnSpy.mockRestore();
+    });
   });
 });
 
 describe("offerMatchesQuery — combined", () => {
   it("rejects on the first failing criterion even when others would pass", () => {
-    const filter: QueryFilter = { contractTypes: ["stage"], keywords: ["data"], acceptableDepartments: ["59"] };
+    const filter: QueryFilter = { contractTypes: ["stage"], keywords: ["data"], acceptableLocations: [LILLE] };
     expect(
       offerMatchesQuery(
         makeOffer({ contractType: "apprentissage", title: "Data Analyst", location: { label: "Lille 59000", city: "Lille", department: "59" } }),
@@ -135,7 +223,7 @@ describe("offerMatchesQuery — combined", () => {
   });
 
   it("accepts an offer passing all three criteria", () => {
-    const filter: QueryFilter = { contractTypes: ["apprentissage"], keywords: ["data"], acceptableDepartments: ["59"] };
+    const filter: QueryFilter = { contractTypes: ["apprentissage"], keywords: ["data"], acceptableLocations: [LILLE] };
     expect(
       offerMatchesQuery(
         makeOffer({ contractType: "apprentissage", title: "Data Analyst", location: { label: "Lille 59000", city: "Lille", department: "59" } }),
