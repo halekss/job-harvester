@@ -4,9 +4,9 @@ import { isFuzzyDuplicate, mergeOffers, type Connector, type NormalizedOffer } f
 import { offers as offersTable, connectorRuns, offerToRow, rowToOffer, type Db } from "@job-harvester/db";
 import type { CampaignConfig } from "./config/campaign-schema.js";
 import { createRateLimitedFetch } from "./rate-limit/rate-limited-fetch.js";
-import { buildHarvestQuery, type HarvestOverrides } from "./build-harvest-query.js";
+import { buildHarvestQuery } from "./build-harvest-query.js";
 import { reportIncident, resolveIncidentIfHealthy } from "./linear/incident-reporter.js";
-import { offerMatchesQuery, acceptableLocationsFromLocations, resolveLocationVerdict } from "./query-filter.js";
+import { offerMatchesQuery, queryFilterFromCampaign, resolveLocationVerdict } from "./query-filter.js";
 
 // Une baseline calculée sur moins de runs que ça n'est pas fiable : on préfère ne pas
 // alerter plutôt que de crier au loup sur les tout premiers runs d'un connecteur.
@@ -112,7 +112,6 @@ export async function runCampaign(
   connector: Connector,
   db: Db,
   env: Record<string, string | undefined>,
-  overrides: HarvestOverrides = {},
 ): Promise<RunSummary> {
   const guardedFetch = sharedGuardedFetch;
   const startedAt = new Date().toISOString();
@@ -122,17 +121,12 @@ export async function runCampaign(
   let unresolvedLocationCount = 0;
   let errorMessage: string | undefined;
 
-  // Filtre ville ad-hoc (JOB-audit-2026-08-21) : une seule localisation au lieu de la boucle sur
-  // toutes celles de la campagne, quand l'utilisateur a choisi une ville pour cette collecte.
-  const locations = overrides.location ? [overrides.location] : campaign.locations;
-  // JOB-73 : calculé une fois pour TOUT le run, pas par itération — un connecteur
-  // locationScoped:false n'est fetché qu'une fois avec la première localisation (voir plus
-  // bas), ses offres doivent quand même pouvoir matcher n'importe laquelle des localisations
-  // couvertes par ce run, pas seulement la première.
-  const acceptableLocations = acceptableLocationsFromLocations(locations);
+  // Un seul jeu de critères par campagne (mots-clés/contrat/localisations) : plus de filtres
+  // ad-hoc côté appelant — pour changer les critères d'une campagne, on édite campaigns.yaml.
+  const filter = queryFilterFromCampaign(campaign);
   let hasFetchedOnce = false;
-  for (const location of locations) {
-    const query = buildHarvestQuery(campaign, location, overrides);
+  for (const location of campaign.locations) {
+    const query = buildHarvestQuery(campaign, location);
     if (!connector.supports(query)) continue;
     if (connector.locationScoped === false) {
       if (hasFetchedOnce) continue;
@@ -145,14 +139,10 @@ export async function runCampaign(
         try {
           const normalized = connector.normalize(raw);
           normalizedCount += 1;
-          if (acceptableLocations.length > 0 && resolveLocationVerdict(normalized, acceptableLocations) === "unresolved") {
+          if (filter.acceptableLocations.length > 0 && resolveLocationVerdict(normalized, filter.acceptableLocations) === "unresolved") {
             unresolvedLocationCount += 1;
           }
-          const matches = offerMatchesQuery(normalized, {
-            contractTypes: query.contractTypes,
-            keywords: query.keywords,
-            acceptableLocations,
-          });
+          const matches = offerMatchesQuery(normalized, filter);
           if (!matches) {
             rejectedCount += 1;
             continue;
@@ -202,16 +192,14 @@ export async function runCampaignAcrossConnectors(
   connectors: Connector[],
   db: Db,
   env: Record<string, string | undefined>,
-  overrides: HarvestOverrides = {},
 ): Promise<RunSummary[]> {
-  const locations = overrides.location ? [overrides.location] : campaign.locations;
   const supportedConnectors = connectors.filter((connector) =>
-    locations.some((location) => connector.supports(buildHarvestQuery(campaign, location, overrides))),
+    campaign.locations.some((location) => connector.supports(buildHarvestQuery(campaign, location))),
   );
 
   const summaries: RunSummary[] = [];
   for (const connector of supportedConnectors) {
-    summaries.push(await runCampaign(campaign, connector, db, env, overrides));
+    summaries.push(await runCampaign(campaign, connector, db, env));
   }
   return summaries;
 }

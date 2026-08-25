@@ -149,6 +149,96 @@ describe("GET /offers", () => {
   });
 });
 
+// Audit 2026-08-26 : "le but du jobboard est d'afficher les offres correspondant à la
+// recherche" — GET /offers?campaignId=... doit réévaluer chaque offre stockée avec les mêmes
+// critères (mots-clés/contrat/localisations) que la collecte, pas se contenter de renvoyer tout
+// l'historique jamais collecté (ex. une offre "Pentester" restée en base depuis avant JOB-73).
+describe("GET /offers — campaign scoping", () => {
+  const dataCampaign: CampaignConfig = {
+    id: "alternance-data-hdf",
+    romeCodes: ["M1403"],
+    keywords: ["data"],
+    locations: [{ label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 }],
+    contractTypes: ["apprentissage", "professionnalisation"],
+  };
+
+  it("hides an offer that no longer matches the campaign's criteria (wrong contractType) without deleting it", async () => {
+    const db = createDb(tmpDbPath());
+    const offTopic: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000P0",
+      sourceOfferId: "pentester",
+      canonicalUrl: "https://example.com/jobs/pentester",
+      title: "Consultant Sécurité Offensive – Pentester (H/F)",
+      contractType: "autre",
+      location: { label: "Paris", city: "Paris" },
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/pentester"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "pentester", canonicalUrl: "https://example.com/jobs/pentester" }],
+    };
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    db.insert(offersTable).values(offerToRow(offTopic)).run();
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const scoped = await app.request("/offers?campaignId=alternance-data-hdf");
+    const scopedBody = (await scoped.json()) as { offers: { title: string }[] };
+    expect(scopedBody.offers.map((o) => o.title)).toEqual([sampleOffer.title]);
+
+    const unscoped = await app.request("/offers");
+    const unscopedBody = (await unscoped.json()) as { offers: unknown[] };
+    expect(unscopedBody.offers).toHaveLength(2);
+  });
+
+  it("falls back to no scoping when campaignId doesn't match any configured campaign", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const res = await app.request("/offers?campaignId=does-not-exist");
+    const body = (await res.json()) as { offers: unknown[] };
+    expect(body.offers).toHaveLength(1);
+  });
+
+  it("keeps pagination correct when campaign-matching offers are sparse across more than one internal DB page", async () => {
+    const db = createDb(tmpDbPath());
+    // 60 offres hors-critères (contractType "autre") + 3 offres qui matchent, sur un total de 63
+    // lignes > PAGE_SIZE (50) : force fetchOffersPage à consommer plus d'une page DB.
+    for (let i = 0; i < 60; i++) {
+      const offer: NormalizedOffer = {
+        ...sampleOffer,
+        id: `01J000000000000000000N${i.toString().padStart(2, "0")}`,
+        sourceOfferId: `noise-${i}`,
+        canonicalUrl: `https://example.com/jobs/noise-${i}`,
+        title: `Offre bruit ${i}`,
+        contractType: "autre",
+        postedAt: `2026-08-${String((i % 27) + 1).padStart(2, "0")}T00:00:00.000Z`,
+        dedupKey: exactDedupKeyFromUrl(`https://example.com/jobs/noise-${i}`),
+        sourceRefs: [{ source: "labonnealternance", sourceOfferId: `noise-${i}`, canonicalUrl: `https://example.com/jobs/noise-${i}` }],
+      };
+      db.insert(offersTable).values(offerToRow(offer)).run();
+    }
+    for (let i = 0; i < 3; i++) {
+      const offer: NormalizedOffer = {
+        ...sampleOffer,
+        id: `01J000000000000000000M${i}`,
+        sourceOfferId: `match-${i}`,
+        canonicalUrl: `https://example.com/jobs/match-${i}`,
+        title: `Data Analyst match ${i}`,
+        postedAt: "2026-08-15T00:00:00.000Z",
+        dedupKey: exactDedupKeyFromUrl(`https://example.com/jobs/match-${i}`),
+        sourceRefs: [{ source: "labonnealternance", sourceOfferId: `match-${i}`, canonicalUrl: `https://example.com/jobs/match-${i}` }],
+      };
+      db.insert(offersTable).values(offerToRow(offer)).run();
+    }
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const res = await app.request("/offers?campaignId=alternance-data-hdf");
+    const body = (await res.json()) as { offers: { sourceOfferId: string }[]; nextCursor: string | null };
+
+    expect(body.offers.map((o) => o.sourceOfferId).sort()).toEqual(["match-0", "match-1", "match-2"]);
+    expect(body.nextCursor).toBeNull();
+  });
+});
+
 describe("GET /offers/:id", () => {
   it("returns 404 for an unknown offer", async () => {
     const db = createDb(tmpDbPath());
@@ -379,10 +469,10 @@ describe("POST /harvest/:campaignId/run", () => {
     expect(res.status).toBe(404);
   });
 
-  // JOB-audit-2026-08-21 : filtres ad-hoc (métier/contrat/ville) du bouton "Lancer la collecte" -
-  // un corps JSON optionnel remplace les champs correspondants de la campagne pour cette
-  // collecte, sans jamais réécrire campaigns.yaml.
-  it("applies keyword/contractType/location overrides from an optional request body", async () => {
+  // Un seul jeu de critères par campagne (audit 2026-08-26) : plus de filtres ad-hoc côté
+  // requête, le run utilise toujours keywords/contractTypes/locations tels que définis dans
+  // campaigns.yaml pour cette campagne.
+  it("always uses the campaign's own keywords/contractTypes/locations, ignoring any request body", async () => {
     const db = createDb(tmpDbPath());
     let receivedQuery: { keywords: string[]; contractTypes: string[]; location: { label: string } } | undefined;
     const observingConnector = {
@@ -398,34 +488,28 @@ describe("POST /harvest/:campaignId/run", () => {
       },
     };
     const campaign: CampaignConfig = {
-      id: "overrides-test",
+      id: "single-criteria-test",
       romeCodes: ["M1403"],
       keywords: ["data"],
-      locations: [
-        { label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 },
-        { label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 },
-      ],
+      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
       contractTypes: ["apprentissage"],
     };
     const app = createApp({ db, connectors: [observingConnector], campaigns: [campaign], env: {} });
 
-    const res = await app.request("/harvest/overrides-test/run", {
+    // Un éventuel corps de requête est ignoré : il n'y a plus de schéma de filtres ad-hoc.
+    const res = await app.request("/harvest/single-criteria-test/run", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        keywords: ["marketing"],
-        contractTypes: ["autre"],
-        location: { label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 },
-      }),
+      body: JSON.stringify({ keywords: ["marketing"], contractTypes: ["autre"] }),
     });
 
     expect(res.status).toBe(200);
-    expect(receivedQuery?.keywords).toEqual(["marketing"]);
-    expect(receivedQuery?.contractTypes).toEqual(["autre"]);
-    expect(receivedQuery?.location).toEqual({ label: "Amiens", lat: 49.9, lng: 2.29, radiusKm: 30 });
+    expect(receivedQuery?.keywords).toEqual(["data"]);
+    expect(receivedQuery?.contractTypes).toEqual(["apprentissage"]);
+    expect(receivedQuery?.location).toEqual({ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 });
   });
 
-  it("behaves exactly as before when no request body is sent (back-compat)", async () => {
+  it("runs with no request body (the normal case)", async () => {
     const db = createDb(tmpDbPath());
     let fetchCallCount = 0;
     const observingConnector = {
@@ -453,26 +537,6 @@ describe("POST /harvest/:campaignId/run", () => {
 
     expect(res.status).toBe(200);
     expect(fetchCallCount).toBe(1);
-  });
-
-  it("returns 400 for an invalid overrides body", async () => {
-    const db = createDb(tmpDbPath());
-    const campaign: CampaignConfig = {
-      id: "invalid-body-test",
-      romeCodes: ["M1403"],
-      keywords: [],
-      locations: [{ label: "Lille", lat: 50.63, lng: 3.05, radiusKm: 30 }],
-      contractTypes: ["apprentissage"],
-    };
-    const app = createApp({ db, connectors: [], campaigns: [campaign], env: {} });
-
-    const res = await app.request("/harvest/invalid-body-test/run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contractTypes: ["not-a-real-contract-type"] }),
-    });
-
-    expect(res.status).toBe(400);
   });
 
   it("runs target discovery after a successful harvest when campaignsFilePath is provided, and reports it in the response", async () => {

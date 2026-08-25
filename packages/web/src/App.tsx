@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { OfferTable } from "./components/OfferTable.js";
 import { HarvestControl } from "./components/HarvestControl.js";
 import { FilterBar } from "./components/FilterBar.js";
@@ -6,10 +7,17 @@ import { BulkActionBar } from "./components/BulkActionBar.js";
 import { useUrlFilters } from "./hooks/useUrlFilters.js";
 import { useOffersQuery } from "./hooks/useOffersQuery.js";
 import { useOfferEventMutation } from "./hooks/useOfferEventMutation.js";
+import { getCampaigns } from "./api/client.js";
 
 export default function App() {
   const { filters, setFilters } = useUrlFilters();
-  const offersQuery = useOffersQuery(filters);
+  // Même campagne partagée entre le déclencheur de collecte et le scope du tableau (audit
+  // 2026-08-26) : le jobboard affiche les offres de LA campagne sélectionnée, pas tout
+  // l'historique jamais collecté. `useQuery` est dédupliqué avec l'appel identique fait par
+  // HarvestControl (même queryKey), pas de requête réseau supplémentaire.
+  const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: getCampaigns });
+  const campaignId = filters.campaignId || campaigns?.[0]?.id;
+  const offersQuery = useOffersQuery({ ...filters, campaignId });
   const offers = useMemo(() => offersQuery.data?.pages.flatMap((page) => page.offers) ?? [], [offersQuery.data]);
 
   const [followUpOnly, setFollowUpOnly] = useState(false);
@@ -44,7 +52,10 @@ export default function App() {
   return (
     <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] p-6">
       <h1 className="text-xl font-semibold mb-4">job-harvester</h1>
-      <HarvestControl />
+      <HarvestControl
+        campaignId={campaignId ?? ""}
+        onCampaignChange={(id) => setFilters((current) => ({ ...current, campaignId: id }))}
+      />
       <FilterBar filters={filters} onChange={setFilters} />
       <div className="mb-3">
         <label className="flex items-center gap-2 text-sm w-fit">

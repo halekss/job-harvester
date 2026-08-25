@@ -1,4 +1,5 @@
 import { departmentFromPostalCode, type ContractType, type NormalizedOffer } from "@job-harvester/core";
+import type { CampaignConfig } from "./config/campaign-schema.js";
 
 export interface AcceptableLocation {
   label: string;
@@ -72,6 +73,18 @@ export function acceptableLocationsFromLocations(
   locations: { label: string; lat: number; lng: number; radiusKm: number }[],
 ): AcceptableLocation[] {
   return locations.map((location) => ({ label: location.label, lat: location.lat, lng: location.lng, radiusKm: location.radiusKm }));
+}
+
+// Seule source de vérité pour dériver un QueryFilter à partir d'une campagne — utilisée à la
+// fois à l'écriture (runCampaign, sur les offres fraîchement collectées) et à la lecture
+// (GET /offers?campaignId=..., sur les offres déjà stockées) pour que "ce qui est collecté" et
+// "ce qui est affiché pour cette campagne" restent rigoureusement les mêmes critères.
+export function queryFilterFromCampaign(campaign: CampaignConfig): QueryFilter {
+  return {
+    contractTypes: campaign.contractTypes,
+    keywords: campaign.keywords,
+    acceptableLocations: acceptableLocationsFromLocations(campaign.locations),
+  };
 }
 
 export type LocationVerdict = "matched" | "out-of-zone" | "unresolved";

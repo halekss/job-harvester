@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { OfferFilters } from "../api/client.js";
 
-const FILTER_KEYS: Array<keyof OfferFilters> = ["city", "contractType", "q"];
+const FILTER_KEYS: Array<keyof OfferFilters> = ["city", "contractType", "q", "campaignId"];
 
 function readFiltersFromLocation(): OfferFilters {
   const params = new URLSearchParams(window.location.search);

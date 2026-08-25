@@ -23,6 +23,10 @@ export interface OfferFilters {
   city?: string;
   contractType?: string;
   q?: string;
+  // Scope le tableau aux offres correspondant réellement aux critères actuels de cette
+  // campagne (mots-clés/contrat/localisations) — audit 2026-08-26 : le jobboard affiche la
+  // recherche demandée, pas tout l'historique jamais collecté.
+  campaignId?: string;
 }
 
 export interface OffersPage {
@@ -35,6 +39,7 @@ export async function getOffers(filters: OfferFilters = {}, cursor?: string): Pr
   if (filters.city) params.set("city", filters.city);
   if (filters.contractType) params.set("contractType", filters.contractType);
   if (filters.q) params.set("q", filters.q);
+  if (filters.campaignId) params.set("campaignId", filters.campaignId);
   if (cursor) params.set("cursor", cursor);
   const qs = params.toString();
   const res = await fetch(`/offers${qs ? `?${qs}` : ""}`);
@@ -70,12 +75,6 @@ export interface RunSummary {
   errorMessage?: string;
 }
 
-export interface HarvestFilters {
-  keywords?: string[];
-  contractTypes?: string[];
-  location?: { label: string; lat: number; lng: number; radiusKm: number };
-}
-
 export interface DiscoveredTarget {
   companySlug: string;
   platform: string;
@@ -87,12 +86,10 @@ export interface HarvestRunResult {
   discoveries: { probed: number; found: DiscoveredTarget[] };
 }
 
-export async function runHarvest(campaignId: string, filters?: HarvestFilters): Promise<HarvestRunResult> {
-  const hasFilters = filters && (filters.keywords?.length || filters.contractTypes?.length || filters.location);
-  const res = await fetch(`/harvest/${campaignId}/run`, {
-    method: "POST",
-    ...(hasFilters ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(filters) } : {}),
-  });
+// Un seul jeu de critères par campagne (audit 2026-08-26) : plus de filtres ad-hoc, la collecte
+// utilise toujours les mots-clés/contrat/localisations tels que définis dans campaigns.yaml.
+export async function runHarvest(campaignId: string): Promise<HarvestRunResult> {
+  const res = await fetch(`/harvest/${campaignId}/run`, { method: "POST" });
   const body = await res.json();
   if (!res.ok) throw new Error(body.error ?? `POST /harvest/${campaignId}/run failed: HTTP ${res.status}`);
   // discoveries est optionnel côté réponse (routes/tests qui ne le fournissent pas encore) -

@@ -31,113 +31,44 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// JOB-audit-2026-08-21 : filtres ad-hoc (métier/contrat/ville) du bouton "Lancer la collecte" -
-// optionnels, la collecte doit fonctionner sans, et se baser dessus quand ils sont renseignés.
-describe("HarvestControl — ad-hoc filters", () => {
-  it("launches the harvest with no request body when no filter is set (back-compat)", async () => {
+// Audit 2026-08-26 : un seul jeu de critères par campagne — plus de filtres ad-hoc
+// métier/contrat/ville, `campaignId` est contrôlé par le parent (partagé avec le scope du
+// tableau d'offres, voir App.tsx).
+describe("HarvestControl", () => {
+  it("launches the harvest for the given campaignId with no request body", async () => {
     const fetchMock = stubFetch();
     const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
+    renderWithClient(<HarvestControl campaignId="alternance-data-hdf" onCampaignChange={vi.fn()} />);
 
     await user.click(await screen.findByRole("button", { name: "Lancer la collecte" }));
 
     await waitFor(() => {
       const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
       expect(call).toBeDefined();
+      expect(String(call![0])).toContain("/harvest/alternance-data-hdf/run");
       expect(call![1]).not.toHaveProperty("body");
     });
   });
 
-  it("sends the métier text as keywords when filled", async () => {
-    const fetchMock = stubFetch();
+  it("shows a campaign selector reflecting the controlled campaignId, and reports changes via onCampaignChange", async () => {
+    stubFetch();
     const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
+    const onCampaignChange = vi.fn();
+    renderWithClient(<HarvestControl campaignId="alternance-data-hdf" onCampaignChange={onCampaignChange} />);
 
-    await user.type(await screen.findByLabelText("Métier"), "marketing");
-    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
+    const select = await screen.findByRole("combobox");
+    expect(select).toHaveValue("alternance-data-hdf");
 
-    await waitFor(() => {
-      const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
-      const body = JSON.parse((call![1] as { body: string }).body);
-      expect(body.keywords).toEqual(["marketing"]);
-    });
+    await user.selectOptions(select, "alternance-devweb-hdf");
+
+    expect(onCampaignChange).toHaveBeenCalledWith("alternance-devweb-hdf");
   });
 
-  it("maps the Alternance contract filter to [apprentissage, professionnalisation]", async () => {
-    const fetchMock = stubFetch();
-    const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
+  it("disables the launch button when no campaignId is set", async () => {
+    stubFetch();
+    renderWithClient(<HarvestControl campaignId="" onCampaignChange={vi.fn()} />);
 
-    await user.selectOptions(await screen.findByLabelText("Contrat"), "Alternance");
-    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
-
-    await waitFor(() => {
-      const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
-      const body = JSON.parse((call![1] as { body: string }).body);
-      expect(body.contractTypes).toEqual(["apprentissage", "professionnalisation"]);
-    });
-  });
-
-  it("maps both CDI and CDD to [autre] (the system can't distinguish them yet)", async () => {
-    const fetchMock = stubFetch();
-    const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
-
-    await user.selectOptions(await screen.findByLabelText("Contrat"), "CDD");
-    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
-
-    await waitFor(() => {
-      const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
-      const body = JSON.parse((call![1] as { body: string }).body);
-      expect(body.contractTypes).toEqual(["autre"]);
-    });
-  });
-
-  it("sends the Lille location (matching campaigns.yaml) when Lille is selected", async () => {
-    const fetchMock = stubFetch();
-    const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
-
-    await user.selectOptions(await screen.findByLabelText("Ville"), "Lille");
-    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
-
-    await waitFor(() => {
-      const call = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
-      const body = JSON.parse((call![1] as { body: string }).body);
-      expect(body.location).toEqual({ label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 });
-    });
-  });
-
-  it("sends contractTypes: ['stage'] when Contrat=Stage is selected (JOB-62)", async () => {
-    const fetchMock = stubFetch();
-    const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
-
-    await user.selectOptions(await screen.findByLabelText("Contrat"), "Stage");
-    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
-
-    await waitFor(() => {
-      const harvestCall = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
-      expect(harvestCall).toBeDefined();
-      const body = JSON.parse(String(harvestCall![1]?.body ?? "{}"));
-      expect(body).toMatchObject({ contractTypes: ["stage"] });
-    });
-  });
-
-  it("sends the Paris location when Ville=Paris is selected (JOB-63)", async () => {
-    const fetchMock = stubFetch();
-    const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
-
-    await user.selectOptions(await screen.findByLabelText("Ville"), "Paris");
-    await user.click(screen.getByRole("button", { name: "Lancer la collecte" }));
-
-    await waitFor(() => {
-      const harvestCall = fetchMock.mock.calls.find(([input]) => String(input).includes("/harvest/"));
-      expect(harvestCall).toBeDefined();
-      const body = JSON.parse(String(harvestCall![1]?.body ?? "{}"));
-      expect(body).toMatchObject({ location: { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 } });
-    });
+    expect(await screen.findByRole("button", { name: "Lancer la collecte" })).toBeDisabled();
   });
 
   it("warns visibly when a connector couldn't verify the location filter on some offers (audit 2026-08-24, root cause #1)", async () => {
@@ -160,7 +91,7 @@ describe("HarvestControl — ad-hoc filters", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
+    renderWithClient(<HarvestControl campaignId="alternance-data-hdf" onCampaignChange={vi.fn()} />);
 
     await user.click(await screen.findByRole("button", { name: "Lancer la collecte" }));
 
@@ -187,7 +118,7 @@ describe("HarvestControl — ad-hoc filters", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
-    renderWithClient(<HarvestControl />);
+    renderWithClient(<HarvestControl campaignId="alternance-data-hdf" onCampaignChange={vi.fn()} />);
 
     await user.click(await screen.findByRole("button", { name: "Lancer la collecte" }));
 

@@ -27,6 +27,26 @@ un résumé (`rawCount`, `normalizedCount`, `rejectedCount`) par connecteur supp
 campagne, et `discoveries` rend compte de la découverte de nouvelles cibles (voir plus bas).
 Les offres apparaissent ensuite dans le jobboard (`pnpm dev:web`).
 
+Une campagne a un seul jeu de critères — `keywords`/`contractTypes`/`locations` — défini dans
+`config/campaigns.yaml`. Il n'y a pas de filtres ad-hoc côté requête ou côté UI qui les
+écraseraient ponctuellement : pour changer les critères d'une campagne, on édite le fichier
+(audit 2026-08-26 — avoir deux jeux de critères concurrents, l'un durable et l'autre ad-hoc,
+entretenait la confusion sur ce qu'une collecte allait réellement chercher).
+
+## Le jobboard affiche la recherche, pas tout l'historique
+
+`GET /offers?campaignId=<id>` ne renvoie que les offres déjà stockées qui correspondent
+*actuellement* aux critères de cette campagne — la même vérification (`offerMatchesQuery`) que
+celle appliquée à l'écriture pendant une collecte, réappliquée à la lecture. Le jobboard web
+scope automatiquement le tableau à la campagne sélectionnée en haut de page (le même sélecteur
+qui déclenche "Lancer la collecte").
+
+C'est délibéré : le but du jobboard est d'afficher les offres correspondant à une recherche, pas
+l'intégralité de ce qui a jamais été collecté, toutes campagnes et toutes époques confondues. Une
+offre qui ne correspond plus aux critères actuels d'une campagne (campagne modifiée après coup,
+ou offre collectée avant l'existence du filtre centralisé) disparaît de la vue scopée sans jamais
+être supprimée de la base — elle reste accessible via `GET /offers` sans `campaignId`.
+
 ## Filtre de campagne centralisé
 
 Après `normalize()`, chaque offre — quel que soit le connecteur (tier0 ou tier1, qu'il applique

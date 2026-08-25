@@ -1,7 +1,7 @@
 import type { NormalizedOffer } from "@job-harvester/core";
 import type { offers } from "./schema.js";
 
-type OfferRow = typeof offers.$inferSelect;
+export type OfferRow = typeof offers.$inferSelect;
 type OfferInsert = typeof offers.$inferInsert;
 
 export function offerToRow(offer: NormalizedOffer): OfferInsert {
