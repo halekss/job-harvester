@@ -34,9 +34,26 @@ ou non son propre pré-filtre) — est vérifiée par rapport au `contractTypes`
 localisations effectifs de la campagne avant d'être persistée. Un connecteur qui ne filtre pas
 lui-même (ou filtre mal) ne peut donc plus laisser passer d'offres hors périmètre : le rejet
 correspondant est comptabilisé dans `rejectedCount` (voir ci-dessus et section `GET
-/connectors/health`). Cas particulier : une offre dont la localisation ne peut pas être résolue
-en département, alors que la campagne a un filtre de localisation actif, est exclue plutôt
-qu'acceptée par défaut (fail-closed), avec un `console.warn` pour le signaler.
+/connectors/health`).
+
+Le filtre de localisation compare l'offre à chaque localisation de la campagne selon une cascade
+à 3 niveaux, du plus fiable au plus grossier (`resolveLocationVerdict()` dans
+`packages/harvester/src/query-filter.ts`) :
+
+1. **Rayon géographique** (distance orthodromique) si l'offre porte ses propres coordonnées
+   (`labonnealternance`, `welcometothejungle`) — comparé au `radiusKm` de la localisation, pas à
+   l'égalité stricte de département : une offre à 20 km de Lille dans le département voisin (62)
+   reste acceptée.
+2. **Égalité de département** si l'offre n'a pas de coordonnées mais un département résolu
+   (`francetravail`, `smartrecruiters`, `talentsoft`, `digitalrecruiters`, `jsonld-generic`).
+3. **Nom de ville normalisé** (accents/casse) contre les libellés des localisations de la
+   campagne, en dernier recours — nécessaire pour `workday`, qui n'expose ni coordonnées ni code
+   postal, seulement un nom de ville libre.
+
+Si aucun des trois niveaux ne permet de trancher (aucune information de localisation exploitable
+sur l'offre), elle est exclue plutôt qu'acceptée par défaut (fail-closed), avec un `console.warn`
+pour le signaler — ce cas est compté séparément dans `unresolvedLocationCount` (sous-ensemble de
+`rejectedCount`, exposé dans les résumés de run).
 
 ## Planifier des collectes automatiques (cron)
 
