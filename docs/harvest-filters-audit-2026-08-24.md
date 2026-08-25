@@ -1,3 +1,24 @@
+> **Statut au 2026-08-25** : ce document a été rouvert avant de reprendre le ticket #1. Vérification
+> ligne par ligne de chaque root cause contre l'état actuel du code — la majorité était déjà résolue
+> entre-temps (probablement une session antérieure, sans mise à jour de ce fichier resté non commité) :
+>
+> | # | Root cause | Statut vérifié le 2026-08-25 |
+> |---|---|---|
+> | 1 | locationScoped:false ignore la ville | Coeur du problème déjà neutralisé par le filtre centralisé `query-filter.ts` (rejette toute offre sans département résolu — fail-closed, testé). Restait "silencieux" : **corrigé aujourd'hui** — `RunSummary.connectorId` + `unresolvedLocationCount`, affichés dans `HarvestControl.tsx`. |
+> | 2 | digitalrecruiters sans filtre contrat | **Déjà résolu.** `normalize.ts` alimente `inferContractTypeFromText` avec le champ réel `item.contract`, et le filtre centralisé applique `contractTypes` à toutes les offres normalisées, tous connecteurs confondus. |
+> | 3 | ROME M1805 partagé entre les 2 campagnes | **Déjà résolu.** `config/campaigns.yaml` actuel : `alternance-data-hdf` = `[M1403]`, `alternance-devweb-hdf` = `[M1802, M1805, M1811]` — plus aucun chevauchement. |
+> | 4 | francetravail : département manquant → recherche nationale silencieuse | **Déjà résolu** (JOB-64, commentaire présent dans `client.ts:106-113`) : lève une erreur explicite, visible en `✗ échec` dans le résumé de collecte. |
+> | 5 | labonnealternance sans filtre contrat | **Déjà résolu.** `normalize.ts` mappe `parsed.contract.type` (champ réel de l'API) vers `apprentissage`/`professionnalisation`/`autre`, puis filtre centralisé. |
+> | 6 | keywords jamais transmis aux connecteurs tier0 | Sans impact sur la justesse (filtre centralisé déjà appliqué). **Piste d'optimisation réseau vérifiée en direct le 2026-08-25 et abandonnée** : francetravail expose bien `motsCles`, mais c'est un **boost de pertinence (re-tri), pas un filtre** — testé sur M1805/dept 75 (32 résultats), `motsCles=python` renvoie exactement les 32 mêmes offres, juste réordonnées ; aucun gain de volume/quota à en attendre. labonnealternance n'expose **aucun** paramètre mot-clé (testé `motsCles` et `keywords` : silencieusement ignorés, 200 OK, réponse identique). Rien à implémenter côté requête — le filtre centralisé post-normalisation reste la seule protection fiable, comme prévu à l'origine pour `alternance=true` (francetravail, JOB-28). |
+> | 7 | UI : pas d'option "Stage" | **Déjà résolu** (JOB-62, test `HarvestControl.test.tsx`). |
+> | 8 | UI : pas d'option "Paris" | **Déjà résolu** (JOB-63, test `HarvestControl.test.tsx`). |
+> | 9 | CDI/CDD → tous deux `["autre"]` | Toujours vrai, mais explicitement documenté (nom de test dédié) — accepté tel quel par la spec d'origine ("documenter au minimum"). |
+>
+> Reste réellement ouvert : l'optimisation réseau du #6 (transmettre les mots-clés aux requêtes
+> tier0 plutôt que de compter uniquement sur le post-filtre), et la couverture QA plus large listée
+> en bas de ce document. Le reste de l'analyse ci-dessous est conservé tel quel comme trace du
+> diagnostic d'origine.
+
 # Prompt développeur senior — Fiabiliser les filtres de collecte (contrat / ville / métier)
 
 > Contexte : collecte lancée avec `Contrat = Alternance`, `Ville = Lille`, campagne `alternance-data-hdf`.
