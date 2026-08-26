@@ -1,0 +1,115 @@
+import { useMemo, useState, type DragEvent, type KeyboardEvent } from "react";
+import type { OfferSummary } from "../api/client.js";
+import { PIPELINE_LANES, groupByStatus, type LaneType } from "../lib/pipeline.js";
+import { useSetOfferStatus } from "../hooks/useSetOfferStatus.js";
+import { PipelineCard } from "./PipelineCard.js";
+
+interface Selection {
+  laneIndex: number;
+  offerIndex: number;
+}
+
+interface PipelineBoardProps {
+  offers: OfferSummary[];
+  hideRejected: boolean;
+}
+
+// Les touches 1-6 assignent toujours la voie canonique de PIPELINE_LANES (indépendamment de
+// hideRejected) : masquer visuellement le Refus n'empêche pas d'y classer une carte au clavier.
+export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
+  const grouped = useMemo(() => groupByStatus(offers), [offers]);
+  const lanes = useMemo(
+    () => PIPELINE_LANES.filter((lane) => !hideRejected || lane.type !== "rejected"),
+    [hideRejected],
+  );
+  const setStatus = useSetOfferStatus();
+  const [selection, setSelection] = useState<Selection | null>(null);
+
+  const offersInLane = (laneIndex: number): OfferSummary[] => {
+    const lane = lanes[laneIndex];
+    return lane ? grouped.lanes[lane.type] : [];
+  };
+
+  const select = (laneIndex: number, offerIndex: number) => {
+    const list = offersInLane(laneIndex);
+    if (list.length === 0) {
+      setSelection(null);
+      return;
+    }
+    setSelection({ laneIndex, offerIndex: Math.max(0, Math.min(list.length - 1, offerIndex)) });
+  };
+
+  const handleBoardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!selection) return;
+    if (event.key === "j") {
+      event.preventDefault();
+      select(selection.laneIndex, selection.offerIndex + 1);
+    } else if (event.key === "k") {
+      event.preventDefault();
+      select(selection.laneIndex, selection.offerIndex - 1);
+    } else if (event.key === "l") {
+      event.preventDefault();
+      select(Math.min(lanes.length - 1, selection.laneIndex + 1), 0);
+    } else if (event.key === "h") {
+      event.preventDefault();
+      select(Math.max(0, selection.laneIndex - 1), 0);
+    } else if (event.key === "Escape") {
+      setSelection(null);
+    } else if (event.key === "Enter") {
+      const offer = offersInLane(selection.laneIndex)[selection.offerIndex];
+      if (offer) window.open(offer.applyUrl ?? offer.canonicalUrl, "_blank", "noopener,noreferrer");
+    } else {
+      const n = Number(event.key);
+      if (Number.isInteger(n) && n >= 1 && n <= PIPELINE_LANES.length) {
+        const offer = offersInLane(selection.laneIndex)[selection.offerIndex];
+        const targetLane = PIPELINE_LANES[n - 1]!;
+        if (offer) setStatus.mutate({ offerId: offer.id, type: targetLane.type });
+      }
+    }
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>, targetType: LaneType) => {
+    event.preventDefault();
+    const offerId = event.dataTransfer.getData("text/plain");
+    if (offerId) setStatus.mutate({ offerId, type: targetType });
+  };
+
+  return (
+    <div
+      role="group"
+      aria-label="Pipeline de candidatures"
+      tabIndex={0}
+      onKeyDown={handleBoardKeyDown}
+      className="grid gap-3 overflow-x-auto pb-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-cool rounded-md"
+      style={{ gridTemplateColumns: `repeat(${lanes.length}, minmax(11rem, 1fr))` }}
+    >
+      {lanes.map((lane, laneIndex) => {
+        const list = offersInLane(laneIndex);
+        return (
+          <div
+            key={lane.type}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => handleDrop(event, lane.type)}
+            className="flex min-h-[6rem] flex-col gap-2 rounded-md border border-border bg-surface-raised p-2"
+          >
+            <div className="flex items-center justify-between font-mono text-[11px] uppercase tracking-wide text-text-faint">
+              <span>{lane.label}</span>
+              <span className="tabular-nums">{list.length}</span>
+            </div>
+            {list.length === 0 && <p className="text-[11px] text-text-faint">—</p>}
+            {list.map((offer, offerIndex) => (
+              <PipelineCard
+                key={offer.id}
+                offer={offer}
+                status={lane.type}
+                selected={selection?.laneIndex === laneIndex && selection.offerIndex === offerIndex}
+                onSelect={() => select(laneIndex, offerIndex)}
+                onDragStart={() => {}}
+              />
+            ))}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
