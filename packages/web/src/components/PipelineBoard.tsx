@@ -39,8 +39,42 @@ export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
     setSelection({ laneIndex, offerIndex: Math.max(0, Math.min(list.length - 1, offerIndex)) });
   };
 
+  // Première voie non vide, offre en tête — utilisée quand on navigue au clavier sans sélection
+  // préalable (Fix 3) ou en dernier recours si aucune voie non vide n'existe dans une direction.
+  const findFirstNonEmptyLane = (): Selection | null => {
+    for (let laneIndex = 0; laneIndex < lanes.length; laneIndex++) {
+      if (offersInLane(laneIndex).length > 0) return { laneIndex, offerIndex: 0 };
+    }
+    return null;
+  };
+
+  // h/l : saute par-dessus les voies vides plutôt que de tomber dessus (Fix 4) — une sélection
+  // ne doit jamais être perdue simplement parce que la voie voisine est vide. Si aucune voie non
+  // vide n'existe dans cette direction, on ne bouge pas (no-op, la sélection actuelle est gardée).
+  const selectLane = (fromLaneIndex: number, direction: 1 | -1) => {
+    let laneIndex = fromLaneIndex + direction;
+    while (laneIndex >= 0 && laneIndex < lanes.length) {
+      if (offersInLane(laneIndex).length > 0) {
+        setSelection({ laneIndex, offerIndex: 0 });
+        return;
+      }
+      laneIndex += direction;
+    }
+  };
+
   const handleBoardKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!selection) return;
+    if (!selection) {
+      // Clavier = mode principal : une première pression sur j/k/h/l doit amorcer une sélection
+      // plutôt que de rester muette tant qu'aucun clic n'a eu lieu (Fix 3).
+      if (event.key === "j" || event.key === "k" || event.key === "h" || event.key === "l") {
+        const first = findFirstNonEmptyLane();
+        if (first) {
+          event.preventDefault();
+          setSelection(first);
+        }
+      }
+      return;
+    }
     if (event.key === "j") {
       event.preventDefault();
       select(selection.laneIndex, selection.offerIndex + 1);
@@ -49,10 +83,10 @@ export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
       select(selection.laneIndex, selection.offerIndex - 1);
     } else if (event.key === "l") {
       event.preventDefault();
-      select(Math.min(lanes.length - 1, selection.laneIndex + 1), 0);
+      selectLane(selection.laneIndex, 1);
     } else if (event.key === "h") {
       event.preventDefault();
-      select(Math.max(0, selection.laneIndex - 1), 0);
+      selectLane(selection.laneIndex, -1);
     } else if (event.key === "Escape") {
       setSelection(null);
     } else if (event.key === "Enter") {
@@ -63,7 +97,8 @@ export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
       if (Number.isInteger(n) && n >= 1 && n <= PIPELINE_LANES.length) {
         const offer = offersInLane(selection.laneIndex)[selection.offerIndex];
         const targetLane = PIPELINE_LANES[n - 1]!;
-        if (offer) setStatus.mutate({ offerId: offer.id, type: targetLane.type });
+        // Pas d'événement redondant si la carte est déjà dans la voie ciblée (Fix 5).
+        if (offer && offer.status !== targetLane.type) setStatus.mutate({ offerId: offer.id, type: targetLane.type });
       }
     }
   };
@@ -71,7 +106,12 @@ export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
   const handleDrop = (event: DragEvent<HTMLDivElement>, targetType: LaneType) => {
     event.preventDefault();
     const offerId = event.dataTransfer.getData("text/plain");
-    if (offerId) setStatus.mutate({ offerId, type: targetType });
+    if (!offerId) return;
+    const offer = offers.find((candidate) => candidate.id === offerId);
+    // Pas d'événement redondant si la carte est déjà dans la voie ciblée (Fix 5) — couvre aussi
+    // un dépôt sur sa propre voie d'origine.
+    if (offer && offer.status === targetType) return;
+    setStatus.mutate({ offerId, type: targetType });
   };
 
   return (

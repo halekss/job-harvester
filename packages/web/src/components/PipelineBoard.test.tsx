@@ -59,7 +59,7 @@ describe("PipelineBoard", () => {
     const user = userEvent.setup();
     renderWithClient(<PipelineBoard offers={[makeOffer("a", "applied")]} hideRejected={false} />);
 
-    await user.click(screen.getByRole("button", { name: "Offre a" }));
+    await user.click(screen.getByTestId("card-a"));
     await user.keyboard("4");
 
     await waitFor(() => {
@@ -77,12 +77,12 @@ describe("PipelineBoard", () => {
       <PipelineBoard offers={[makeOffer("a", "applied"), makeOffer("b", "applied")]} hideRejected={false} />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Offre a" }));
-    expect(screen.getByRole("button", { name: "Offre a" })).toHaveAttribute("aria-pressed", "true");
+    await user.click(screen.getByTestId("card-a"));
+    expect(screen.getByTestId("card-a")).toHaveAttribute("data-selected", "true");
 
     await user.keyboard("j");
-    expect(screen.getByRole("button", { name: "Offre a" })).toHaveAttribute("aria-pressed", "false");
-    expect(screen.getByRole("button", { name: "Offre b" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByTestId("card-a")).toHaveAttribute("data-selected", "false");
+    expect(screen.getByTestId("card-b")).toHaveAttribute("data-selected", "true");
   });
 
   it("dropping a card on a lane moves it to that lane's status", async () => {
@@ -103,16 +103,74 @@ describe("PipelineBoard", () => {
     });
   });
 
+  it("pressing j with no prior selection selects the first offer of the first non-empty lane", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const user = userEvent.setup();
+    renderWithClient(<PipelineBoard offers={[makeOffer("a", "interview")]} hideRejected={false} />);
+
+    screen.getByRole("group", { name: "Pipeline de candidatures" }).focus();
+    await user.keyboard("j");
+
+    expect(screen.getByTestId("card-a")).toHaveAttribute("data-selected", "true");
+  });
+
+  it("does nothing on j/k/h/l with no prior selection when every lane is empty", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const user = userEvent.setup();
+    renderWithClient(<PipelineBoard offers={[]} hideRejected={false} />);
+
+    screen.getByRole("group", { name: "Pipeline de candidatures" }).focus();
+    await expect(user.keyboard("j")).resolves.not.toThrow();
+  });
+
+  it("l skips over empty lanes to the next non-empty lane, and is a no-op past the last non-empty lane", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+    const user = userEvent.setup();
+    // applied (a) and interview (b) are non-empty; spontaneous/followup in between are empty.
+    renderWithClient(
+      <PipelineBoard offers={[makeOffer("a", "applied"), makeOffer("b", "interview")]} hideRejected={false} />,
+    );
+
+    await user.click(screen.getByTestId("card-a"));
+    await user.keyboard("l");
+    expect(screen.getByTestId("card-b")).toHaveAttribute("data-selected", "true");
+
+    // No non-empty lane further right (rejected/no_reply are empty): selection stays put.
+    await user.keyboard("l");
+    expect(screen.getByTestId("card-b")).toHaveAttribute("data-selected", "true");
+  });
+
+  it("does not POST a redundant event when the number key targets the card's current lane", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ event: { id: "evt-new" } }), { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderWithClient(<PipelineBoard offers={[makeOffer("a", "interview")]} hideRejected={false} />);
+
+    await user.click(screen.getByTestId("card-a"));
+    await user.keyboard("4"); // 4 = interview, the card's current lane
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("does not POST a redundant event when a card is dropped back onto its own lane", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ event: { id: "evt-new" } }), { status: 201 }));
+    vi.stubGlobal("fetch", fetchMock);
+    renderWithClient(<PipelineBoard offers={[makeOffer("a", "applied")]} hideRejected={false} />);
+
+    const dataTransfer = { setData: vi.fn(), getData: vi.fn(() => "a"), dropEffect: "", effectAllowed: "" };
+    const appliedLane = screen.getByTestId("card-a").parentElement!;
+    fireEvent.dragOver(appliedLane, { dataTransfer });
+    fireEvent.drop(appliedLane, { dataTransfer });
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("has no detectable accessibility violations", async () => {
     vi.stubGlobal("fetch", vi.fn());
     const { container } = renderWithClient(
       <PipelineBoard offers={[makeOffer("a", "applied"), makeOffer("b", "interview")]} hideRejected={false} />,
     );
-    // "nested-interactive" is disabled here as a documented, scoped exception: PipelineCard
-    // (Task 7, already merged, out of this task's scope) renders a role="button" wrapper
-    // containing a real <a> link — a genuine a11y bug inherited from Task 7's brief, which
-    // never ran axe on PipelineCard in isolation. Every other axe rule still runs and must pass.
-    const results = await axe(container, { rules: { "nested-interactive": { enabled: false } } });
+    const results = await axe(container);
     expect(results).toHaveNoViolations();
   });
 });

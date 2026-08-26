@@ -30,16 +30,18 @@ describe("PipelineCard", () => {
     expect(screen.getByText("Entretien")).toBeInTheDocument();
   });
 
-  it("reflects the selected state via aria-pressed", () => {
+  it("reflects the selected state via aria-current and data-selected", () => {
     render(<PipelineCard offer={makeOffer()} status="interview" selected onSelect={vi.fn()} onDragStart={vi.fn()} />);
-    expect(screen.getByRole("button", { name: "Data Analyst" })).toHaveAttribute("aria-pressed", "true");
+    const card = screen.getByTestId("card-offer-1");
+    expect(card).toHaveAttribute("aria-current", "true");
+    expect(card).toHaveAttribute("data-selected", "true");
   });
 
   it("calls onSelect when the card is clicked", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     render(<PipelineCard offer={makeOffer()} status="interview" selected={false} onSelect={onSelect} onDragStart={vi.fn()} />);
-    await user.click(screen.getByRole("button", { name: "Data Analyst" }));
+    await user.click(screen.getByTestId("card-offer-1"));
     expect(onSelect).toHaveBeenCalled();
   });
 

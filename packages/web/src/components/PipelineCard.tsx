@@ -18,10 +18,10 @@ export function PipelineCard({ offer, status, selected, onSelect, onDragStart }:
 
   return (
     <div
-      role="button"
       tabIndex={-1}
-      aria-pressed={selected}
-      aria-label={offer.title}
+      aria-current={selected ? "true" : undefined}
+      data-selected={selected}
+      data-testid={`card-${offer.id}`}
       onClick={onSelect}
       className={`rounded-md border bg-surface px-2.5 py-2 text-xs transition-colors duration-150 ${
         selected ? "border-accent outline outline-2 outline-accent" : "border-border hover:border-accent/40"
