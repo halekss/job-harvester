@@ -58,9 +58,10 @@ Ajustement fait par rapport aux valeurs "dark mode" fournies en session (ex. `#3
 ### 4. Architecture split-view
 
 - Split **horizontal** : `Quai` (bandeau, offres `status === "new"`, défilement horizontal) au-dessus, `Pipeline` (grille 6 colonnes, une par statut) en dessous, pleine largeur.
-- `Quai` : replié par défaut sous 700px ; sur desktop, toujours visible avec bouton replier/déplier.
-- Chaque voie du `Pipeline` défile verticalement de façon indépendante (`overflow-y: auto`, hauteur fixe de la grille de voies).
-- Sous 700px, les voies passent en onglets horizontaux (une voie visible à la fois) plutôt qu'un scroll horizontal à 6 colonnes.
+- `Quai` : toujours visible avec bouton replier/déplier (le repli automatique sous 700px n'est pas dans ce lot, voir note ci-dessous).
+- Chaque voie du `Pipeline` défile verticalement de façon indépendante.
+
+> **Amendement (revue finale de branche, 2026-08-26) :** le comportement responsive décrit initialement ici (repli automatique du Quai sous 700px, voies en onglets horizontaux sous 700px, hauteur fixe + scroll vertical par voie) n'a pas été implémenté dans ce lot — aucune tâche du plan ne le couvrait, et la revue finale a repéré l'écart entre cette section et le code livré. Décision : desktop-only pour ce lot (le board reste un scroll horizontal à 6 colonnes sous 700px, écart connu et assumé) ; le responsive mobile est explicitement hors scope et à traiter dans un lot dédié plutôt que rajouté en urgence dans la dernière passe de correctifs.
 
 ### 5. Interaction carte → changement de statut
 
