@@ -23,6 +23,8 @@ campaigns:
     contractTypes:
       - apprentissage
       - professionnalisation
+      - stage
+      - autre
     schedule: 0 7 * * *
     targets:
       workday:
@@ -36,6 +38,9 @@ campaigns:
         - BELIEVE
         - NEXTON
         - KEYRUS
+        - COFACE
+        - IMPLICITY
+        - ASSYSTEM
       talentsoft:
         - agirc-arrco-career.talent-soft.com
         - cnp-recrute.talent-soft.com
@@ -72,6 +77,8 @@ campaigns:
     contractTypes:
       - apprentissage
       - professionnalisation
+      - stage
+      - autre
     schedule: 0 7 * * *
     targets:
       workday:
@@ -85,6 +92,9 @@ campaigns:
         - BELIEVE
         - NEXTON
         - KEYRUS
+        - COFACE
+        - IMPLICITY
+        - ASSYSTEM
       talentsoft:
         - agirc-arrco-career.talent-soft.com
         - cnp-recrute.talent-soft.com
