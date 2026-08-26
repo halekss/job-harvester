@@ -17,10 +17,12 @@ beforeEach(() => {
 });
 
 describe("francetravailConnector", () => {
-  it("declares tier 0 and supports apprentissage/professionnalisation queries", () => {
+  it("declares tier 0 and supports every contract type (generalist jobboard, unlike labonnealternance)", () => {
     expect(francetravailConnector.tier).toBe(0);
     expect(francetravailConnector.supports(query)).toBe(true);
-    expect(francetravailConnector.supports({ ...query, contractTypes: ["stage"] })).toBe(false);
+    expect(francetravailConnector.supports({ ...query, contractTypes: ["stage"] })).toBe(true);
+    expect(francetravailConnector.supports({ ...query, contractTypes: ["autre"] })).toBe(true);
+    expect(francetravailConnector.supports({ ...query, contractTypes: [] })).toBe(true);
   });
 
   it("fetches raw offers wrapping each item with the connector id", async () => {

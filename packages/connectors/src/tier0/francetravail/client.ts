@@ -144,6 +144,16 @@ export async function* fetchFranceTravailOffers(query: HarvestQuery, options: Fr
   const accessToken = await getAccessToken(options);
   const baseUrl = buildSearchUrl(query);
 
+  // L'API renvoie toute offre matchant codeROME/departement quel que soit son type de contrat
+  // (CDI/CDD/stage inclus) — il n'existe pas de paramètre de recherche fiable pour restreindre à
+  // l'alternance (vérifié en direct : `alternance=true` en query string est silencieusement
+  // ignoré par l'API). Chaque offre porte en revanche un champ booléen fiable `alternance` ; on
+  // ne s'en sert comme filtre client que lorsque la campagne ne vise QUE l'alternance — sinon
+  // (contractTypes incluant "stage"/"autre") on laisse tout passer et c'est le contractType
+  // inféré par normalize() qui tranche, en aval, via le filtre centralisé (JOB-73/JOB-78-bis :
+  // ne plus limiter France Travail à l'alternance).
+  const alternanceOnly = query.contractTypes.length > 0 && query.contractTypes.every((type) => type === "apprentissage" || type === "professionnalisation");
+
   let start = 0;
   for (let page = 0; page < MAX_PAGES; page++) {
     const pagedUrl = new URL(baseUrl);
@@ -159,14 +169,10 @@ export async function* fetchFranceTravailOffers(query: HarvestQuery, options: Fr
     const bodyJson = await response.json();
     const parsed = FranceTravailSearchResponseSchema.parse(bodyJson);
     for (const item of parsed.resultats) {
-      // L'API renvoie toute offre matchant codeROME/departement quel que soit son type de
-      // contrat (CDI/CDD inclus) — il n'existe pas de paramètre de recherche fiable pour
-      // restreindre à l'alternance (vérifié en direct : `alternance=true` en query string est
-      // silencieusement ignoré par l'API). Chaque offre porte en revanche un champ booléen
-      // fiable `alternance` ; on filtre donc côté client, avant de yield, comme pour le
-      // connecteur smartrecruiters (JOB-28).
-      const listing = item as { alternance?: boolean };
-      if (listing.alternance !== true) continue;
+      if (alternanceOnly) {
+        const listing = item as { alternance?: boolean };
+        if (listing.alternance !== true) continue;
+      }
       yield item;
     }
 

@@ -14,6 +14,9 @@ function mapContractType(natureContrat: string | undefined): ContractType {
   if (!natureContrat) return "autre";
   if (/apprentissage/i.test(natureContrat)) return "apprentissage";
   if (/professionnalisation/i.test(natureContrat)) return "professionnalisation";
+  // Les stages remontent avec un natureContrat du type "Convention de stage" — sans ce cas ils
+  // retombaient dans "autre" au même titre qu'un CDI/CDD, indistinguables une fois collectés.
+  if (/\bstages?\b/i.test(natureContrat)) return "stage";
   return "autre";
 }
 

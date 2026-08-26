@@ -66,6 +66,39 @@ describe("fetchFranceTravailOffers", () => {
     expect(results).toEqual([{ id: "alternance-1", alternance: true }]);
   });
 
+  it("keeps CDI/CDD and stage offers when the campaign is not alternance-only", async () => {
+    const broadQuery: HarvestQuery = { ...query, contractTypes: ["apprentissage", "professionnalisation", "stage", "autre"] };
+    const fetchImpl = vi.fn<typeof fetch>(async (input) => {
+      const url = String(input);
+      if (url.includes("access_token")) {
+        return new Response(tokenResponseBody, { status: 200 });
+      }
+      return new Response(
+        JSON.stringify({
+          resultats: [
+            { id: "cdi-1", alternance: false },
+            { id: "stage-1", alternance: false },
+            { id: "no-flag" },
+            { id: "alternance-1", alternance: true },
+          ],
+        }),
+        { status: 200, headers: { "content-range": "offres 0-3/4" } },
+      );
+    });
+
+    const results: unknown[] = [];
+    for await (const item of fetchFranceTravailOffers(broadQuery, { clientId: "cid", clientSecret: "csecret", fetchImpl })) {
+      results.push(item);
+    }
+
+    expect(results).toEqual([
+      { id: "cdi-1", alternance: false },
+      { id: "stage-1", alternance: false },
+      { id: "no-flag" },
+      { id: "alternance-1", alternance: true },
+    ]);
+  });
+
   it("reuses a cached token across two calls instead of requesting a new one", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);

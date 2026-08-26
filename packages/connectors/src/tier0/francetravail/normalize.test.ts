@@ -51,6 +51,24 @@ describe("normalizeFranceTravailOffer", () => {
     expect(offer.location.city).toBe("Ajaccio");
   });
 
+  it("maps a natureContrat mentioning stage to contractType 'stage' instead of the 'autre' catch-all", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const stagePayload = { ...directFixture, natureContrat: "Convention de stage" };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload: stagePayload });
+
+    expect(offer.contractType).toBe("stage");
+  });
+
+  it("maps a CDI/CDD natureContrat to the 'autre' catch-all", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const cdiPayload = { ...directFixture, natureContrat: "CDI" };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload: cdiPayload });
+
+    expect(offer.contractType).toBe("autre");
+  });
+
   it("throws on a payload that fails schema validation", () => {
     expect(() => normalizeFranceTravailOffer({ source: "francetravail", payload: { nope: true } })).toThrow();
   });

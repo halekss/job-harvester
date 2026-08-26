@@ -6,8 +6,11 @@ export const francetravailConnector: Connector = {
   id: FRANCE_TRAVAIL_CONNECTOR_ID,
   tier: 0,
 
-  supports(query: HarvestQuery): boolean {
-    return query.contractTypes.some((type) => type === "apprentissage" || type === "professionnalisation");
+  supports(): boolean {
+    // France Travail est un jobboard généraliste (CDI/CDD/stage/alternance) — contrairement à
+    // labonnealternance, qui est alternance-only par construction, il n'y a aucune raison de
+    // l'écarter pour une campagne visant les stages ou les contrats classiques.
+    return true;
   },
 
   async *fetch(query: HarvestQuery, ctx: ConnectorContext): AsyncIterable<RawOffer> {
