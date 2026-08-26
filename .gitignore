@@ -9,3 +9,5 @@ dist/
 .worktrees/
 graphify-out/cache/
 graphify-out/audit-report.html
+resultats
+template
