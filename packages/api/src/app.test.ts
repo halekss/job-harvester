@@ -147,6 +147,34 @@ describe("GET /offers", () => {
 
     expect(body.offers[0]!.activeEvents).toEqual({});
   });
+
+  it("exposes status as the type of the most recent event across all types", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    db.insert(applicationEventsTable)
+      .values([
+        { id: "evt-1", offerId: sampleOffer.id, type: "applied", occurredAt: "2026-08-01T00:00:00.000Z" },
+        { id: "evt-2", offerId: sampleOffer.id, type: "interview", occurredAt: "2026-08-05T00:00:00.000Z" },
+      ])
+      .run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { status: string }[] };
+
+    expect(body.offers[0]!.status).toBe("interview");
+  });
+
+  it("exposes status 'new' when an offer has no events", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [], env: {} });
+
+    const res = await app.request("/offers");
+    const body = (await res.json()) as { offers: { status: string }[] };
+
+    expect(body.offers[0]!.status).toBe("new");
+  });
 });
 
 // Audit 2026-08-26 : "le but du jobboard est d'afficher les offres correspondant à la

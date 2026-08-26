@@ -11,6 +11,7 @@ export interface OfferSummary {
   canonicalUrl: string;
   nextFollowUpAt?: string | null;
   activeEvents: Record<string, string>;
+  status: string;
 }
 
 export interface OfferDetail {

@@ -65,6 +65,33 @@ function activeEventsByOfferId(db: Db, offerIds: string[]): Map<string, Record<s
   return result;
 }
 
+// Statut courant = type de l'événement le plus récent, tous types confondus (même algorithme
+// que deriveStatus(), déjà utilisé par GET /offers/:id et GET /stats) — c'est ce qui détermine
+// la voie du Pipeline dans laquelle une offre apparaît côté web.
+function statusByOfferId(db: Db, offerIds: string[]): Map<string, string> {
+  const result = new Map<string, string>();
+  if (offerIds.length === 0) return result;
+  const rows = db
+    .select({
+      offerId: applicationEvents.offerId,
+      type: applicationEvents.type,
+      occurredAt: applicationEvents.occurredAt,
+    })
+    .from(applicationEvents)
+    .where(inArray(applicationEvents.offerId, offerIds))
+    .all();
+  const eventsByOfferId = new Map<string, { type: string; occurredAt: string }[]>();
+  for (const row of rows) {
+    const list = eventsByOfferId.get(row.offerId) ?? [];
+    list.push({ type: row.type, occurredAt: row.occurredAt });
+    eventsByOfferId.set(row.offerId, list);
+  }
+  for (const offerId of offerIds) {
+    result.set(offerId, deriveStatus(eventsByOfferId.get(offerId) ?? []));
+  }
+  return result;
+}
+
 // Le but du jobboard est d'afficher les offres correspondant à la recherche de l'utilisateur,
 // pas tout l'historique jamais collecté (audit 2026-08-26) : quand une campagne est sélectionnée,
 // on réévalue chaque offre stockée avec la MÊME logique que l'écriture (offerMatchesQuery), pour
@@ -140,10 +167,12 @@ export function registerOfferRoutes(app: Hono, { db, campaigns }: AppDeps): void
     const offerIds = rows.map((row) => row.id);
     const followUps = nextFollowUpByOfferId(db, offerIds);
     const activeEvents = activeEventsByOfferId(db, offerIds);
+    const statuses = statusByOfferId(db, offerIds);
     const offers = rows.map((row) => ({
       ...rowToOffer(row),
       nextFollowUpAt: followUps.get(row.id) ?? null,
       activeEvents: activeEvents.get(row.id) ?? {},
+      status: statuses.get(row.id) ?? "new",
     }));
     return c.json({ offers, nextCursor });
   });
