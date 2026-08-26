@@ -80,7 +80,7 @@ campaigns:
     romeCodes: [M1403]
     keywords: []
     locations: []
-    contractTypes: [cdi]
+    contractTypes: [interim]
 `);
     expect(() => loadCampaigns(filePath)).toThrow();
   });

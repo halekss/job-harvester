@@ -1,6 +1,6 @@
 import type { OfferFilters } from "../api/client.js";
 
-const CONTRACT_TYPES = ["apprentissage", "professionnalisation", "stage", "autre"];
+const CONTRACT_TYPES = ["apprentissage", "professionnalisation", "stage", "cdi", "cdd", "autre"];
 
 interface FilterBarProps {
   filters: OfferFilters;

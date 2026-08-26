@@ -26,7 +26,7 @@ describe("NormalizedOfferSchema", () => {
   });
 
   it("rejects an offer with an invalid contractType", () => {
-    expect(() => NormalizedOfferSchema.parse({ ...validOffer, contractType: "cdi" })).toThrow();
+    expect(() => NormalizedOfferSchema.parse({ ...validOffer, contractType: "interim" })).toThrow();
   });
 
   it("rejects an offer missing romeCodes", () => {

@@ -6,8 +6,10 @@ export const francetravailConnector: Connector = {
   id: FRANCE_TRAVAIL_CONNECTOR_ID,
   tier: 0,
 
-  supports(query: HarvestQuery): boolean {
-    return query.contractTypes.some((type) => type === "apprentissage" || type === "professionnalisation");
+  // L'API renvoie tout type de contrat (CDI/CDD/stage/alternance) pour un codeROME+département
+  // donné — plus de restriction ici, le tri se fait en aval via query-filter.ts.
+  supports(): boolean {
+    return true;
   },
 
   async *fetch(query: HarvestQuery, ctx: ConnectorContext): AsyncIterable<RawOffer> {

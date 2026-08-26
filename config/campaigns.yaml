@@ -24,7 +24,8 @@ campaigns:
       - apprentissage
       - professionnalisation
       - stage
-      - autre
+      - cdi
+      - cdd
     schedule: 0 7 * * *
     targets:
       workday:
@@ -78,7 +79,8 @@ campaigns:
       - apprentissage
       - professionnalisation
       - stage
-      - autre
+      - cdi
+      - cdd
     schedule: 0 7 * * *
     targets:
       workday:

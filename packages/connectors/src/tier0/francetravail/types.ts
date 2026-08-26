@@ -21,6 +21,8 @@ export const FranceTravailOfferSchema = z.object({
     })
     .optional(),
   natureContrat: z.string().optional(),
+  typeContrat: z.string().optional(),
+  typeContratLibelle: z.string().optional(),
   alternance: z.boolean().optional(),
   origineOffre: z.object({
     origine: z.string(),

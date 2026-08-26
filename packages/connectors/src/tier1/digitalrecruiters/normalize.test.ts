@@ -28,7 +28,7 @@ describe("normalizeDigitalRecruitersOffer", () => {
     expect(offer.location.city).toBe("Bordeaux");
     expect(offer.location.postalCode).toBe("33300");
     expect(offer.location.department).toBe("33");
-    expect(offer.contractType).toBe("autre");
+    expect(offer.contractType).toBe("cdi");
     expect(offer.company.name).toBe("Decathlon");
     expect(offer.canonicalUrl).toBe("https://joinus.decathlon.fr/fr/annonce/4553539-conseiller-ere-vente-omnicanal-hf-temps-partiel-33300-bordeaux");
   });

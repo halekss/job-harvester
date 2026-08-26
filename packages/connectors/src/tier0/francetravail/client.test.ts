@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 describe("fetchFranceTravailOffers", () => {
-  it("fetches a token then yields each alternance item from resultats, sending the Bearer token on search", async () => {
+  it("fetches a token then yields each item from resultats, sending the Bearer token on search", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
       if (url.includes("access_token")) {
@@ -40,7 +40,7 @@ describe("fetchFranceTravailOffers", () => {
     expect((init?.headers as Record<string, string>).Authorization).toBe("Bearer fake-token");
   });
 
-  it("filters out non-alternance offers (alternance: false or missing) before yielding (JOB-28)", async () => {
+  it("yields every offer regardless of contract type — CDI/CDD/stage/alternance included, filtering happens downstream", async () => {
     const fetchImpl = vi.fn<typeof fetch>(async (input) => {
       const url = String(input);
       if (url.includes("access_token")) {
@@ -63,7 +63,7 @@ describe("fetchFranceTravailOffers", () => {
       results.push(item);
     }
 
-    expect(results).toEqual([{ id: "alternance-1", alternance: true }]);
+    expect(results).toEqual([{ id: "cdi-1", alternance: false }, { id: "no-flag" }, { id: "alternance-1", alternance: true }]);
   });
 
   it("reuses a cached token across two calls instead of requesting a new one", async () => {

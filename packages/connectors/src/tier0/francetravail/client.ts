@@ -158,15 +158,11 @@ export async function* fetchFranceTravailOffers(query: HarvestQuery, options: Fr
     }
     const bodyJson = await response.json();
     const parsed = FranceTravailSearchResponseSchema.parse(bodyJson);
+    // L'API renvoie toute offre matchant codeROME/departement quel que soit son type de contrat
+    // (CDI/CDD/stage/alternance confondus) — le tri par type de contrat demandé par la campagne
+    // se fait en aval dans query-filter.ts, comme pour tous les autres connecteurs, plutôt que de
+    // restreindre ici à l'alternance uniquement.
     for (const item of parsed.resultats) {
-      // L'API renvoie toute offre matchant codeROME/departement quel que soit son type de
-      // contrat (CDI/CDD inclus) — il n'existe pas de paramètre de recherche fiable pour
-      // restreindre à l'alternance (vérifié en direct : `alternance=true` en query string est
-      // silencieusement ignoré par l'API). Chaque offre porte en revanche un champ booléen
-      // fiable `alternance` ; on filtre donc côté client, avant de yield, comme pour le
-      // connecteur smartrecruiters (JOB-28).
-      const listing = item as { alternance?: boolean };
-      if (listing.alternance !== true) continue;
       yield item;
     }
 

@@ -51,6 +51,42 @@ describe("normalizeFranceTravailOffer", () => {
     expect(offer.location.city).toBe("Ajaccio");
   });
 
+  it("maps typeContrat CDI to cdi when natureContrat doesn't indicate apprentissage/professionnalisation/stage", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const payload = { ...directFixture, natureContrat: undefined, typeContrat: "CDI", alternance: false };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload });
+
+    expect(offer.contractType).toBe("cdi");
+  });
+
+  it("maps typeContrat CDD to cdd when natureContrat doesn't indicate apprentissage/professionnalisation/stage", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const payload = { ...directFixture, natureContrat: undefined, typeContrat: "CDD", alternance: false };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload });
+
+    expect(offer.contractType).toBe("cdd");
+  });
+
+  it("maps a natureContrat mentioning stage to stage, regardless of typeContrat", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const payload = { ...directFixture, natureContrat: "Stage", typeContrat: "CDD", alternance: false };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload });
+
+    expect(offer.contractType).toBe("stage");
+  });
+
+  it("falls back to autre when neither natureContrat nor typeContrat map to a known type", () => {
+    const directFixture = loadFixture("offer-direct.json") as Record<string, unknown>;
+    const payload = { ...directFixture, natureContrat: undefined, typeContrat: "MIS", alternance: false };
+
+    const offer = normalizeFranceTravailOffer({ source: "francetravail", payload });
+
+    expect(offer.contractType).toBe("autre");
+  });
+
   it("throws on a payload that fails schema validation", () => {
     expect(() => normalizeFranceTravailOffer({ source: "francetravail", payload: { nope: true } })).toThrow();
   });

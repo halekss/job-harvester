@@ -9,5 +9,7 @@ export function inferContractTypeFromText(text: string): ContractType {
   // entirely (JOB-33). Revisit if a source distinguishes the two more precisely.
   if (/alternan(t|ce)/i.test(text)) return "apprentissage";
   if (/\bstages?\b|stagiaire/i.test(text)) return "stage";
+  if (/\bCDI\b/i.test(text)) return "cdi";
+  if (/\bCDD\b/i.test(text)) return "cdd";
   return "autre";
 }

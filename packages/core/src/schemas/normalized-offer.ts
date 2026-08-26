@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ContractTypeSchema = z.enum(["apprentissage", "professionnalisation", "stage", "autre"]);
+export const ContractTypeSchema = z.enum(["apprentissage", "professionnalisation", "stage", "cdi", "cdd", "autre"]);
 export type ContractType = z.infer<typeof ContractTypeSchema>;
 
 export const RemotePolicySchema = z.enum(["onsite", "hybrid", "remote", "unknown"]);
