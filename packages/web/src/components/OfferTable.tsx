@@ -10,7 +10,7 @@ import { EventButtons } from "./EventButtons.js";
 // par ligne et desalignent tout l'en-tete. Largeur Actions fixe pour que toutes les lignes
 // (et l'en-tete) partagent exactement les memes pistes de colonnes.
 const ROW_GRID =
-  "grid-cols-[2.5rem_minmax(10rem,2fr)_minmax(8rem,1.2fr)_minmax(6rem,0.8fr)_minmax(8rem,1.2fr)_6.5rem_6.5rem_23rem]";
+  "grid-cols-[2.5rem_minmax(10rem,2fr)_minmax(8rem,1.2fr)_minmax(6rem,0.8fr)_minmax(8rem,1.2fr)_6.5rem_6.5rem_27rem]";
 
 interface OfferTableProps {
   offers: OfferSummary[];
@@ -77,7 +77,15 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
   };
 
   if (offers.length === 0) {
-    return <p className="text-[var(--color-text-muted)] text-sm">Aucune offre.</p>;
+    const hasFilters = Boolean(filters.q || filters.city || filters.contractType);
+    return (
+      <div className="rounded-md border border-dashed border-border px-6 py-10 text-center">
+        <p className="text-sm text-text">Aucune offre.</p>
+        {hasFilters && (
+          <p className="mt-1 text-xs text-text-muted">Essayez d'élargir la recherche ou les filtres.</p>
+        )}
+      </div>
+    );
   }
 
   return (
@@ -85,13 +93,13 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
       role="table"
       aria-label="Offres d'emploi"
       aria-rowcount={offers.length + 1}
-      className="w-full text-sm border border-[var(--color-border)] rounded overflow-hidden"
+      className="w-full text-sm border border-border rounded-md overflow-hidden"
     >
       <div role="rowgroup" className="overflow-y-auto [scrollbar-gutter:stable]">
         <div
           role="row"
           aria-rowindex={1}
-          className={`grid ${ROW_GRID} gap-2 items-center px-2 py-2 text-left text-[var(--color-text-muted)] border-b border-[var(--color-border)] bg-[var(--color-surface)]`}
+          className={`grid ${ROW_GRID} gap-2 items-center px-2 py-2 text-left text-text-muted text-xs uppercase tracking-wide border-b border-border bg-surface-raised`}
         >
           <div role="columnheader">
             <input
@@ -99,6 +107,7 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
               checked={allSelected}
               onChange={onToggleAll}
               aria-label="Sélectionner toutes les offres"
+              className="accent-accent-cool"
             />
           </div>
           <div role="columnheader">Titre</div>
@@ -114,7 +123,7 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
           <div role="columnheader">Actions</div>
         </div>
       </div>
-      <div ref={parentRef} role="rowgroup" className="max-h-[70vh] overflow-auto [scrollbar-gutter:stable]">
+      <div ref={parentRef} role="rowgroup" className="max-h-[70vh] overflow-auto [scrollbar-gutter:stable] bg-surface">
         <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
           {virtualizer.getVirtualItems().map((virtualRow) => {
             const offer = offers[virtualRow.index]!;
@@ -129,8 +138,8 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
                 tabIndex={focusedIndex === virtualRow.index ? 0 : -1}
                 onFocus={() => setFocusedIndex(virtualRow.index)}
                 onKeyDown={(event) => handleRowKeyDown(event, virtualRow.index)}
-                className={`grid ${ROW_GRID} gap-2 items-center px-2 border-b border-[var(--color-border)] focus:outline focus:outline-2 focus:outline-[var(--color-accent)] focus:-outline-offset-2 ${
-                  selected ? "bg-[var(--color-surface)]" : ""
+                className={`grid ${ROW_GRID} gap-2 items-center px-2 border-b border-border transition-colors duration-150 focus:outline focus:outline-2 focus:outline-accent-cool focus:-outline-offset-2 ${
+                  selected ? "bg-surface-raised shadow-accent relative z-10" : "hover:bg-surface-raised/60"
                 }`}
                 style={{
                   position: "absolute",
@@ -147,26 +156,32 @@ export function OfferTable({ offers, filters, selectedIds, onToggleOne, onToggle
                     checked={selected}
                     onChange={() => onToggleOne(offer.id)}
                     aria-label={`Sélectionner ${offer.title}`}
+                    className="accent-accent-cool"
                   />
                 </div>
                 <div role="cell" className="truncate">
-                  <a href={offer.applyUrl ?? offer.canonicalUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={offer.applyUrl ?? offer.canonicalUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-text underline decoration-border decoration-1 underline-offset-2 transition-colors duration-150 hover:text-accent-cool hover:decoration-accent-cool focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-cool rounded-sm"
+                  >
                     {offer.title}
                   </a>
                 </div>
-                <div role="cell" className="truncate">
+                <div role="cell" className="truncate text-text">
                   {offer.company.name}
                 </div>
-                <div role="cell" className="truncate">
+                <div role="cell" className="truncate text-text-muted">
                   {offer.location.city}
                 </div>
-                <div role="cell" className="truncate">
+                <div role="cell" className="truncate text-text-muted">
                   {offer.originSource ? `${offer.originSource} (via ${offer.source})` : offer.source}
                 </div>
-                <div role="cell" className="tabular-nums">
+                <div role="cell" className="tabular-nums font-mono text-xs text-text-muted">
                   {formatDate(offer.postedAt)}
                 </div>
-                <div role="cell" className="tabular-nums">
+                <div role="cell" className="tabular-nums font-mono text-xs text-text-muted">
                   {formatDate(offer.nextFollowUpAt)}
                 </div>
                 <div role="cell">

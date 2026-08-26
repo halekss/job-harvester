@@ -12,21 +12,23 @@ export function BulkActionBar({ selectedCount, onMarkFollowedUp, onClearSelectio
     <div
       role="toolbar"
       aria-label="Actions groupées"
-      className="flex items-center gap-3 mb-3 px-3 py-2 rounded border border-[var(--color-accent)] bg-[var(--color-surface)] text-sm"
+      className="flex items-center gap-3 mb-3 px-4 py-2.5 rounded-md border border-accent bg-surface-raised text-sm shadow-accent animate-[bar-rise_150ms_ease-out]"
     >
-      <span aria-live="polite">{selectedCount} offre(s) sélectionnée(s)</span>
+      <span aria-live="polite" className="font-medium text-text">
+        {selectedCount} offre(s) sélectionnée(s)
+      </span>
       <button
         type="button"
         onClick={onMarkFollowedUp}
         disabled={disabled}
-        className="px-2 py-1 rounded bg-[var(--color-accent)] text-white disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-text)]"
+        className="px-3 py-1 rounded-sm bg-accent text-background font-medium transition-colors duration-150 hover:brightness-110 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-cool"
       >
         Marquer comme relancé
       </button>
       <button
         type="button"
         onClick={onClearSelection}
-        className="px-2 py-1 rounded border border-[var(--color-border)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--color-accent)]"
+        className="px-3 py-1 rounded-sm border border-border text-text transition-colors duration-150 hover:border-accent-cool focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-cool"
       >
         Désélectionner
       </button>

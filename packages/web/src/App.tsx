@@ -50,22 +50,38 @@ export default function App() {
   };
 
   return (
-    <main className="min-h-screen bg-[var(--color-background)] text-[var(--color-text)] p-6">
-      <h1 className="text-xl font-semibold mb-4">job-harvester</h1>
+    <main className="min-h-screen bg-background text-text p-6 max-w-[1400px] mx-auto">
+      <header className="mb-4">
+        <h1 className="font-display text-2xl text-text tracking-tight">job-harvester</h1>
+      </header>
+
       <HarvestControl
         campaignId={campaignId ?? ""}
         onCampaignChange={(id) => setFilters((current) => ({ ...current, campaignId: id }))}
       />
       <FilterBar filters={filters} onChange={setFilters} />
       <div className="mb-3">
-        <label className="flex items-center gap-2 text-sm w-fit">
-          <input
-            type="checkbox"
-            checked={followUpOnly}
-            onChange={(event) => setFollowUpOnly(event.target.checked)}
-          />
+        <button
+          type="button"
+          role="switch"
+          aria-checked={followUpOnly}
+          onClick={() => setFollowUpOnly((v) => !v)}
+          className="flex items-center gap-2 text-sm text-text rounded-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-cool"
+        >
+          <span
+            aria-hidden="true"
+            className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors duration-150 ${
+              followUpOnly ? "bg-accent" : "bg-border"
+            }`}
+          >
+            <span
+              className={`inline-block h-3.5 w-3.5 transform rounded-full bg-text transition-transform duration-150 ${
+                followUpOnly ? "translate-x-[18px]" : "translate-x-[2px]"
+              }`}
+            />
+          </span>
           À relancer uniquement
-        </label>
+        </button>
       </div>
       <BulkActionBar
         selectedCount={selectedIds.size}
@@ -73,8 +89,23 @@ export default function App() {
         onClearSelection={() => setSelectedIds(new Set())}
         disabled={bulkMutation.isPending}
       />
-      {offersQuery.isLoading && <p className="text-[var(--color-text-muted)]">Chargement…</p>}
-      {offersQuery.error && <p className="text-red-400">Erreur de chargement des offres.</p>}
+      {offersQuery.isLoading && (
+        <div className="rounded-md border border-border px-6 py-10 text-center">
+          <p className="text-sm text-text-muted">Chargement des offres…</p>
+        </div>
+      )}
+      {offersQuery.error && (
+        <div className="rounded-md border border-danger/40 bg-surface px-4 py-3 flex items-center justify-between gap-3">
+          <p className="text-sm text-danger">Erreur de chargement des offres.</p>
+          <button
+            type="button"
+            onClick={() => offersQuery.refetch()}
+            className="text-xs px-2.5 py-1.5 rounded-sm border border-danger/40 text-text transition-colors duration-150 hover:border-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-cool"
+          >
+            Réessayer
+          </button>
+        </div>
+      )}
       {!offersQuery.isLoading && !offersQuery.error && (
         <OfferTable
           offers={displayedOffers}
@@ -90,7 +121,7 @@ export default function App() {
           type="button"
           onClick={() => offersQuery.fetchNextPage()}
           disabled={offersQuery.isFetchingNextPage}
-          className="mt-3 text-sm px-3 py-1 rounded border border-[var(--color-border)] disabled:opacity-50"
+          className="mt-3 text-sm px-3 py-1.5 rounded-sm border border-border text-text transition-colors duration-150 hover:border-accent-cool disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-cool"
         >
           {offersQuery.isFetchingNextPage ? "Chargement…" : "Charger plus d'offres"}
         </button>
