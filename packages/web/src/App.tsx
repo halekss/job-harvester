@@ -1,53 +1,49 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { OfferTable } from "./components/OfferTable.js";
 import { HarvestControl } from "./components/HarvestControl.js";
 import { FilterBar } from "./components/FilterBar.js";
-import { BulkActionBar } from "./components/BulkActionBar.js";
+import { QuaiStrip } from "./components/QuaiStrip.js";
+import { PipelineBoard } from "./components/PipelineBoard.js";
+import { PipelineFilters } from "./components/PipelineFilters.js";
 import { useUrlFilters } from "./hooks/useUrlFilters.js";
 import { useOffersQuery } from "./hooks/useOffersQuery.js";
-import { useOfferEventMutation } from "./hooks/useOfferEventMutation.js";
 import { getCampaigns } from "./api/client.js";
 
 export default function App() {
   const { filters, setFilters } = useUrlFilters();
-  // Même campagne partagée entre le déclencheur de collecte et le scope du tableau (audit
-  // 2026-08-26) : le jobboard affiche les offres de LA campagne sélectionnée, pas tout
-  // l'historique jamais collecté. `useQuery` est dédupliqué avec l'appel identique fait par
-  // HarvestControl (même queryKey), pas de requête réseau supplémentaire.
   const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: getCampaigns });
   const campaignId = filters.campaignId || campaigns?.[0]?.id;
   const offersQuery = useOffersQuery({ ...filters, campaignId });
   const offers = useMemo(() => offersQuery.data?.pages.flatMap((page) => page.offers) ?? [], [offersQuery.data]);
 
   const [followUpOnly, setFollowUpOnly] = useState(false);
-  const displayedOffers = useMemo(() => {
-    if (!followUpOnly) return offers;
-    const now = new Date().toISOString();
-    return offers.filter((offer) => offer.nextFollowUpAt && offer.nextFollowUpAt <= now);
-  }, [offers, followUpOnly]);
+  const [hideRejected, setHideRejected] = useState(false);
+  const [excludedSources, setExcludedSources] = useState<Set<string>>(new Set());
+  const [quaiCollapsed, setQuaiCollapsed] = useState(false);
 
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const toggleOne = (id: string) => {
-    setSelectedIds((current) => {
+  const displayedOffers = useMemo(() => {
+    let result = offers;
+    if (followUpOnly) {
+      const now = new Date().toISOString();
+      result = result.filter((offer) => offer.nextFollowUpAt && offer.nextFollowUpAt <= now);
+    }
+    if (excludedSources.size > 0) {
+      result = result.filter((offer) => !excludedSources.has(offer.source));
+    }
+    return result;
+  }, [offers, followUpOnly, excludedSources]);
+
+  const sources = useMemo(() => Array.from(new Set(offers.map((offer) => offer.source))).sort(), [offers]);
+  const toggleSource = (source: string) => {
+    setExcludedSources((current) => {
       const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(source)) next.delete(source);
+      else next.add(source);
       return next;
     });
   };
-  const allSelected = displayedOffers.length > 0 && displayedOffers.every((offer) => selectedIds.has(offer.id));
-  const toggleAll = () => {
-    setSelectedIds(allSelected ? new Set() : new Set(displayedOffers.map((offer) => offer.id)));
-  };
 
-  const bulkMutation = useOfferEventMutation(filters);
-  const handleMarkFollowedUp = () => {
-    bulkMutation.mutate(
-      { offerIds: Array.from(selectedIds), type: "followup" },
-      { onSuccess: () => setSelectedIds(new Set()) },
-    );
-  };
+  const quaiOffers = useMemo(() => displayedOffers.filter((offer) => offer.status === "new"), [displayedOffers]);
 
   return (
     <main className="min-h-screen bg-background text-text p-6 max-w-[1400px] mx-auto">
@@ -83,11 +79,12 @@ export default function App() {
           À relancer uniquement
         </button>
       </div>
-      <BulkActionBar
-        selectedCount={selectedIds.size}
-        onMarkFollowedUp={handleMarkFollowedUp}
-        onClearSelection={() => setSelectedIds(new Set())}
-        disabled={bulkMutation.isPending}
+      <PipelineFilters
+        sources={sources}
+        excludedSources={excludedSources}
+        onToggleSource={toggleSource}
+        hideRejected={hideRejected}
+        onToggleHideRejected={() => setHideRejected((v) => !v)}
       />
       {offersQuery.isLoading && (
         <div className="rounded-md border border-border px-6 py-10 text-center">
@@ -107,14 +104,10 @@ export default function App() {
         </div>
       )}
       {!offersQuery.isLoading && !offersQuery.error && (
-        <OfferTable
-          offers={displayedOffers}
-          filters={filters}
-          selectedIds={selectedIds}
-          onToggleOne={toggleOne}
-          onToggleAll={toggleAll}
-          allSelected={allSelected}
-        />
+        <>
+          <QuaiStrip offers={quaiOffers} collapsed={quaiCollapsed} onToggleCollapsed={() => setQuaiCollapsed((v) => !v)} />
+          <PipelineBoard offers={displayedOffers} hideRejected={hideRejected} />
+        </>
       )}
       {offersQuery.hasNextPage && (
         <button
