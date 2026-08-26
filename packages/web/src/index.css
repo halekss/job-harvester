@@ -16,14 +16,6 @@
   --color-accent-cool: #1d4ed8;
   --color-danger: #dc2626;
 
-  /* Anciennes pills de statut — utilisées par EventButtons, retirées avec lui (Task 12) */
-  --color-status-applied: #1d4ed8;
-  --color-status-spontaneous: #6d28d9;
-  --color-status-followup: #b45309;
-  --color-status-interview: #047857;
-  --color-status-rejected: #dc2626;
-  --color-status-noreply: #52525b;
-
   /* Statuts Pipeline — fond+texte au repos (10 %), solid+on au survol/sélection */
   --color-status-new-bg: #f4f4f5;
   --color-status-new-fg: #52525b;
