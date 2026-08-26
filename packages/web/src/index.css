@@ -1,39 +1,69 @@
 @import "tailwindcss";
 
 @theme {
-  /* Surfaces — charbon chaud ("chantier de récolte au crépuscule"), pas noir-bleu froid */
-  --color-background: #14120f;
-  --color-surface: #1e1b17;
-  --color-surface-raised: #262119;
-  --color-border: #3a352c;
-  --color-text: #f2ede3;
-  --color-text-muted: #a89d8a;
+  /* Surfaces — thème "Clean Light" */
+  --color-background: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f4f4f5;
+  --color-border: #e4e4e7;
+  --color-border-soft: #ededf0;
+  --color-text: #09090b;
+  --color-text-muted: #71717a;
+  --color-text-faint: #a1a1aa;
 
-  /* Accents */
-  --color-accent: #d9992f; /* ambre récolte — CTA, marque, pill "Relance" */
-  --color-accent-cool: #49b8ae; /* sarcelle — focus-visible, info secondaire */
-  --color-danger: #d9636b;
+  /* Accent — un seul bleu ; ne réapparaît jamais sur un badge de statut */
+  --color-accent: #1d4ed8;
+  --color-accent-cool: #1d4ed8;
+  --color-danger: #dc2626;
 
-  /* Pills de statut (6, distinctes en teinte, toujours doublées d'un libellé texte) */
-  --color-status-applied: #4fb0c9;
-  --color-status-spontaneous: #9b8cf2;
-  --color-status-followup: #d9992f;
-  --color-status-interview: #7fae6c;
-  --color-status-rejected: #d9636b;
-  --color-status-noreply: #8890a0;
+  /* Anciennes pills de statut — utilisées par EventButtons, retirées avec lui (Task 12) */
+  --color-status-applied: #1d4ed8;
+  --color-status-spontaneous: #6d28d9;
+  --color-status-followup: #b45309;
+  --color-status-interview: #047857;
+  --color-status-rejected: #dc2626;
+  --color-status-noreply: #52525b;
 
-  /* Élévation — ombres teintées chaud, jamais neutres */
-  --shadow-sm: 0 1px 2px rgba(20, 14, 8, 0.5);
-  --shadow-md: 0 2px 6px rgba(20, 14, 8, 0.35), 0 8px 20px rgba(20, 14, 8, 0.25);
-  --shadow-accent: 0 0 0 1px var(--color-accent), 0 4px 14px rgba(217, 153, 47, 0.25);
+  /* Statuts Pipeline — fond+texte au repos (10 %), solid+on au survol/sélection */
+  --color-status-new-bg: #f4f4f5;
+  --color-status-new-fg: #52525b;
+  --color-status-new-solid: #71717a;
+  --color-status-new-on: #ffffff;
+  --color-status-applied-bg: #eff6ff;
+  --color-status-applied-fg: #1d4ed8;
+  --color-status-applied-solid: #2563eb;
+  --color-status-applied-on: #ffffff;
+  --color-status-spontaneous-bg: #f5f3ff;
+  --color-status-spontaneous-fg: #6d28d9;
+  --color-status-spontaneous-solid: #7c3aed;
+  --color-status-spontaneous-on: #ffffff;
+  --color-status-followup-bg: #fef3c7;
+  --color-status-followup-fg: #b45309;
+  --color-status-followup-solid: #f59e0b;
+  --color-status-followup-on: #451a03;
+  --color-status-interview-bg: #d1fae5;
+  --color-status-interview-fg: #047857;
+  --color-status-interview-solid: #059669;
+  --color-status-interview-on: #ffffff;
+  --color-status-rejected-bg: #fee2e2;
+  --color-status-rejected-fg: #b91c1c;
+  --color-status-rejected-solid: #dc2626;
+  --color-status-rejected-on: #ffffff;
+  --color-status-noreply-bg: #f4f4f5;
+  --color-status-noreply-fg: #52525b;
+  --color-status-noreply-solid: #71717a;
+  --color-status-noreply-on: #ffffff;
+
+  --shadow-sm: 0 1px 2px rgba(9, 9, 11, 0.06);
+  --shadow-md: 0 2px 6px rgba(9, 9, 11, 0.05), 0 8px 20px rgba(9, 9, 11, 0.06);
+  --shadow-accent: 0 0 0 1px var(--color-accent), 0 4px 14px rgba(29, 78, 216, 0.18);
 
   --radius-sm: 6px;
   --radius-md: 10px;
 
-  /* Typographie — display de caractère (retenue), body dense, mono pour le journal */
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 }
 
 body {
@@ -43,7 +73,7 @@ body {
 }
 
 ::selection {
-  background-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  background-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
   color: var(--color-text);
 }
 
