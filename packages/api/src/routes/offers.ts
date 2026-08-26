@@ -36,9 +36,10 @@ function nextFollowUpByOfferId(db: Db, offerIds: string[]): Map<string, string> 
   return result;
 }
 
-// Latest event id per (offer, type) — lets the UI show several action buttons as
-// active at once for one offer (applied + interview aren't mutually exclusive),
-// and gives it the event id it needs to toggle a button off via DELETE.
+// Latest event id per (offer, type), tous types confondus pour une même offre. N'est plus
+// consommé par l'UI Pipeline (qui pilote son affichage via `status`, voir statusByOfferId
+// ci-dessous), mais reste un champ valide de la réponse — un autre consommateur pourrait encore
+// s'appuyer sur l'historique multi-types par offre.
 function activeEventsByOfferId(db: Db, offerIds: string[]): Map<string, Record<string, string>> {
   const result = new Map<string, Record<string, string>>();
   if (offerIds.length === 0) return result;

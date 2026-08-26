@@ -33,7 +33,7 @@ afterEach(() => {
 
 // Audit 2026-08-26 : un seul jeu de critères par campagne — plus de filtres ad-hoc
 // métier/contrat/ville, `campaignId` est contrôlé par le parent (partagé avec le scope du
-// tableau d'offres, voir App.tsx).
+// Quai et du Pipeline, voir App.tsx).
 describe("HarvestControl", () => {
   it("launches the harvest for the given campaignId with no request body", async () => {
     const fetchMock = stubFetch();

@@ -25,7 +25,7 @@ const TONE_DOT: Record<"ok" | "warning" | "error", string> = {
 // Un seul jeu de critères par campagne (audit 2026-08-26) : plus de filtres ad-hoc
 // métier/contrat/ville ici — pour changer les critères d'une campagne, on édite
 // config/campaigns.yaml. `campaignId` est contrôlé par le parent : c'est aussi ce qui scope le
-// tableau d'offres affiché plus bas (voir App.tsx).
+// Quai et le Pipeline affichés plus bas (voir App.tsx).
 export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlProps) {
   const queryClient = useQueryClient();
   const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: getCampaigns });

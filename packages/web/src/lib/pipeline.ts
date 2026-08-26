@@ -7,7 +7,7 @@ export interface PipelineLane {
   label: string;
 }
 
-// Ordre déjà établi côté produit par EventButtons — conservé pour continuité visuelle.
+// Ordre déjà établi côté produit (ex-boutons d'action, un par type) — conservé pour continuité visuelle.
 export const PIPELINE_LANES: PipelineLane[] = [
   { type: "applied", label: "Candidature" },
   { type: "spontaneous", label: "Spontané" },

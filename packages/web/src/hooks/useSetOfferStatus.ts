@@ -10,8 +10,7 @@ export interface SetOfferStatusVars {
 // Pas de suppression : l'historique reste append-only, cohérent avec deriveStatus() qui ne
 // regarde que l'événement le plus récent. Invalidation par préfixe ["offers"] : React Query
 // matche déjà toute query ["offers", filters] quels que soient les filtres actifs, pas besoin
-// de connaître les filtres ici (contrairement à useOfferEventMutation et sa mise à jour
-// optimiste, qui a besoin de la clé exacte).
+// de connaître les filtres actifs ici pour cibler une mise à jour optimiste.
 export function useSetOfferStatus() {
   const queryClient = useQueryClient();
 
