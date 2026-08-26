@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCampaigns, runHarvest, type HarvestRunResult } from "../api/client.js";
 
@@ -32,6 +32,7 @@ export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlP
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [collapsed, setCollapsed] = useState(true);
   const [runSeq, setRunSeq] = useState(0);
+  const [successFlash, setSuccessFlash] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (id: string) => runHarvest(id),
@@ -39,6 +40,7 @@ export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlP
       setLastResult({ campaignId: id, ...result });
       setCollapsed(false);
       setRunSeq((n) => n + 1);
+      setSuccessFlash(result.summaries.every((s) => s.ok));
       queryClient.invalidateQueries({ queryKey: ["offers"] });
     },
     onError: (error, id) => {
@@ -48,6 +50,12 @@ export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlP
     },
   });
 
+  useEffect(() => {
+    if (!successFlash) return;
+    const timer = setTimeout(() => setSuccessFlash(false), 1200);
+    return () => clearTimeout(timer);
+  }, [successFlash]);
+
   const handleLaunch = () => {
     if (!campaignId) return;
     setCollapsed(false);
@@ -55,6 +63,27 @@ export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlP
   };
 
   const tone = lastResult ? summaryTone(lastResult) : null;
+
+  const failedCount = lastResult && "summaries" in lastResult ? lastResult.summaries.filter((s) => !s.ok).length : 0;
+  const newOffersCount =
+    lastResult && "summaries" in lastResult ? lastResult.summaries.reduce((sum, s) => sum + s.normalizedCount, 0) : 0;
+  const hasFailure = failedCount > 0 || (lastResult ? "error" in lastResult : false);
+
+  const buttonLabel = mutation.isPending
+    ? "Collecte en cours…"
+    : hasFailure
+      ? `${failedCount} connecteur(s) en échec`
+      : successFlash
+        ? `+${newOffersCount} nouvelles offres`
+        : "Lancer la collecte";
+
+  const buttonToneClass = mutation.isPending
+    ? "bg-surface-raised text-text-muted border border-border"
+    : hasFailure
+      ? "bg-danger text-white hover:brightness-110"
+      : successFlash
+        ? "bg-status-interview-solid text-status-interview-on"
+        : "bg-accent text-white hover:brightness-110";
 
   return (
     <section className="mb-4 rounded-md border border-border bg-surface-raised shadow-sm">
@@ -106,15 +135,15 @@ export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlP
           type="button"
           onClick={handleLaunch}
           disabled={!campaignId || mutation.isPending}
-          className="ml-auto flex items-center gap-2 bg-accent text-background rounded-sm px-3 py-1.5 text-sm font-medium transition-[filter] duration-150 hover:brightness-110 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-cool"
+          className={`ml-auto flex items-center gap-2 rounded-sm px-3 py-1.5 text-sm font-medium transition-colors duration-150 disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-cool ${buttonToneClass}`}
         >
           {mutation.isPending && (
             <span
               aria-hidden="true"
-              className="h-3 w-3 rounded-full border-2 border-background/40 border-t-background animate-spin"
+              className="h-3 w-3 rounded-full border-2 border-text-muted/40 border-t-text-muted animate-spin"
             />
           )}
-          {mutation.isPending ? "Collecte en cours…" : "Lancer la collecte"}
+          {buttonLabel}
         </button>
       </div>
 

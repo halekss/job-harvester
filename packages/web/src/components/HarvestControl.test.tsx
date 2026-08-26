@@ -125,4 +125,60 @@ describe("HarvestControl", () => {
     expect(await screen.findByText(/1 nouvelle cible découverte/)).toBeInTheDocument();
     expect(screen.getByText(/acme.*digitalRecruiters.*joinus\.acme\.fr/)).toBeInTheDocument();
   });
+
+  it("shows a persistent failure state on the launch button when a connector fails", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/campaigns")) {
+        return new Response(JSON.stringify({ campaigns: [{ id: "alternance-data-hdf" }] }), { status: 200 });
+      }
+      if (url.includes("/harvest/")) {
+        return new Response(
+          JSON.stringify({
+            summaries: [
+              { runId: "r1", connectorId: "workday", rawCount: 0, normalizedCount: 0, rejectedCount: 0, unresolvedLocationCount: 0, ok: false, errorMessage: "timeout" },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderWithClient(<HarvestControl campaignId="alternance-data-hdf" onCampaignChange={vi.fn()} />);
+
+    const button = await screen.findByRole("button", { name: "Lancer la collecte" });
+    await user.click(button);
+
+    expect(await screen.findByRole("button", { name: /1 connecteur\(s\) en échec/ })).toBeInTheDocument();
+  });
+
+  it("flashes a success count on the launch button after a clean run", async () => {
+    const fetchMock = vi.fn(async (input: string | URL | Request) => {
+      const url = String(input);
+      if (url.endsWith("/campaigns")) {
+        return new Response(JSON.stringify({ campaigns: [{ id: "alternance-data-hdf" }] }), { status: 200 });
+      }
+      if (url.includes("/harvest/")) {
+        return new Response(
+          JSON.stringify({
+            summaries: [
+              { runId: "r1", connectorId: "francetravail", rawCount: 5, normalizedCount: 5, rejectedCount: 0, unresolvedLocationCount: 0, ok: true },
+            ],
+          }),
+          { status: 200 },
+        );
+      }
+      return new Response("not found", { status: 404 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderWithClient(<HarvestControl campaignId="alternance-data-hdf" onCampaignChange={vi.fn()} />);
+
+    const button = await screen.findByRole("button", { name: "Lancer la collecte" });
+    await user.click(button);
+
+    expect(await screen.findByRole("button", { name: /\+5 nouvelles offres/ })).toBeInTheDocument();
+  });
 });
