@@ -8,6 +8,7 @@ export function registerCampaignRoutes(app: Hono, { campaigns }: AppDeps): void 
     return c.json({
       campaigns: campaigns.map((campaign) => ({
         id: campaign.id,
+        name: campaign.name ?? campaign.id,
         locations: campaign.locations.map((location) => ({ label: location.label })),
         contractTypes: campaign.contractTypes,
       })),

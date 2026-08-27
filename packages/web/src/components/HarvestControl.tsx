@@ -112,13 +112,13 @@ export function HarvestControl({ campaignId, onCampaignChange }: HarvestControlP
           >
             {campaigns.map((campaign) => (
               <option key={campaign.id} value={campaign.id}>
-                {campaign.id}
+                {campaign.name}
               </option>
             ))}
           </select>
         ) : (
           campaigns && campaigns.length === 1 && (
-            <span className="font-mono text-sm text-text">{campaigns[0]!.id}</span>
+            <span className="font-mono text-sm text-text">{campaigns[0]!.name}</span>
           )
         )}
 

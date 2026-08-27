@@ -558,9 +558,24 @@ describe("GET /campaigns", () => {
 
     expect(res.status).toBe(200);
     expect(body.campaigns).toEqual([
-      { id: "alternance-data-hdf", locations: [], contractTypes: ["apprentissage"] },
-      { id: "alternance-devweb-hdf", locations: [], contractTypes: ["apprentissage"] },
+      { id: "alternance-data-hdf", name: "alternance-data-hdf", locations: [], contractTypes: ["apprentissage"] },
+      { id: "alternance-devweb-hdf", name: "alternance-devweb-hdf", locations: [], contractTypes: ["apprentissage"] },
     ]);
+  });
+
+  // Le nom affiché (frontend) est distinct de l'id technique (scheduler, runs, filtres) : quand
+  // campaigns.yaml n'en définit pas, on retombe sur l'id plutôt que d'exposer un champ vide.
+  it("falls back to the campaign id when no display name is configured", async () => {
+    const db = createDb(tmpDbPath());
+    const campaigns: CampaignConfig[] = [
+      { id: "alternance-data-hdf", name: "Data", romeCodes: [], keywords: [], locations: [], contractTypes: [] },
+    ];
+    const app = createApp({ db, connectors: [], campaigns, env: {} });
+
+    const res = await app.request("/campaigns");
+    const body = (await res.json()) as { campaigns: { id: string; name: string }[] };
+
+    expect(body.campaigns).toEqual([{ id: "alternance-data-hdf", name: "Data", locations: [], contractTypes: [] }]);
   });
 
   // Nécessaire pour que le frontend sache quels boutons de bascule afficher (chips par ville /
@@ -589,6 +604,7 @@ describe("GET /campaigns", () => {
     expect(body.campaigns).toEqual([
       {
         id: "alternance-data-hdf",
+        name: "alternance-data-hdf",
         locations: [{ label: "Lille 59000" }, { label: "Paris 75000" }],
         contractTypes: ["apprentissage", "stage"],
       },

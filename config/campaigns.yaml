@@ -1,5 +1,6 @@
 campaigns:
   - id: alternance-data-hdf
+    name: Data
     romeCodes:
       - M1403
     keywords:
@@ -54,6 +55,7 @@ campaigns:
       digitalRecruiters:
         - joinus.yzee-services.fr
   - id: alternance-devweb-hdf
+    name: Dev Web
     romeCodes:
       - M1802
       - M1805

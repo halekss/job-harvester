@@ -7,6 +7,7 @@ import { CampaignParamToggles } from "./CampaignParamToggles.js";
 function makeCampaign(): Campaign {
   return {
     id: "alternance-data-hdf",
+    name: "Data",
     locations: [{ label: "Lille 59000" }, { label: "Paris 75000" }],
     contractTypes: ["apprentissage", "stage"],
   };
@@ -72,7 +73,7 @@ describe("CampaignParamToggles", () => {
   it("renders nothing when the campaign has neither locations nor contract types", () => {
     const { container } = render(
       <CampaignParamToggles
-        campaign={{ id: "empty", locations: [], contractTypes: [] }}
+        campaign={{ id: "empty", name: "Empty", locations: [], contractTypes: [] }}
         onToggleLocation={vi.fn()}
         onToggleContractType={vi.fn()}
       />,

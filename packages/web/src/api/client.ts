@@ -57,6 +57,7 @@ export async function getOfferDetail(id: string): Promise<OfferDetail> {
 
 export interface Campaign {
   id: string;
+  name: string;
   locations: { label: string }[];
   contractTypes: string[];
 }

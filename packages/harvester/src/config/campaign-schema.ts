@@ -11,6 +11,7 @@ export type LocationConfig = z.infer<typeof LocationConfigSchema>;
 
 export const CampaignConfigSchema = z.object({
   id: z.string(),
+  name: z.string().optional(),
   romeCodes: z.array(z.string()),
   keywords: z.array(z.string()),
   locations: z.array(LocationConfigSchema),
