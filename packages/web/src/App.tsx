@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { HarvestControl } from "./components/HarvestControl.js";
-import { FilterBar } from "./components/FilterBar.js";
 import { QuaiStrip } from "./components/QuaiStrip.js";
 import { PipelineBoard } from "./components/PipelineBoard.js";
 import { PipelineFilters } from "./components/PipelineFilters.js";
@@ -83,7 +82,6 @@ export default function App() {
           setFilters((current) => ({ ...current, campaignId: id, campaignLocations: undefined, campaignContractTypes: undefined }))
         }
       />
-      <FilterBar filters={filters} onChange={setFilters} />
       {selectedCampaign && (
         <CampaignParamToggles
           campaign={selectedCampaign}

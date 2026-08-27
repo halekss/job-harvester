@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { OfferFilters } from "../api/client.js";
 
-const FILTER_KEYS = ["city", "q", "campaignId"] as const;
+const FILTER_KEYS = ["campaignId"] as const;
 // Stockées en CSV dans l'URL, comme envoyé à l'API (voir getOffers) — un tableau vide (tout
 // décoché via CampaignParamToggles) doit rester distinguable de l'absence du paramètre.
 const ARRAY_FILTER_KEYS = ["campaignLocations", "campaignContractTypes"] as const;

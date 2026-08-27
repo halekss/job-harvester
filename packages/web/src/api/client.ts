@@ -21,8 +21,6 @@ export interface OfferDetail {
 }
 
 export interface OfferFilters {
-  city?: string;
-  q?: string;
   // Scope le tableau aux offres correspondant réellement aux critères actuels de cette
   // campagne (mots-clés/contrat/localisations) — audit 2026-08-26 : le jobboard affiche la
   // recherche demandée, pas tout l'historique jamais collecté.
@@ -41,8 +39,6 @@ export interface OffersPage {
 
 export async function getOffers(filters: OfferFilters = {}, cursor?: string): Promise<OffersPage> {
   const params = new URLSearchParams();
-  if (filters.city) params.set("city", filters.city);
-  if (filters.q) params.set("q", filters.q);
   if (filters.campaignId) params.set("campaignId", filters.campaignId);
   if (filters.campaignLocations) params.set("locations", filters.campaignLocations.join(","));
   if (filters.campaignContractTypes) params.set("contractTypes", filters.campaignContractTypes.join(","));
