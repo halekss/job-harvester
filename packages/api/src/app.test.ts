@@ -186,7 +186,10 @@ describe("GET /offers — campaign scoping", () => {
     id: "alternance-data-hdf",
     romeCodes: ["M1403"],
     keywords: ["data"],
-    locations: [{ label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 }],
+    locations: [
+      { label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 },
+      { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 },
+    ],
     contractTypes: ["apprentissage", "professionnalisation"],
   };
 
@@ -264,6 +267,75 @@ describe("GET /offers — campaign scoping", () => {
 
     expect(body.offers.map((o) => o.sourceOfferId).sort()).toEqual(["match-0", "match-1", "match-2"]);
     expect(body.nextCursor).toBeNull();
+  });
+
+  // Boutons de bascule côté web (JOB-quai) : restreindre une campagne à un sous-ensemble de ses
+  // propres localisations/types de contrat, sans toucher à campaigns.yaml. Réutilise le même
+  // QueryFilter/offerMatchesQuery que la collecte — seule sa sous-liste change.
+  it("restricts to the requested subset of campaign locations via the locations param", async () => {
+    const db = createDb(tmpDbPath());
+    const parisOffer: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000P1",
+      sourceOfferId: "paris-1",
+      canonicalUrl: "https://example.com/jobs/paris-1",
+      title: "Data Analyst Paris",
+      location: { label: "Paris", city: "Paris" },
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/paris-1"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "paris-1", canonicalUrl: "https://example.com/jobs/paris-1" }],
+    };
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run(); // Lille
+    db.insert(offersTable).values(offerToRow(parisOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const res = await app.request(`/offers?campaignId=alternance-data-hdf&locations=${encodeURIComponent("Lille 59000")}`);
+    const body = (await res.json()) as { offers: { title: string }[] };
+
+    expect(body.offers.map((o) => o.title)).toEqual([sampleOffer.title]);
+  });
+
+  it("restricts to the requested subset of campaign contract types via the contractTypes param", async () => {
+    const db = createDb(tmpDbPath());
+    const proOffer: NormalizedOffer = {
+      ...sampleOffer,
+      id: "01J0000000000000000000C1",
+      sourceOfferId: "pro-1",
+      canonicalUrl: "https://example.com/jobs/pro-1",
+      title: "Data Analyst en professionnalisation",
+      contractType: "professionnalisation",
+      dedupKey: exactDedupKeyFromUrl("https://example.com/jobs/pro-1"),
+      sourceRefs: [{ source: "labonnealternance", sourceOfferId: "pro-1", canonicalUrl: "https://example.com/jobs/pro-1" }],
+    };
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run(); // apprentissage
+    db.insert(offersTable).values(offerToRow(proOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const res = await app.request("/offers?campaignId=alternance-data-hdf&contractTypes=apprentissage");
+    const body = (await res.json()) as { offers: { title: string }[] };
+
+    expect(body.offers.map((o) => o.title)).toEqual([sampleOffer.title]);
+  });
+
+  it("returns no offers when every campaign location is deselected", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const res = await app.request("/offers?campaignId=alternance-data-hdf&locations=");
+    const body = (await res.json()) as { offers: unknown[] };
+
+    expect(body.offers).toEqual([]);
+  });
+
+  it("returns no offers when every campaign contract type is deselected", async () => {
+    const db = createDb(tmpDbPath());
+    db.insert(offersTable).values(offerToRow(sampleOffer)).run();
+    const app = createApp({ db, connectors: [], campaigns: [dataCampaign], env: {} });
+
+    const res = await app.request("/offers?campaignId=alternance-data-hdf&contractTypes=");
+    const body = (await res.json()) as { offers: unknown[] };
+
+    expect(body.offers).toEqual([]);
   });
 });
 
@@ -485,7 +557,42 @@ describe("GET /campaigns", () => {
     const body = (await res.json()) as { campaigns: { id: string }[] };
 
     expect(res.status).toBe(200);
-    expect(body.campaigns).toEqual([{ id: "alternance-data-hdf" }, { id: "alternance-devweb-hdf" }]);
+    expect(body.campaigns).toEqual([
+      { id: "alternance-data-hdf", locations: [], contractTypes: ["apprentissage"] },
+      { id: "alternance-devweb-hdf", locations: [], contractTypes: ["apprentissage"] },
+    ]);
+  });
+
+  // Nécessaire pour que le frontend sache quels boutons de bascule afficher (chips par ville /
+  // par type de contrat) sans dupliquer campaigns.yaml côté client.
+  it("includes each campaign's location labels and contract types", async () => {
+    const db = createDb(tmpDbPath());
+    const campaigns: CampaignConfig[] = [
+      {
+        id: "alternance-data-hdf",
+        romeCodes: ["M1403"],
+        keywords: [],
+        locations: [
+          { label: "Lille 59000", lat: 50.630951, lng: 3.045391, radiusKm: 30 },
+          { label: "Paris 75000", lat: 48.8566, lng: 2.3522, radiusKm: 20 },
+        ],
+        contractTypes: ["apprentissage", "stage"],
+      },
+    ];
+    const app = createApp({ db, connectors: [], campaigns, env: {} });
+
+    const res = await app.request("/campaigns");
+    const body = (await res.json()) as {
+      campaigns: { id: string; locations: { label: string }[]; contractTypes: string[] }[];
+    };
+
+    expect(body.campaigns).toEqual([
+      {
+        id: "alternance-data-hdf",
+        locations: [{ label: "Lille 59000" }, { label: "Paris 75000" }],
+        contractTypes: ["apprentissage", "stage"],
+      },
+    ]);
   });
 });
 

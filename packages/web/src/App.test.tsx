@@ -8,7 +8,18 @@ function stubFetch() {
   const fetchMock = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     if (url.endsWith("/campaigns")) {
-      return new Response(JSON.stringify({ campaigns: [{ id: "alternance-data-hdf" }] }), { status: 200 });
+      return new Response(
+        JSON.stringify({
+          campaigns: [
+            {
+              id: "alternance-data-hdf",
+              locations: [{ label: "Lille 59000" }, { label: "Paris 75000" }],
+              contractTypes: ["apprentissage", "cdi"],
+            },
+          ],
+        }),
+        { status: 200 },
+      );
     }
     if (url.match(/^\/offers\/[^/]+\/events$/) && init?.method === "POST") {
       return new Response(JSON.stringify({ event: { id: "evt-new" } }), { status: 201 });
@@ -110,6 +121,29 @@ describe("App", () => {
         "/offers/a/events",
         expect.objectContaining({ method: "POST", body: JSON.stringify({ type: "interview" }) }),
       );
+    });
+  });
+
+  it("refetches offers with the remaining locations when a campaign location chip is deselected", async () => {
+    const fetchMock = stubFetch();
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const user = userEvent.setup();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>,
+    );
+
+    await screen.findByText("Data Analyst");
+    const parisChip = screen.getByRole("button", { name: "Paris 75000" });
+    expect(parisChip).toHaveAttribute("aria-pressed", "true");
+
+    await user.click(parisChip);
+
+    expect(parisChip).toHaveAttribute("aria-pressed", "false");
+    await waitFor(() => {
+      const offersCalls = fetchMock.mock.calls.filter(([input]) => String(input).startsWith("/offers?"));
+      expect(offersCalls.at(-1)?.[0]).toContain("locations=Lille+59000");
     });
   });
 });

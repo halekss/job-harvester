@@ -146,6 +146,15 @@ function fetchOffersPage(
   return { rows: matched, nextCursor: exhausted ? null : (cursor ?? null) };
 }
 
+// Sous-ensemble choisi via les boutons de bascule du Quai (locations/contractTypes) pour une
+// campagne : undefined si le paramètre est absent (aucune restriction, comportement historique),
+// [] si présent mais vide (l'utilisateur a tout décoché — pas la même chose qu'une absence).
+function parseCsvParam(raw: string | undefined): string[] | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === "") return [];
+  return raw.split(",").filter((value) => value.length > 0);
+}
+
 export function registerOfferRoutes(app: Hono, { db, campaigns }: AppDeps): void {
   app.get("/offers", (c) => {
     const city = c.req.query("city");
@@ -153,9 +162,29 @@ export function registerOfferRoutes(app: Hono, { db, campaigns }: AppDeps): void
     const q = c.req.query("q");
     const campaignId = c.req.query("campaignId");
     const cursorParam = c.req.query("cursor");
+    const locationsParam = parseCsvParam(c.req.query("locations"));
+    const contractTypesParam = parseCsvParam(c.req.query("contractTypes"));
 
     const campaign = campaignId ? campaigns.find((cmp) => cmp.id === campaignId) : undefined;
-    const campaignFilter = campaign ? queryFilterFromCampaign(campaign) : undefined;
+    let campaignFilter = campaign ? queryFilterFromCampaign(campaign) : undefined;
+
+    if (campaignFilter) {
+      // Un paramètre présent mais vide signifie "tout décoché" : ne pas laisser
+      // offerMatchesQuery le lire comme un tableau vide (qui, lui, veut dire "pas de
+      // restriction") — on court-circuite avant même d'interroger la base.
+      if (locationsParam?.length === 0 || contractTypesParam?.length === 0) {
+        return c.json({ offers: [], nextCursor: null });
+      }
+      campaignFilter = {
+        ...campaignFilter,
+        acceptableLocations: locationsParam
+          ? campaignFilter.acceptableLocations.filter((location) => locationsParam.includes(location.label))
+          : campaignFilter.acceptableLocations,
+        contractTypes: contractTypesParam
+          ? campaignFilter.contractTypes.filter((type) => contractTypesParam.includes(type))
+          : campaignFilter.contractTypes,
+      };
+    }
 
     const baseConditions = [
       city ? eq(offersTable.city, city) : undefined,

@@ -5,14 +5,26 @@ import { FilterBar } from "./components/FilterBar.js";
 import { QuaiStrip } from "./components/QuaiStrip.js";
 import { PipelineBoard } from "./components/PipelineBoard.js";
 import { PipelineFilters } from "./components/PipelineFilters.js";
+import { CampaignParamToggles } from "./components/CampaignParamToggles.js";
 import { useUrlFilters } from "./hooks/useUrlFilters.js";
 import { useOffersQuery } from "./hooks/useOffersQuery.js";
 import { getCampaigns } from "./api/client.js";
+
+// Ajoute/retire `value` du sous-ensemble actif (`current`, undefined = tout `all` activé) et
+// renvoie undefined dès que le résultat couvre à nouveau tout `all` — pour que l'URL/la requête
+// API restent sans paramètre (donc sans restriction) tant que rien n'a réellement été décoché.
+function toggleInSelection(all: string[], current: string[] | undefined, value: string): string[] | undefined {
+  const enabled = current ?? all;
+  const next = enabled.includes(value) ? enabled.filter((v) => v !== value) : [...enabled, value];
+  const isFullSet = next.length === all.length && all.every((v) => next.includes(v));
+  return isFullSet ? undefined : next;
+}
 
 export default function App() {
   const { filters, setFilters } = useUrlFilters();
   const { data: campaigns } = useQuery({ queryKey: ["campaigns"], queryFn: getCampaigns });
   const campaignId = filters.campaignId || campaigns?.[0]?.id;
+  const selectedCampaign = campaigns?.find((campaign) => campaign.id === campaignId);
   const offersQuery = useOffersQuery({ ...filters, campaignId });
   const offers = useMemo(() => offersQuery.data?.pages.flatMap((page) => page.offers) ?? [], [offersQuery.data]);
 
@@ -45,6 +57,20 @@ export default function App() {
 
   const quaiOffers = useMemo(() => displayedOffers.filter((offer) => offer.status === "new"), [displayedOffers]);
 
+  const toggleCampaignLocation = (label: string) => {
+    if (!selectedCampaign) return;
+    const all = selectedCampaign.locations.map((location) => location.label);
+    setFilters((current) => ({ ...current, campaignLocations: toggleInSelection(all, current.campaignLocations, label) }));
+  };
+
+  const toggleCampaignContractType = (type: string) => {
+    if (!selectedCampaign) return;
+    setFilters((current) => ({
+      ...current,
+      campaignContractTypes: toggleInSelection(selectedCampaign.contractTypes, current.campaignContractTypes, type),
+    }));
+  };
+
   return (
     <main className="min-h-screen bg-background text-text p-6 max-w-[1400px] mx-auto">
       <header className="mb-4">
@@ -53,9 +79,20 @@ export default function App() {
 
       <HarvestControl
         campaignId={campaignId ?? ""}
-        onCampaignChange={(id) => setFilters((current) => ({ ...current, campaignId: id }))}
+        onCampaignChange={(id) =>
+          setFilters((current) => ({ ...current, campaignId: id, campaignLocations: undefined, campaignContractTypes: undefined }))
+        }
       />
       <FilterBar filters={filters} onChange={setFilters} />
+      {selectedCampaign && (
+        <CampaignParamToggles
+          campaign={selectedCampaign}
+          selectedLocations={filters.campaignLocations}
+          selectedContractTypes={filters.campaignContractTypes}
+          onToggleLocation={toggleCampaignLocation}
+          onToggleContractType={toggleCampaignContractType}
+        />
+      )}
       <div className="mb-3">
         <button
           type="button"

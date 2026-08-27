@@ -22,12 +22,16 @@ export interface OfferDetail {
 
 export interface OfferFilters {
   city?: string;
-  contractType?: string;
   q?: string;
   // Scope le tableau aux offres correspondant réellement aux critères actuels de cette
   // campagne (mots-clés/contrat/localisations) — audit 2026-08-26 : le jobboard affiche la
   // recherche demandée, pas tout l'historique jamais collecté.
   campaignId?: string;
+  // Sous-ensemble des localisations/types de contrat de la campagne sélectionnée, via les boutons
+  // de bascule (CampaignParamToggles) — absent = pas de restriction (toute la campagne), tableau
+  // vide = tout décoché (aucune offre). Sans effet si campaignId n'est pas renseigné.
+  campaignLocations?: string[];
+  campaignContractTypes?: string[];
 }
 
 export interface OffersPage {
@@ -38,9 +42,10 @@ export interface OffersPage {
 export async function getOffers(filters: OfferFilters = {}, cursor?: string): Promise<OffersPage> {
   const params = new URLSearchParams();
   if (filters.city) params.set("city", filters.city);
-  if (filters.contractType) params.set("contractType", filters.contractType);
   if (filters.q) params.set("q", filters.q);
   if (filters.campaignId) params.set("campaignId", filters.campaignId);
+  if (filters.campaignLocations) params.set("locations", filters.campaignLocations.join(","));
+  if (filters.campaignContractTypes) params.set("contractTypes", filters.campaignContractTypes.join(","));
   if (cursor) params.set("cursor", cursor);
   const qs = params.toString();
   const res = await fetch(`/offers${qs ? `?${qs}` : ""}`);
@@ -56,6 +61,8 @@ export async function getOfferDetail(id: string): Promise<OfferDetail> {
 
 export interface Campaign {
   id: string;
+  locations: { label: string }[];
+  contractTypes: string[];
 }
 
 export async function getCampaigns(): Promise<Campaign[]> {

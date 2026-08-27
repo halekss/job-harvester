@@ -1,7 +1,5 @@
 import type { OfferFilters } from "../api/client.js";
 
-const CONTRACT_TYPES = ["apprentissage", "professionnalisation", "stage", "cdi", "cdd", "autre"];
-
 interface FilterBarProps {
   filters: OfferFilters;
   onChange: (next: OfferFilters | ((current: OfferFilters) => OfferFilters)) => void;
@@ -12,7 +10,7 @@ const FIELD_CLASS =
 const LABEL_CLASS = "text-[11px] uppercase tracking-wide text-text-muted";
 
 export function FilterBar({ filters, onChange }: FilterBarProps) {
-  const hasActiveFilters = Boolean(filters.q || filters.city || filters.contractType);
+  const hasActiveFilters = Boolean(filters.q || filters.city);
 
   return (
     <form
@@ -45,24 +43,6 @@ export function FilterBar({ filters, onChange }: FilterBarProps) {
           onChange={(event) => onChange((current) => ({ ...current, city: event.target.value || undefined }))}
           className={FIELD_CLASS}
         />
-      </div>
-      <div className="flex flex-col gap-1">
-        <label htmlFor="filter-contract" className={LABEL_CLASS}>
-          Contrat
-        </label>
-        <select
-          id="filter-contract"
-          value={filters.contractType ?? ""}
-          onChange={(event) => onChange((current) => ({ ...current, contractType: event.target.value || undefined }))}
-          className={FIELD_CLASS}
-        >
-          <option value="">Tous</option>
-          {CONTRACT_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {type}
-            </option>
-          ))}
-        </select>
       </div>
       {hasActiveFilters && (
         <button
