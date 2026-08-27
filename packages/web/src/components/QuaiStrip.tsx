@@ -1,11 +1,16 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, type DragEvent, type KeyboardEvent } from "react";
 import type { OfferSummary } from "../api/client.js";
 import { PIPELINE_LANES } from "../lib/pipeline.js";
 import { useSetOfferStatus } from "../hooks/useSetOfferStatus.js";
+import { useUnassignOffer } from "../hooks/useUnassignOffer.js";
 import { PipelineCard } from "./PipelineCard.js";
 
 interface QuaiStripProps {
   offers: OfferSummary[];
+  // Offres toutes voies confondues (pas seulement celles du Quai) : nécessaire pour retrouver,
+  // au dépôt d'une carte glissée depuis une voie du Pipeline, son statut actuel et l'id de
+  // l'événement qui l'a produit (voir handleDrop).
+  allOffers: OfferSummary[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }
@@ -16,9 +21,25 @@ interface QuaiStripProps {
 // Le Quai n'est pas une sixième voie (design §4) : il porte donc sa propre sélection clavier,
 // indépendante de celle de PipelineBoard. Pas de j/k/h/l ici — le Quai est une liste plate, pas
 // une grille de voies — seulement 1-6 (assigner), Entrée (ouvrir le lien) et Échap (désélectionner).
-export function QuaiStrip({ offers, collapsed, onToggleCollapsed }: QuaiStripProps) {
+export function QuaiStrip({ offers, allOffers, collapsed, onToggleCollapsed }: QuaiStripProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const setStatus = useSetOfferStatus();
+  const unassign = useUnassignOffer();
+
+  // Dépôt d'une carte venue d'une voie du Pipeline : la repositionne sur le Quai en supprimant
+  // l'événement qui déterminait sa voie actuelle (voir useUnassignOffer). Pas de no-op à garder
+  // ici pour une carte déjà "new" : elle vient forcément d'une voie (PipelineBoard.handleDrop est
+  // le seul autre point qui pose event.dataTransfer), donc `offer.status` ne peut valoir "new".
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const offerId = event.dataTransfer.getData("text/plain");
+    if (!offerId) return;
+    const offer = allOffers.find((candidate) => candidate.id === offerId);
+    if (!offer || offer.status === "new") return;
+    const eventId = offer.activeEvents[offer.status];
+    if (!eventId) return;
+    unassign.mutate({ offerId, eventId });
+  };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (selectedIndex === null) return;
@@ -40,7 +61,12 @@ export function QuaiStrip({ offers, collapsed, onToggleCollapsed }: QuaiStripPro
   };
 
   return (
-    <section className="mb-4 rounded-md border border-border bg-surface" aria-label="Quai de réception">
+    <section
+      className="mb-4 rounded-md border border-border bg-surface"
+      aria-label="Quai de réception"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={handleDrop}
+    >
       <div className="flex items-center justify-between px-3 py-2">
         <button
           type="button"

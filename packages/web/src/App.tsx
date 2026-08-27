@@ -142,7 +142,12 @@ export default function App() {
       )}
       {!offersQuery.isLoading && !offersQuery.error && (
         <>
-          <QuaiStrip offers={quaiOffers} collapsed={quaiCollapsed} onToggleCollapsed={() => setQuaiCollapsed((v) => !v)} />
+          <QuaiStrip
+            offers={quaiOffers}
+            allOffers={displayedOffers}
+            collapsed={quaiCollapsed}
+            onToggleCollapsed={() => setQuaiCollapsed((v) => !v)}
+          />
           <PipelineBoard offers={displayedOffers} hideRejected={hideRejected} />
         </>
       )}

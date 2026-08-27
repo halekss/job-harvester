@@ -17,7 +17,7 @@ function makeOffer(id: string, status: string, title = `Offre ${id}`): OfferSumm
     contractType: "apprentissage",
     canonicalUrl: `https://example.com/${id}`,
     nextFollowUpAt: null,
-    activeEvents: {},
+    activeEvents: status === "new" ? {} : { [status]: `evt-${id}` },
     status,
   };
 }
@@ -67,6 +67,20 @@ describe("PipelineBoard", () => {
         "/offers/a/events",
         expect.objectContaining({ method: "POST", body: JSON.stringify({ type: "interview" }) }),
       );
+    });
+  });
+
+  it("pressing 0 on a selected card repositions it on the Quai by deleting its active event", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const user = userEvent.setup();
+    renderWithClient(<PipelineBoard offers={[makeOffer("a", "applied")]} hideRejected={false} />);
+
+    await user.click(screen.getByTestId("card-a"));
+    await user.keyboard("0");
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/offers/a/events/evt-a", expect.objectContaining({ method: "DELETE" }));
     });
   });
 

@@ -2,6 +2,7 @@ import { useMemo, useState, type DragEvent, type KeyboardEvent } from "react";
 import type { OfferSummary } from "../api/client.js";
 import { PIPELINE_LANES, groupByStatus, type LaneType } from "../lib/pipeline.js";
 import { useSetOfferStatus } from "../hooks/useSetOfferStatus.js";
+import { useUnassignOffer } from "../hooks/useUnassignOffer.js";
 import { PipelineCard } from "./PipelineCard.js";
 
 interface Selection {
@@ -23,6 +24,7 @@ export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
     [hideRejected],
   );
   const setStatus = useSetOfferStatus();
+  const unassign = useUnassignOffer();
   const [selection, setSelection] = useState<Selection | null>(null);
 
   const offersInLane = (laneIndex: number): OfferSummary[] => {
@@ -92,6 +94,13 @@ export function PipelineBoard({ offers, hideRejected }: PipelineBoardProps) {
     } else if (event.key === "Enter") {
       const offer = offersInLane(selection.laneIndex)[selection.offerIndex];
       if (offer) window.open(offer.applyUrl ?? offer.canonicalUrl, "_blank", "noopener,noreferrer");
+    } else if (event.key === "0") {
+      // Repositionne la carte sélectionnée sur le Quai — symétrique de 1-6, hors erreur de
+      // classement (voir useUnassignOffer pour pourquoi c'est une suppression et pas un POST).
+      event.preventDefault();
+      const offer = offersInLane(selection.laneIndex)[selection.offerIndex];
+      const eventId = offer?.activeEvents[offer.status];
+      if (offer && eventId) unassign.mutate({ offerId: offer.id, eventId });
     } else {
       const n = Number(event.key);
       if (Number.isInteger(n) && n >= 1 && n <= PIPELINE_LANES.length) {
